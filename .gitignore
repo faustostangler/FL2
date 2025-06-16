@@ -123,10 +123,9 @@ temp/
 *.war
 *.db-shm
 *.db-wal
+data/
 
 # Profiles and logs
 *.profile
 *.prof
 
-backend/utils-original
-backend/utils/Untitled-1.ipynb
