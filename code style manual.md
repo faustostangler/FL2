@@ -38,12 +38,10 @@ ruff check . --fix  # aplicar lint e autofix
 
 - **Logic Separation**: Within functions:
   - Use a blank line to separate distinct logical steps.
-  - Include a comment explaining each step.
+  - Include an inline comment explaining each step.
 
 - **Return Values**: Every function should always return something:
-  - Return the main parameter if applicable.
-  - Otherwise, return `True`.
-  - If neither applies, return `None`.
+  - Return the main parameter if applicable otherwise, return `True`. If neither applies, return `None`.
 
 - **Example**:
   ```python
@@ -58,41 +56,49 @@ ruff check . --fix  # aplicar lint e autofix
       Returns:
       float: The total cost.
       """
-      total_cost = price * quantity  # Calculate the total cost
-      return total_cost  # Return the calculated total cost
+      # Calculate the total cost
+      total_cost = price * quantity
+      
+      return total_cost
   ```
 
 ## 2. Naming Conventions
 
 ### 2.1 Variables and Functions
-- **Convention**: Use `snake_case` for naming variables and functions. Consider using 'pylint .'. 
+- **Convention**: Use `snake_case` for naming variables and functions. Use `CAPITAL_SNAKE_CASE` only in the top of the module and for module-level values (constant value whose meaning and scope are immutable throughout the module’s lifetime). Use `CamelCase` for domain vocabulary: like classes and aggregates, entities, value objects, services, controllers, and so on. Consider using 'pylint .'. 
 - **Descriptive Names**: Names should clearly convey their purpose or action.
 - **Example**:
   ```python
-  def get_user_age(user):
-      user_age = user.get('age')
+  # Module-level constant (used only at the top of the module)
+  DEFAULT_AGE_IF_MISSING = 30
+
+  # Class using CamelCase, representing a domain entity or aggregate
+  class UserData:
+      def __init__(self, age=None):
+          self.age = age
+
+  # Function using snake_case, following PEP 8 convention
+  def get_user_age(user_data: UserData) -> int:
+    """
+    Retrieve the user's age from a UserData object.
+
+    If the age is not set (None), return a default age defined by the module.
+    
+    Args:
+        user_data (UserData): The user data containing the age attribute.
+    
+    Returns:
+        int: The user's age or the default if unavailable.
+    """
+    # Retrieve the user's age; if it's missing (None), fall back to default
+      user_age = user_data.age
+      if user_age is None:
+          return DEFAULT_AGE_IF_MISSING
+
       return user_age
   ```
 
-### 2.2 Constants
-- **Convention**: Use `UPPER_SNAKE_CASE` for constants.
-- **Placement**: Define constants at the beginning of the file or within a configuration module.
-- **Example**:
-  ```python
-  MAX_RETRIES = 3
-  TIMEOUT_SECONDS = 30
-  ```
-
-### 2.3 Classes
-- **Convention**: Use `CamelCase` for class names.
-- **Naming**: Class names should be nouns or noun phrases that describe the entity they represent.
-- **Example**:
-  ```python
-  class DataProcessor:
-      pass
-  ```
-
-### 2.4 Best Practices for Naming
+### 2.2 Best Practices for Naming
 - **Clarity and Descriptiveness**: Choose names that clearly describe the entity’s purpose or function. Avoid vague or generic names.
   - **Example**: Use `user_age` instead of `x`, and `temporary_file` instead of `temp`.
 
@@ -146,7 +152,7 @@ ruff check . --fix  # aplicar lint e autofix
   ```
 
 ### 3.2 Inline Comments
-- **Purpose**: Use inline comments to clarify complex or non-obvious code.
+- **Purpose**: Use inline comments with moderation to clarify complex or non-obvious code.
 - **Placement**: Place comments on the line above the code they describe or at the end of the line if brief.
 - **Style**: Start comments with a capital letter and leave a space after the `#`.
 - **Example**:
@@ -163,7 +169,7 @@ ruff check . --fix  # aplicar lint e autofix
 ## 4. Error Handling
 
 ### 4.1 Try-Except Blocks
-- **Use**: Use `try-except` blocks to handle errors, especially when dealing with external resources or user input.
+- **Use**: Always Use `try-except` blocks to handle errors, especially when dealing with external resources or user input.
 - **Logging**: Log errors using a centralized logging function (`log_error`) for consistency.
 - **Specificity**: Handle specific exceptions where possible, avoiding generic `except` clauses.
 
@@ -201,7 +207,14 @@ ruff check . --fix  # aplicar lint e autofix
 ### 5.2 Indentation
 - **Spacing**: Use 4 spaces per indentation level. Do not use tabs.
 
-## 6. Function Design
+## 6. Architecture and Design
+- Use best softwarte architecture principles. Low Coupling and High Cohesion. 
+- Consider MVC (Model-View-Controller), DDD (Domain-Driven Design), Hexagonal Architecture (Ports and Adapters), Clean Architecture, Microservices, Monolith, and Event-Driven Architecture. 
+- Consider MVC, DDD, hexagonal, clean, microservices, monolith, event-driven and others.
+- Use logical layers (presentation, application, domain, infrastructure).
+- Use components within layers (Controller, Domain, Service, Repository, Entities)
+- VO, aggregates, business rules, DTO.
+- For persistence and ORM, SQLAlchemy and SQLite.
 
 ### 6.1 Single Responsibility
 - **Focus**: Each function should have a single, well-defined responsibility. If a function does too much, refactor it into smaller, more focused functions.
@@ -209,13 +222,7 @@ ruff check . --fix  # aplicar lint e autofix
 ### 6.2 Parameter Handling
 - **Descriptive Names**: Use clear and descriptive names for parameters.
 - **Default Values**: Provide default values for optional parameters.
-- **Grouping**: If a function requires many parameters, consider grouping them into a dictionary or passing an object.
-
-### 6.3 Return Values
-- **Consistency**: Every function should always return something:
-  - Preferably return the main parameter.
-  - Otherwise, return `True`.
-  - If neither is applicable, return `None`.
+- **Grouping**: If a function requires many parameters, consider grouping them into a dictionary or passing an object. Use dataclasses and DTO whenever possible. 
 
 ## 7. Performance Logging and Benchmarking
 
@@ -228,25 +235,9 @@ ruff check . --fix  # aplicar lint e autofix
 - **Guidelines**: Benchmarking should be used when testing different configurations of a function (e.g., varying the number of workers in ThreadPoolExecutor).
 A benchmark function should: Test performance using different numbers of workers; Measure execution time, memory usage, and CPU load. Provide comparable results for optimization.
 
-## 8. Specific Guidelines for Code Clarity and Maintenance
+## 8. Specific Guidelines for Code
 
-### 8.1 Hard-Coded Variables
-- **Placement**
-
-: All hard-coded variables, such as XPaths, CSS selectors, string literals, and configuration values, should be defined at the beginning of each function. This makes the code easier to maintain and ensures that any changes to these variables are centralized.
-  
-- **Example**:
-  ```python
-  def submit_form(driver, wait):
-      xpath_submit_button = '//*[@id="submit"]'
-      success_message = "Form submitted"
-      
-      button = wait.until(EC.element_to_be_clickable((By.XPATH, xpath_submit_button)))
-      button.click()
-      print(success_message)
-  ```
-
-### 8.2 Conditional Logic
+### 8.1 Conditional Logic
 - **Regressive Conditionals**: When designing loops that require conditional operations at specific iterations, use regressive logic to ensure the condition is met towards the end of the loop.
   
 - **Example**:
@@ -256,28 +247,63 @@ A benchmark function should: Test performance using different numbers of workers
   ```
 
 ### 8.3 Timing and Loops
-- **Timing Initialization**: When measuring execution time within loops, always initialize the `start_time` variable immediately before the loop begins. This ensures accurate tracking of the loop's execution duration.
+- **Timing Initialization**: When measuring execution time within loops, always initialize the `start_time` variable immediately before the loop begins. This ensures accurate tracking of the loop's execution duration. Whenever there is a loop, always there is also a timing code and a print_info(). 
   
 - **Example**:
   ```python
   start_time = time.time()
   for i, item in enumerate(items):
       # Loop logic
+
+      # print
+      extra_info = []
+      self.print_info(self, index=index, size=size, start_time=start_time, extra_info=[], indent_level=0)
   ```
 
-### 8.4 Function Comments and Documentation
-- **Inline Comments**: Add comments to describe the purpose of logical blocks within functions, especially where operations or decisions are made. Comments should be clear and concise, explaining *why* a block of code is necessary.
+### 9. Code Structure
+- Overall code structure can e something like this
 
-- **Example**:
-  ```python
-  # Initialize WebDriver
-  driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
-  ```
-
-### 8.5 Code Structure
-- **Consistent Naming**: Ensure that variables, functions, and classes follow a consistent naming convention that reflects their purpose. Use descriptive names to enhance readability.
-
-- **Example**:
-  ```python
-  total_pages = max(pages) - 1  # Calculate the total number of pages to iterate over
-  ```
+ﬕ FLY/                          ← project root  
+│  
+├─ config/                      ← path, DB, and schema definitions  
+│   └─ config.py                ← centralizes Config()  
+│  
+├─ utils/                       ← generic utilities and BaseProcessor  
+│   ├─ base_processor.py        ← abstract class and scraping helpers  
+│   ├─ exceptions.py            ← custom exceptions  
+│   └─ logging.py               ← structured logging wrapper  
+│  
+├─ presentation/                ← adapters for CLI, REST, or GUI  
+│   ├─ cli/                     ← command-line interface commands  
+│   │   └─ run_app.py           ← main entry point (argparse)  
+│   └─ http/                    ← controllers and routes (FastAPI, Flask…)  
+│       ├─ controllers/         ← resource-specific controllers  
+│       └─ routers.py           ← route definitions  
+│  
+├─ application/                 ← orchestration layer for use cases  
+│   ├─ services/                ← Service classes using repositories  
+│   ├─ usecases/                ← objects executing business flows  
+│   └─ dtos/                    ← immutable Data Transfer Objects  
+│  
+├─ domain/                      ← pure business core  
+│   ├─ entities/                ← core entities (Company, Statement…)  
+│   ├─ value_objects/           ← value objects (Quarter, Money…)  
+│   ├─ aggregates/              ← aggregates and their roots  
+│   └─ interfaces/              ← IRepositories, IAdapters, IPublishers  
+│  
+├─ infrastructure/              ← concrete implementations of ports/adapters  
+│   ├─ repositories/            ← SQLite + SQLAlchemy + mappings  
+│   ├─ scrapers/                ← adapters for Selenium, Cloudsraper, BSoup  
+│   ├─ external/                ← HTTP clients for external APIs (Yahoo, B3)  
+│   └─ events/                  ← corporate event listeners/publishers  
+│  
+├─ scripts/                     ← auxiliary scripts (migrations, backups, docker)  
+│   ├─ docker-compose.yml  
+│   └─ deploy.sh  
+│  
+├─ tests/                       ← unit and integration tests organized by layer  
+│   ├─ domain/  
+│   ├─ application/  
+│   └─ infrastructure/  
+│  
+└─ README.md                    ← overview, usage guide, and folder map  
