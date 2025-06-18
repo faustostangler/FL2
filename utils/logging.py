@@ -1,6 +1,6 @@
 _logger_instance = None
 
-def log_message(message, name=None, level:str="debug"):
+def log_message(message, name=None, level:str="debug", progress=None):
     """
     Logs a message both to the terminal (stdout) and a file, ensuring consistent formatting.
 
@@ -21,6 +21,7 @@ def log_message(message, name=None, level:str="debug"):
         from pathlib import Path
         import logging
         import inspect
+        import time
 
         config = Config()
         log_path = config.paths["log_file"]
@@ -30,14 +31,40 @@ def log_message(message, name=None, level:str="debug"):
 
         global _logger_instance
 
+        # Progress
+        progress_msg = ""
+        if progress:
+            index = progress.get("index", 0)
+            size = progress.get("size", 1)
+            start = progress.get("start_time", time.time())
+            now = time.time()
+
+            completed = index + 1
+            percent = (completed / size)
+            elapsed = now - start
+            avg = elapsed / completed
+            remaining = (size - completed) * avg
+            total_est = elapsed + remaining
+
+            def fmt(seconds):
+                h, rem = divmod(int(seconds), 3600)
+                m, s = divmod(rem, 60)
+                return f"{h}h{m:02}m{s:02}s"
+
+            progress_msg = (
+                f"{completed}/{size} | {percent:.1%} | "
+                f"{fmt(elapsed)} + {fmt(remaining)} = {fmt(total_est)} "
+            )
+
+
         if _logger_instance is None:
             # Create and configure logger
             logger = logging.getLogger(name)
             logger.setLevel(logging.DEBUG)  # Always capture all levels; handlers will filter as needed
 
-            if not logger.handlers:
-                # Define formatter with precise timestamp, origin and message layout
-                formatter = logging.Formatter(
+            # Define formatter with precise timestamp, origin and message layout
+            formatter = logging.Formatter(
+                    (progress_msg) +
                     "%(asctime)s "
                     "%(levelname)s: "
                     "%(message)s "
@@ -48,19 +75,19 @@ def log_message(message, name=None, level:str="debug"):
                     , datefmt="%Y-%m-%d %H:%M:%S"  # Removes milliseconds
                 )
 
-                # StreamHandler (e.g., console output)
-                stream_handler = logging.StreamHandler()
-                stream_handler.setLevel(logging.DEBUG)
-                stream_handler.setFormatter(formatter)
+            # StreamHandler (e.g., console output)
+            stream_handler = logging.StreamHandler()
+            stream_handler.setLevel(logging.DEBUG)
+            stream_handler.setFormatter(formatter)
 
-                # FileHandler (persistent output)
-                file_handler = logging.FileHandler(log_path)
-                file_handler.setLevel(logging.DEBUG)
-                file_handler.setFormatter(formatter)
+            # FileHandler (persistent output)
+            file_handler = logging.FileHandler(log_path)
+            file_handler.setLevel(logging.DEBUG)
+            file_handler.setFormatter(formatter)
 
-                # Register both handlers
-                logger.addHandler(stream_handler)
-                logger.addHandler(file_handler)
+            # Register both handlers
+            logger.addHandler(stream_handler)
+            logger.addHandler(file_handler)
 
             _logger_instance = logger
 
@@ -76,11 +103,11 @@ def log_message(message, name=None, level:str="debug"):
 
         # Format into single message
         context = " <- ".join(relevant[1:-1])
-        full_message = f"{message} | {context}"
+        full_message = message if level.lower() != "debug" else f"{message} | {context}"
 
         # Log the combined message using stacklevel of the topmost relevant frame
         _log_method = getattr(_logger_instance, level.lower(), _logger_instance.info)
-        _log_method(full_message)
+        _log_method(full_message + progress_msg)
 
     except Exception as e:
         print(f"Logging error: {e}")

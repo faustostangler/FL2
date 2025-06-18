@@ -1,7 +1,12 @@
-from typing import List, Dict
+from typing import List, Dict, Optional
+import json
+import base64
+import requests
+import time
 
 import utils.logging as logging_utils
 from config.config import Config
+from infrastructure.scrapers.fetch_utils import _fetch_with_retry
 
 class CompanyScraper:
     """
@@ -20,12 +25,112 @@ class CompanyScraper:
         self.endpoint_detail = config.b3["endpoints"]["detail"]
         self.endpoint_financial = config.b3["endpoints"]["financial"]
 
+        self.session = requests.Session()
+
     def fetch_all(self) -> List[Dict]:
         """
         Simulates fetching raw data for all companies.
 
         :return: List of dictionaries representing raw company data
         """
+        logging_utils.log_message("Start CompanyScraper fetch_all", level="info")
+
+        results = []
+        initial = self._fetch_initial_data()
+        start_time = time.time()
+        for i, entry in enumerate(initial):
+            try:
+                cvm_code = entry.get("codeCVM")
+                detail = self._fetch_detail(str(cvm_code))
+                parsed = self._parse_company(entry, detail)
+                results.append(parsed)
+                message = f"cvm_code: {cvm_code} "
+                progress={"index": i, "size": len(initial), "start_time": start_time}
+                logging_utils.log_message(message, level="info", progress=progress)
+            except Exception as e:
+                logging_utils.log_message(f"erro {e}", level="warning")
+        return results
+
+    def _fetch_initial_data(self) -> List[Dict]:
+        """
+        Busca o conjunto inicial de empresas disponíveis na B3.
+
+        :return: Lista de empresas com código CVM e nome base.
+        """
+        payload = {
+            "language": self.language,
+            "pageNumber": 1,
+            "pageSize": 120
+        }
+        token = self._encode_payload(payload)
+        url = self.endpoint_initial + token
+        response = _fetch_with_retry(self.session, url)
+        return response.json().get("results", [])
+
+    def _encode_payload(self, payload: dict) -> str:
+        """
+        Codifica um dicionário JSON para o formato base64 usado pela B3.
+
+        :param payload: Dicionário de entrada
+        :return: String base64
+        """
+        return base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
+
+    def _fetch_detail(self, cvm_code: str) -> Dict:
+        """
+        Busca os detalhes de uma empresa a partir do código CVM.
+
+        :param cvm_code: Código CVM da empresa
+        :return: Dicionário com detalhes estendidos da empresa
+        """
+        payload = {
+            "codeCVM": cvm_code,
+            "language": self.language
+        }
+        token = self._encode_payload(payload)
+        url = self.endpoint_detail + token
+        response = _fetch_with_retry(self.session, url)
+        return response.json()
+
+    def _parse_company(self, base: Dict, detail: Dict) -> Optional[Dict]:
+        """
+        Combina os dados do resultado base com os detalhes e retorna um dicionário padronizado.
+
+        :param base: Dados iniciais da empresa (GetInitialCompanies)
+        :param detail: Detalhes adicionais da empresa (GetDetail)
+        :return: Dicionário padronizado
+        """
+        try:
+            codes = detail.get("otherCodes", []) or []
+            ticker_codes = [c["code"] for c in codes if "code" in c]
+            isin_codes = [c["isin"] for c in codes if "isin" in c]
+
+            # Classificação setorial
+            industry = detail.get("industryClassification", "")
+            parts = [p.strip() for p in industry.split("/")]
+
+            return {
+                "ticker": base.get("issuingCompany"),
+                "company_name": base.get("companyName"),
+                "cvm_code": base.get("codeCVM"),
+                "cnpj": detail.get("cnpj"),
+                "trading_name": detail.get("tradingName"),
+                "listing": detail.get("listingSegment"),
+                "registrar": detail.get("registrar"),
+                "website": detail.get("site"),
+                "ticker_codes": json.dumps(ticker_codes),
+                "isin_codes": json.dumps(isin_codes),
+                "sector": parts[0] if len(parts) > 0 else None,
+                "subsector": parts[1] if len(parts) > 1 else None,
+                "segment": parts[2] if len(parts) > 2 else None,
+            }
+        except Exception as e:
+            print(f"[ERROR] Failed to parse company: {e}")
+            return None
+
+
+
+
         return [
             {
                 "ticker": "PETR4",
