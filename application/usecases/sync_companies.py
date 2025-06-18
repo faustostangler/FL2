@@ -1,4 +1,6 @@
 from typing import List
+
+import utils.logging as logging_utils
 from domain.models.company_dto import CompanyDTO
 from infrastructure.repositories.base_repository import BaseRepository
 from infrastructure.scrapers.company_scraper import CompanyScraper
@@ -9,6 +11,8 @@ class SyncCompaniesUseCase:
     """
 
     def __init__(self, repository: BaseRepository[CompanyDTO], scraper: CompanyScraper):
+        logging_utils.log_message("Start SyncCompaniesUseCase", level="info")
+
         self.repository = repository
         self.scraper = scraper
 

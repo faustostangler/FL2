@@ -1,10 +1,24 @@
 from typing import List, Dict
 
+import utils.logging as logging_utils
+from config.config import Config
+
 class CompanyScraper:
     """
     Scraper adapter responsible for fetching raw company data.
     In a real implementation, this could use requests, BeautifulSoup, or Selenium.
     """
+    def __init__(self):
+        """
+        Initializes the SQLite database connection and ensures table creation.
+        """
+        logging_utils.log_message("Start CompanyScraper", level="info")
+
+        config = Config()
+        self.language = config.b3["language"]
+        self.endpoint_initial = config.b3["endpoints"]["initial"]
+        self.endpoint_detail = config.b3["endpoints"]["detail"]
+        self.endpoint_financial = config.b3["endpoints"]["financial"]
 
     def fetch_all(self) -> List[Dict]:
         """

@@ -43,3 +43,14 @@ class Config:
                 }
             }
         }
+
+        # B3 API endpoints for different languages
+        self.b3 = {
+            "language": "pt-br",
+            "endpoints": {
+                "initial": "https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyCall/GetInitialCompanies/",
+                "detail": "https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyCall/GetDetail/",
+                "financial": "https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyCall/GetListedFinancial/"
+            }
+        }
+

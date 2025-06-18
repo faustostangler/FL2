@@ -75,7 +75,7 @@ def log_message(message, name=None, level:str="debug"):
                 relevant.append(f"line {frame.lineno} of {frame.function}() in '{path.relative_to(project_root)}'")
 
         # Format into single message
-        context = " < ".join(relevant[1:-1])
+        context = " <- ".join(relevant[1:-1])
         full_message = f"{message} | {context}"
 
         # Log the combined message using stacklevel of the topmost relevant frame
