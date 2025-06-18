@@ -3,17 +3,27 @@ from pathlib import Path
 class Config:
     def __init__(self):
         """ Initializes the configuration settings for the application.
-        This includes setting up paths for logging and other necessary directories.
+        This includes setting up paths and other data.
         """
         # Folders and files
         TEMP_FOLDER = "temp"
+        DATA_FOLDER = "data"
         LOG_FILE = "fly_logger.log"
+        DB_NAME = "fly.db"
+
+        # Database table names
+        TBL_COMPANY_INFO = "tbl_company"
+
+        # Paths
+        root_path = Path(__file__).parent.parent.resolve()
 
         # Initialize paths
-        temp_path = Path(TEMP_FOLDER)
         self.paths = {
-            "root_folder": Path(__file__).parent.parent.resolve(),
-            "log_file": temp_path / LOG_FILE,
+            "root_folder": root_path,
+            "temp_folder": Path(TEMP_FOLDER),
+            "data_folder": Path(DATA_FOLDER),
+            "log_file": Path(TEMP_FOLDER) / LOG_FILE,
+            "db_file": Path(DATA_FOLDER) / DB_NAME,
             # more paths...
         }
 
@@ -22,3 +32,14 @@ class Config:
             path_obj = Path(path)
             folder = path_obj.parent if path_obj.suffix else path_obj
             folder.mkdir(parents=True, exist_ok=True)
+
+        # Database configuration
+        self.databases = {
+            "default": {
+                "name": DB_NAME,
+                "filepath": Path(DATA_FOLDER) / DB_NAME,
+                "tables": {
+                    "company": TBL_COMPANY_INFO
+                }
+            }
+        }
