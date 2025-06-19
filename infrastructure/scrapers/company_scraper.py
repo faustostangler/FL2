@@ -42,8 +42,6 @@ class CompanyScraper:
         for i, entry in enumerate(initial):
             try:
                 cvm_code = entry.get("codeCVM")
-                if cvm_code == '9954':  # Skip CVM code 9954 (B3 itself)
-                    pass
                 detail = self._fetch_detail(str(cvm_code))
                 parsed = self._parse_company(entry, detail)
                 results.append(parsed)
@@ -60,18 +58,41 @@ class CompanyScraper:
 
         :return: Lista de empresas com código CVM e nome base.
         """
-        PAGENUMBER = 1
-        PAGENUMBER_SIZE = 120
+        PAGE_NUMBER = 1
+        PAGE_SIZE = 120
+        results = []
+        start_time = time.time()
 
-        payload = {
-            "language": self.language,
-            "pageNumber": PAGENUMBER,
-            "pageSize": PAGENUMBER_SIZE,
-        }
-        token = self._encode_payload(payload)
-        url = self.endpoint_initial + token
-        response = _fetch_with_retry(self.session, url)
-        return response.json().get("results", [])
+        while True:
+            payload = {
+                "language": self.language,
+                "pageNumber": PAGE_NUMBER,
+                "pageSize": PAGE_SIZE,
+            }
+            token = self._encode_payload(payload)
+            url = self.endpoint_initial + token
+            response = _fetch_with_retry(self.session, url)
+            data = response.json()
+
+            current_results = data.get("results", [])
+            results.extend(current_results)
+
+            total_pages = data.get("page", {}).get("totalPages", 1)
+
+            progress = {
+                "index": PAGE_NUMBER - 1,
+                "size": total_pages,
+                "start_time": start_time,
+            }
+            logging_utils.log_message(f"Page {PAGE_NUMBER}/{total_pages}", level="info", progress=progress)
+
+            if PAGE_NUMBER >= total_pages:
+                break
+
+            PAGE_NUMBER += 1
+
+        return results
+
 
     def _encode_payload(self, payload: dict) -> str:
         """

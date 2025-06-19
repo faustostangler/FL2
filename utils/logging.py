@@ -90,7 +90,7 @@ def _format_progress(progress: dict) -> str:
             m, s = divmod(rem, 60)
             return f"{h}h{m:02}m{s:02}s"
 
-        return f"{completed}/{size} | {percent:.1%} | {fmt(elapsed)} + {fmt(remaining)} = {fmt(total_est)}"
+        return f"{completed}/{size} | {percent:.4%} | {fmt(elapsed)} + {fmt(remaining)} = {fmt(total_est)}"
     except Exception:
         return ""
 
