@@ -20,6 +20,19 @@ class CompanyDTO:
     cnpj: Optional[str]
     website: Optional[str]
 
+    company_type: Optional[str]
+    status: Optional[str]
+    b3_code: Optional[str]
+    company_category: Optional[str]
+    corporate_name: Optional[str]
+    registration_date: Optional[str]
+    start_situation_date: Optional[str]
+    situation: Optional[str]
+    situation_date: Optional[str]
+    country: Optional[str]
+    state: Optional[str]
+    city: Optional[str]
+
     @staticmethod
     def from_dict(raw: dict) -> "CompanyDTO":
         """
@@ -40,4 +53,17 @@ class CompanyDTO:
             registrar=raw.get("registrar"),
             cnpj=raw.get("cnpj"),
             website=raw.get("website"),
+
+            company_type=raw.get("company_type"),
+            status=raw.get("status"),
+            b3_code=raw.get("b3_code"),
+            company_category=raw.get("company_category"),
+            corporate_name=raw.get("corporate_name"),
+            registration_date=raw.get("registration_date"),
+            start_situation_date=raw.get("start_situation_date"),
+            situation=raw.get("situation"),
+            situation_date=raw.get("situation_date"),
+            country=raw.get("country"),
+            state=raw.get("state"),
+            city=raw.get("city"),
         )

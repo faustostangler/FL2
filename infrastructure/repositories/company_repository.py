@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine, Column, String
 from sqlalchemy.orm import declarative_base, sessionmaker
-from typing import List
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from typing import List, Optional
 
 import utils.logging as logging_utils
 from config.config import Config
@@ -20,20 +21,33 @@ class CompanyModel(Base):
     """
     __tablename__ = config.databases["main"]["tables"]["company"]
 
-    ticker = Column(String, primary_key=True)
-    company_name = Column(String)
-    cnpj = Column(String)
-    cvm_code = Column(String)
-    ticker_codes = Column(String)
-    isin_codes = Column(String)
-    trading_name = Column(String)
-    sector = Column(String)
-    subsector = Column(String)
-    segment = Column(String)
-    listing = Column(String)
-    activity = Column(String)
-    registrar = Column(String)
-    website = Column(String)
+    ticker: Mapped[str] = mapped_column(primary_key=True)
+    company_name: Mapped[str] = mapped_column()
+    cnpj: Mapped[Optional[str]] = mapped_column()
+    cvm_code: Mapped[Optional[str]] = mapped_column()
+    ticker_codes: Mapped[Optional[str]] = mapped_column()
+    isin_codes: Mapped[Optional[str]] = mapped_column()
+    trading_name: Mapped[Optional[str]] = mapped_column()
+    sector: Mapped[Optional[str]] = mapped_column()
+    subsector: Mapped[Optional[str]] = mapped_column()
+    segment: Mapped[Optional[str]] = mapped_column()
+    listing: Mapped[Optional[str]] = mapped_column()
+    activity: Mapped[Optional[str]] = mapped_column()
+    registrar: Mapped[Optional[str]] = mapped_column()
+    website: Mapped[Optional[str]] = mapped_column()
+
+    company_type: Mapped[Optional[str]] = mapped_column()
+    status: Mapped[Optional[str]] = mapped_column()
+    b3_code: Mapped[Optional[str]] = mapped_column()
+    company_category: Mapped[Optional[str]] = mapped_column()
+    corporate_name: Mapped[Optional[str]] = mapped_column()
+    registration_date: Mapped[Optional[str]] = mapped_column()
+    start_situation_date: Mapped[Optional[str]] = mapped_column()
+    situation: Mapped[Optional[str]] = mapped_column()
+    situation_date: Mapped[Optional[str]] = mapped_column()
+    country: Mapped[Optional[str]] = mapped_column()
+    state: Mapped[Optional[str]] = mapped_column()
+    city: Mapped[Optional[str]] = mapped_column()
 
 
 class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
@@ -74,7 +88,20 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
                     listing=dto.listing,
                     activity=dto.activity,
                     registrar=dto.registrar,
-                    website=dto.website
+                    website=dto.website, 
+
+                    company_type=dto.company_type,
+                    status=dto.status,
+                    b3_code=dto.b3_code,
+                    company_category=dto.company_category,
+                    corporate_name=dto.corporate_name,
+                    registration_date=dto.registration_date,
+                    start_situation_date=dto.start_situation_date,
+                    situation=dto.situation,
+                    situation_date=dto.situation_date,
+                    country=dto.country,
+                    state=dto.state,
+                    city=dto.city,
                 )
                 session.merge(obj)  # Upsert operation: insert or update if exists
             session.commit()
@@ -132,18 +159,46 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
         :return: Domain DTO (CompanyDTO)
         """
         return CompanyDTO(
-            ticker=obj.ticker,                  # type: ignore
-            company_name=obj.company_name,      # type: ignore
-            cnpj=obj.cnpj,                      # type: ignore
-            cvm_code=obj.cvm_code,              # type: ignore
-            ticker_codes=obj.ticker_codes,      # type: ignore
-            isin_codes=obj.isin_codes,          # type: ignore
-            trading_name=obj.trading_name,      # type: ignore
-            sector=obj.sector,                  # type: ignore
-            subsector=obj.subsector,            # type: ignore
-            segment=obj.segment,                # type: ignore
-            listing=obj.listing,                # type: ignore
-            activity=obj.activity,              # type: ignore
-            registrar=obj.registrar,            # type: ignore
-            website=obj.website,                # type: ignore
+            ticker=obj.ticker,
+            company_name=obj.company_name,
+            cnpj=obj.cnpj,
+            cvm_code=obj.cvm_code,
+            ticker_codes=obj.ticker_codes,
+            isin_codes=obj.isin_codes,
+            trading_name=obj.trading_name,
+            sector=obj.sector,
+            subsector=obj.subsector,
+            segment=obj.segment,
+            listing=obj.listing,
+            activity=obj.activity,
+            registrar=obj.registrar,
+            website=obj.website,
+
+            company_type=obj.company_type,
+            status=obj.status,
+            b3_code=obj.b3_code,
+            company_category=obj.company_category,
+            corporate_name=obj.corporate_name,
+            registration_date=obj.registration_date,
+            start_situation_date=obj.start_situation_date,
+            situation=obj.situation,
+            situation_date=obj.situation_date,
+            country=obj.country,
+            state=obj.state,
+            city=obj.city,
+
         )
+
+    def get_all_cvm_codes(self) -> set[str]:
+        """
+        Retorna um conjunto com todos os códigos CVM já salvos no banco.
+
+        :return: Conjunto de códigos CVM únicos.
+        """
+        session = self.Session()
+        try:
+            results = session.query(CompanyModel.cvm_code).distinct().all()
+            return {row[0] for row in results if row[0]}
+        finally:
+            session.close()
+

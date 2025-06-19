@@ -229,6 +229,7 @@ class Config:
 
         self.global_settings = {
             "wait": 2,
+            "save_threshold": 50,
         }
 
         self.domain = {
