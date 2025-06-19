@@ -3,22 +3,28 @@ import random
 import time
 
 from config.config import Config
+import utils.logging as logging_utils
+from utils.time_utils import sleep_dynamic
 
 config = Config()
 
 def header_random() -> dict:
     """Generate random HTTP headers for requests."""
-    headers = {}
     try:
         user_agent = random.choice(config.scraping["user_agents"])
         referer = random.choice(config.scraping["referers"])
         language = random.choice(config.scraping["languages"])
 
-        headers = {"User-Agent": user_agent, "Referer": referer, "Accept-Language": language}
+        return {"User-Agent": user_agent, "Referer": referer, "Accept-Language": language}
     except Exception as e:
-        print(e)
+        logging_utils.log_message(e, level="debug")
 
-    return headers
+        return {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                          "(KHTML, like Gecko) Chrome/114.0.5735.199 Safari/537.36",
+            "Referer": "https://www.google.com/",
+            "Accept-Language": "en-US,en;q=0.9"
+        }
 
 def test_internet(url=None, timeout=None) -> bool:
 
@@ -31,9 +37,9 @@ def test_internet(url=None, timeout=None) -> bool:
     except Exception as e:
         return False
 
-def _fetch_with_retry(scraper, url, max_attempts=None, wait=None):
+def _fetch_with_retry(scraper, url, max_attempts=None, timeout=None):
     max_attempts = max_attempts or config.scraping["max_attempts"] or 5
-    wait = wait or config.global_settings["wait"] or 2
+    timeout = timeout or config.scraping["timeout"] or 5
 
     attempt = 0
     while attempt < max_attempts:
@@ -43,6 +49,7 @@ def _fetch_with_retry(scraper, url, max_attempts=None, wait=None):
                 return response
         except Exception:
             pass
-        time.sleep(wait)
         attempt += 1
+        # logging_utils.log_message(f"Attempt {attempt} failed for {url}", level="warning")
+        sleep_dynamic(wait=timeout)
     raise ConnectionError(f"Failed to fetch {url} after {max_attempts} attempts.")

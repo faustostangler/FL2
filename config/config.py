@@ -19,7 +19,7 @@ class Config:
 
         # Initialize paths
         self.paths = {
-            "root_folder": root_path,
+            "base_dir": root_path,
             "temp_folder": Path(TEMP_FOLDER),
             "data_folder": Path(DATA_FOLDER),
             "log_file": Path(TEMP_FOLDER) / LOG_FILE,
@@ -35,7 +35,7 @@ class Config:
 
         # Database configuration
         self.databases = {
-            "default": {
+            "main": {
                 "name": DB_NAME,
                 "filepath": Path(DATA_FOLDER) / DB_NAME,
                 "tables": {
@@ -229,4 +229,15 @@ class Config:
 
         self.global_settings = {
             "wait": 2,
+        }
+
+        self.domain = {
+            "words_to_remove": [
+                "EM LIQUIDACAO",
+                "EM LIQUIDACAO EXTRAJUDICIAL",
+                "EXTRAJUDICIAL",
+                "EM RECUPERACAO JUDICIAL",
+                "EM REC JUDICIAL",
+                "EMPRESA FALIDA"
+            ]
         }

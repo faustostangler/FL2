@@ -18,7 +18,7 @@ class CompanyModel(Base):
     ORM mapping class representing the 'company' table in the database.
     This model reflects the structure of the tbl_company table as defined in the config and CompanyDTO.
     """
-    __tablename__ = config.databases["default"]["tables"]["company"]
+    __tablename__ = config.databases["main"]["tables"]["company"]
 
     ticker = Column(String, primary_key=True)
     company_name = Column(String)

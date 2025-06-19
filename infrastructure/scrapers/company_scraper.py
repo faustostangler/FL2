@@ -7,6 +7,7 @@ import time
 import utils.logging as logging_utils
 from config.config import Config
 from infrastructure.scrapers.fetch_utils import _fetch_with_retry
+from utils.data_cleaner import DataCleaner
 
 class CompanyScraper:
     """
@@ -29,7 +30,7 @@ class CompanyScraper:
 
     def fetch_all(self) -> List[Dict]:
         """
-        Simulates fetching raw data for all companies.
+        Fetches raw data for all companies.
 
         :return: List of dictionaries representing raw company data
         """
@@ -41,6 +42,8 @@ class CompanyScraper:
         for i, entry in enumerate(initial):
             try:
                 cvm_code = entry.get("codeCVM")
+                if cvm_code == '9954':  # Skip CVM code 9954 (B3 itself)
+                    pass
                 detail = self._fetch_detail(str(cvm_code))
                 parsed = self._parse_company(entry, detail)
                 results.append(parsed)
@@ -57,10 +60,13 @@ class CompanyScraper:
 
         :return: Lista de empresas com código CVM e nome base.
         """
+        PAGENUMBER = 1
+        PAGENUMBER_SIZE = 120
+
         payload = {
             "language": self.language,
-            "pageNumber": 1,
-            "pageSize": 120
+            "pageNumber": PAGENUMBER,
+            "pageSize": PAGENUMBER_SIZE,
         }
         token = self._encode_payload(payload)
         url = self.endpoint_initial + token
@@ -109,59 +115,71 @@ class CompanyScraper:
             industry = detail.get("industryClassification", "")
             parts = [p.strip() for p in industry.split("/")]
 
+            ticker = DataCleaner.clean_text(base.get("issuingCompany"))
+            company_name = DataCleaner.clean_text(base.get("companyName"))
+            cvm_code = DataCleaner.clean_text(base.get("codeCVM"))
+            cnpj = DataCleaner.clean_text(detail.get("cnpj"))
+            trading_name = DataCleaner.clean_text(detail.get("tradingName"))
+            listing = DataCleaner.clean_text(detail.get("listingSegment"))
+            registrar = DataCleaner.clean_text(detail.get("registrar"))
+            website = detail.get("website")
+            sector = DataCleaner.clean_text(parts[0]) if len(parts) > 0 else None
+            subsector = DataCleaner.clean_text(parts[1]) if len(parts) > 1 else None
+            segment = DataCleaner.clean_text(parts[2]) if len(parts) > 2 else None
+
+            market_indicator = DataCleaner.clean_text(base.get("marketIndicator") or detail.get("marketIndicator"))
+            type_bdr = DataCleaner.clean_text(base.get("typeBDR") or detail.get("typeBDR"))
+            date_listing = DataCleaner.clean_date(base.get("dateListing"))
+            status = DataCleaner.clean_text(base.get("status") or detail.get("status"))
+            segment_b3 = DataCleaner.clean_text(base.get("segment"))
+            segment_eng = DataCleaner.clean_text(base.get("segmentEng"))
+            company_type = DataCleaner.clean_text(base.get("type"))
+            market = DataCleaner.clean_text(base.get("market") or detail.get("market"))
+            industry = detail.get("industryClassification")
+            industry_eng = detail.get("industryClassificationEng")
+            activity = detail.get("activity")
+            institution_common = DataCleaner.clean_text(detail.get("institutionCommon"))
+            institution_pref = DataCleaner.clean_text(detail.get("institutionPreferred"))
+            last_date = DataCleaner.clean_date(detail.get("lastDate"))
+            category = DataCleaner.clean_text(detail.get("describleCategoryBVMF"))
+            quotation_date = DataCleaner.clean_date(detail.get("dateQuotation"))
+
             return {
-                "ticker": base.get("issuingCompany"),
-                "company_name": base.get("companyName"),
-                "cvm_code": base.get("codeCVM"),
-                "cnpj": detail.get("cnpj"),
-                "trading_name": detail.get("tradingName"),
-                "listing": detail.get("listingSegment"),
-                "registrar": detail.get("registrar"),
-                "website": detail.get("site"),
+                "ticker": ticker,
+                "company_name": company_name,
+                "cvm_code": cvm_code,
+                "cnpj": cnpj,
+                "trading_name": trading_name,
+                "listing": listing,
+                "registrar": registrar,
+                "website": website,
                 "ticker_codes": json.dumps(ticker_codes),
                 "isin_codes": json.dumps(isin_codes),
-                "sector": parts[0] if len(parts) > 0 else None,
-                "subsector": parts[1] if len(parts) > 1 else None,
-                "segment": parts[2] if len(parts) > 2 else None,
+                "otherCodes": codes,
+                "sector": sector,
+                "subsector": subsector,
+                "segment": segment,
+
+                "marketIndicator": market_indicator,
+                "typeBDR": type_bdr,
+                "dateListing": date_listing,
+                "status": status,
+                "segment_b3": segment_b3,
+                "segmentEng": segment_eng,
+                "type": company_type,
+                "market": market,
+                "industryClassification": industry,
+                "industryClassificationEng": industry_eng,
+                "activity": activity,
+                "hasQuotation": detail.get("hasQuotation"),
+                "institutionCommon": institution_common,
+                "institutionPreferred": institution_pref,
+                "lastDate": last_date,
+                "hasEmissions": detail.get("hasEmissions"),
+                "hasBDR": detail.get("hasBDR"),
+                "describleCategoryBVMF": category,
+                "dateQuotation": quotation_date,
             }
         except Exception as e:
-            print(f"[ERROR] Failed to parse company: {e}")
+            logging_utils.log_message(f"erro {e}", level="debug")
             return None
-
-
-
-
-        return [
-            {
-                "ticker": "PETR4",
-                "company_name": "Petrobras",
-                "cnpj": "33.000.167/0001-01",
-                "cvm_code": "9512",
-                "ticker_codes": "PETR4, PETR3",
-                "isin_codes": "BRPETRACNPR6",
-                "trading_name": "PETROBRAS",
-                "sector": "Petróleo",
-                "subsector": "Exploração",
-                "segment": "Energia",
-                "listing": "Novo Mercado",
-                "activity": "Exploração e produção de petróleo",
-                "registrar": "Bradesco",
-                "website": "http://www.petrobras.com.br",
-            },
-            {
-                "ticker": "VALE3",
-                "company_name": "Vale S.A.",
-                "cnpj": "33.592.510/0001-54",
-                "cvm_code": "2458",
-                "ticker_codes": "VALE3",
-                "isin_codes": "BRVALEACNOR0",
-                "trading_name": "VALE",
-                "sector": "Mineração",
-                "subsector": "Metais",
-                "segment": "Commodities",
-                "listing": "Novo Mercado",
-                "activity": "Extração de minério",
-                "registrar": "Itaú",
-                "website": "http://www.vale.com",
-            }
-        ]
