@@ -2,7 +2,7 @@ import requests
 import random
 import time
 
-from config.config import Config
+from config import Config
 import utils.logging as logging_utils
 from utils.time_utils import sleep_dynamic
 

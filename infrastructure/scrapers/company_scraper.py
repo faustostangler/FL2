@@ -6,7 +6,7 @@ import requests
 import time
 
 import utils.logging as logging_utils
-from config.config import Config
+from config import Config
 from infrastructure.scrapers.fetch_utils import _fetch_with_retry
 from utils.data_cleaner import DataCleaner
 

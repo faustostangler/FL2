@@ -2,7 +2,7 @@ import time
 import psutil
 import random
 
-from config.config import Config
+from config import Config
 
 config = Config()
 

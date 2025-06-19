@@ -1,7 +1,7 @@
 from typing import List
 
 import utils.logging as logging_utils
-from config.config import Config
+from config import Config
 from domain.models.company_dto import CompanyDTO
 from infrastructure.repositories.company_repository import SQLiteCompanyRepository
 from infrastructure.scrapers.company_scraper import CompanyScraper

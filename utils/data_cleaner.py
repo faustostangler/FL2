@@ -5,7 +5,7 @@ import unidecode
 
 
 import utils.logging as logging_utils
-from config.config import Config
+from config import Config
 
 config = Config()
 

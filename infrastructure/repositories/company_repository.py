@@ -4,7 +4,7 @@ from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from typing import List, Optional
 
 import utils.logging as logging_utils
-from config.config import Config
+from config import Config
 from infrastructure.repositories.base_repository import BaseRepository
 from domain.models.company_dto import CompanyDTO
 
@@ -19,7 +19,7 @@ class CompanyModel(Base):
     ORM mapping class representing the 'company' table in the database.
     This model reflects the structure of the tbl_company table as defined in the config and CompanyDTO.
     """
-    __tablename__ = config.databases["main"]["tables"]["company"]
+    __tablename__ = config.database.tables["company"]
 
     ticker: Mapped[str] = mapped_column(primary_key=True)
     company_name: Mapped[str] = mapped_column()
@@ -61,7 +61,7 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
         Initializes the SQLite database connection and ensures table creation.
         """
         logging_utils.log_message("Start SQLiteCompanyRepository", level="info")
-        self.engine = create_engine(f"sqlite:///{config.paths['db_file']}")
+        self.engine = create_engine(config.database.connection_string)
         self.Session = sessionmaker(bind=self.engine)
         Base.metadata.create_all(self.engine)
 

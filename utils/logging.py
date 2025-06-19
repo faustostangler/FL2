@@ -1,4 +1,4 @@
-from config.config import Config
+from config import Config
 from pathlib import Path
 import logging
 import inspect
@@ -28,7 +28,7 @@ def _get_logger(name=None, level:str="DEBUG") -> logging.Logger:
             handler.setLevel(numeric_level)
         return _logger_instance
 
-    log_path = config.paths["log_file"]
+    log_path = config.logging.full_path
     name = name or Path(log_path).stem  # Usa o nome do arquivo como fallback
 
     logger = logging.getLogger(name)
@@ -104,7 +104,7 @@ def _get_context() -> str:
     """
     try:
         stack = inspect.stack()
-        project_root = config.paths["base_dir"]
+        project_root = config.paths.root_dir
         relevant = []
 
         for frame in stack:
@@ -151,7 +151,7 @@ def log_message(message, name=None, level:str="debug", progress=None):
 
 
 
-# from config.config import Config
+# from config import Config
 # from pathlib import Path
 # import logging
 # import inspect
@@ -246,7 +246,7 @@ def log_message(message, name=None, level:str="debug", progress=None):
 
 #         # Get relevant stack frames inside the project
 #         stack = inspect.stack()
-#         project_root = config.paths["base_dir"]
+#         project_root = config.paths.root_dir
 #         relevant = []
 
 #         for frame in stack:
