@@ -4,9 +4,11 @@ from typing import List
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from domain.dto.nsd_dto import NSDDTO
+
 from domain.ports.nsd_repository import NSDRepository
-from infrastructure.database.connection import create_sqlite_session
-from infrastructure.database.models import NSDModel
+from infrastructure.config import Config
+from infrastructure.logging import Logger
+from infrastructure.models import NSDModel  # Assumindo que foi movido de database.models
 
 
 class SQLiteNSDRepository(NSDRepository):
@@ -15,7 +17,7 @@ class SQLiteNSDRepository(NSDRepository):
     Responsável por persistir objetos NSDDTO na tabela 'nsd_documents'.
     """
 
-    def __init__(self, db_path: str = "data/fly.db"):
+    def __init__(self, db_path: str = None):
         self.db_path = db_path
 
     def list_existing_ids(self) -> List[str]:

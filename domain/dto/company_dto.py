@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
+
 @dataclass(frozen=True)
 class CompanyDTO:
     """Representa os dados estruturados de uma empresa listada na B3."""

@@ -3,8 +3,8 @@ from sqlalchemy.orm import sessionmaker
 from typing import List
 
 from infrastructure.repositories.base_repository import BaseRepository
-from domain.dto.company_dto import CompanyDTO
 from infrastructure.models.company_model import Base, CompanyModel
+from domain.dto.company_dto import CompanyDTO
 
 
 class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):

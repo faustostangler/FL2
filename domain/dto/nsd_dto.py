@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Optional
 from datetime import datetime
 
+
 @dataclass(frozen=True)
 class NSDDTO:
     nsd: int

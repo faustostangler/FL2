@@ -1,9 +1,6 @@
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from typing import Optional
 from domain.dto.company_dto import CompanyDTO
-from infrastructure.config import Config
-
-config = Config()
 
 class Base(DeclarativeBase):
     pass
@@ -13,7 +10,7 @@ class CompanyModel(Base):
     Modelo ORM da tabela de empresas no banco de dados.
     Serve como adaptador entre o domínio (DTO) e o banco (SQLAlchemy).
     """
-    __tablename__ = config.database.tables["company"]
+    __tablename__ = "tbl_company"
 
     ticker: Mapped[str] = mapped_column(primary_key=True)
     company_name: Mapped[str] = mapped_column()
