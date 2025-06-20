@@ -23,10 +23,10 @@ class CompanyScraper:
         """
         logging_utils.log_message("Start CompanyScraper", level="info")
 
-        self.language = config.b3["language"]
-        self.endpoint_initial = config.b3["endpoints"]["initial"]
-        self.endpoint_detail = config.b3["endpoints"]["detail"]
-        self.endpoint_financial = config.b3["endpoints"]["financial"]
+        self.language = config.b3.language
+        self.endpoint_initial = config.b3.endpoints["initial"]
+        self.endpoint_detail = config.b3.endpoints['detail']
+        self.endpoint_financial = config.b3.endpoints["financial"]
 
         self.session = requests.Session()
 

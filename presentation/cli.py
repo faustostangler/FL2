@@ -6,7 +6,7 @@ from application.services.company_services import CompanyService
 def main_cli():
     logging_utils.log_message("Start FLY CLI", level="info")
 
-    # Create the Application Service with injected dependencies
+    # Create the Company Application Service with injected dependencies
     logging_utils.log_message("Start Companies Sync Use Case", level="info")
     repository = SQLiteCompanyRepository()
     scraper = CompanyScraper()
