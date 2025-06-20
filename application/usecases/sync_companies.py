@@ -1,9 +1,9 @@
 from typing import List
 
 import utils.logging as logging_utils
-from config import Config
+from infrastructure.config import Config
 from domain.dto.company_dto import CompanyDTO
-from infrastructure.repositories.company_repository import SQLiteCompanyRepository
+from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
 
 config = Config()
@@ -14,7 +14,7 @@ class SyncCompaniesUseCase:
     """
 
     def __init__(self, repository: SQLiteCompanyRepository, scraper: CompanyB3Scraper):
-        logging_utils.log_message("Start SyncCompaniesUseCase", level="info")
+        self.logger.log("Start SyncCompaniesUseCase", level="info")
 
         self.repository = repository
         self.scraper = scraper

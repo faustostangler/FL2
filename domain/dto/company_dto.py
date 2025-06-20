@@ -1,5 +1,3 @@
-# domain/models/nsd_dto.py
-
 from dataclasses import dataclass
 from typing import Optional
 from datetime import datetime

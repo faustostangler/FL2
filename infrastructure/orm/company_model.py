@@ -1,7 +1,7 @@
 from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from typing import Optional
 from domain.dto.company_dto import CompanyDTO
-from config import Config
+from infrastructure.config import Config
 
 config = Config()
 

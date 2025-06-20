@@ -6,7 +6,7 @@ import requests
 import time
 
 import utils.logging as logging_utils
-from config import Config
+from infrastructure.config import Config
 from infrastructure.scrapers.fetch_utils import _fetch_with_retry
 from utils.data_cleaner import DataCleaner
 
@@ -21,7 +21,7 @@ class CompanyB3Scraper:
         """
         companies_listizes the SQLite database connection and ensures table creation.
         """
-        logging_utils.log_message("Start CompanyB3Scraper", level="info")
+        self.logger.log("Start CompanyB3Scraper", level="info")
 
         self.language = config.b3.language
         self.endpoint_companies_list = config.b3.endpoints["initial"]
@@ -52,7 +52,7 @@ class CompanyB3Scraper:
         """
         PAGE_NUMBER = 1
         PAGE_SIZE = 120
-        logging_utils.log_message("Get Existing Companies", level="info")
+        self.logger.log("Get Existing Companies", level="info")
 
         results = []
         start_time = time.time()
@@ -78,7 +78,7 @@ class CompanyB3Scraper:
                 "size": total_pages,
                 "start_time": start_time,
             }
-            logging_utils.log_message(f"Page {PAGE_NUMBER}/{total_pages}", level="info", progress=progress)
+            self.logger.log(f"Page {PAGE_NUMBER}/{total_pages}", level="info", progress=progress)
 
             if PAGE_NUMBER >= total_pages:
                 break
@@ -98,7 +98,7 @@ class CompanyB3Scraper:
 
     def _fetch_companies_details(self, companies_list: List[Dict], skip_cvm_codes: Optional[Set[str]] = None, save_callback: Optional[Callable[[List[dict]], None]] = None, save_threshold: Optional[int] = None) -> List[Dict]:
 
-        logging_utils.log_message("Start CompanyB3Scraper fetch_all", level="info")
+        self.logger.log("Start CompanyB3Scraper fetch_all", level="info")
         buffer = []
         results = []
         start_time = time.time()
@@ -115,17 +115,17 @@ class CompanyB3Scraper:
                 results.append(parsed)
 
                 progress={"index": i, "size": len(companies_list), "start_time": start_time}
-                logging_utils.log_message(f"cvm_code: {cvm_code} ", level="info", progress=progress)
+                self.logger.log(f"cvm_code: {cvm_code} ", level="info", progress=progress)
 
                 remaining_items = len(companies_list) - i - 1
                 if (remaining_items % save_threshold == 0) or (remaining_items == 0):
                     if callable(save_callback):
                         save_callback(buffer)
-                        logging_utils.log_message(f"Saved {len(buffer)} companies (partial)", level="info")
+                        self.logger.log(f"Saved {len(buffer)} companies (partial)", level="info")
                         buffer.clear()
 
             except Exception as e:
-                logging_utils.log_message(f"erro {e}", level="warning")
+                self.logger.log(f"erro {e}", level="warning")
 
         return results
 
@@ -228,5 +228,5 @@ class CompanyB3Scraper:
                 "dateQuotation": quotation_date,
             }
         except Exception as e:
-            logging_utils.log_message(f"erro {e}", level="debug")
+            self.logger.log(f"erro {e}", level="debug")
             return None

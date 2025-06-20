@@ -2,7 +2,7 @@ import requests
 import random
 import time
 
-from config import Config
+from infrastructure.config import Config
 import utils.logging as logging_utils
 from utils.time_utils import sleep_dynamic
 
@@ -17,7 +17,7 @@ def header_random() -> dict:
 
         return {"User-Agent": user_agent, "Referer": referer, "Accept-Language": language}
     except Exception as e:
-        logging_utils.log_message(e, level="debug")
+        self.logger.log(e, level="debug")
 
         return {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -50,6 +50,6 @@ def _fetch_with_retry(scraper, url, max_attempts=None, timeout=None):
         except Exception:
             pass
         attempt += 1
-        # logging_utils.log_message(f"Attempt {attempt} failed for {url}", level="warning")
+        # self.logger.log(f"Attempt {attempt} failed for {url}", level="warning")
         sleep_dynamic(wait=timeout)
     raise ConnectionError(f"Failed to fetch {url} after {max_attempts} attempts.")

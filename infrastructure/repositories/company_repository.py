@@ -2,8 +2,6 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 from typing import List
 
-import utils.logging as logging_utils
-from config import Config
 from infrastructure.repositories.base_repository import BaseRepository
 from domain.dto.company_dto import CompanyDTO
 from infrastructure.orm.company_model import Base, CompanyModel
@@ -17,11 +15,14 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
     using SQLite and SQLAlchemy for persistence.
     """
 
-    def __init__(self):
+    def __init__(self, config, logger):
         """
         Initializes the SQLite database connection and ensures table creation.
         """
-        logging_utils.log_message("Start SQLiteCompanyRepository", level="info")
+        self.config = config
+        self.logger = logger
+        self.logger.log("Start SQLiteCompanyRepository", level="info")
+
         self.engine = create_engine(config.database.connection_string)
         self.Session = sessionmaker(bind=self.engine)
         Base.metadata.create_all(self.engine)

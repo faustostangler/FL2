@@ -1,5 +1,5 @@
 from application.usecases.sync_companies import SyncCompaniesUseCase
-from infrastructure.repositories.company_repository import SQLiteCompanyRepository
+from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
 
 import utils.logging as logging_utils
@@ -15,7 +15,7 @@ class CompanyService:
             repository (SQLiteCompanyRepository): The repository instance for company data persistence.
             scraper (CompanyB3Scraper): The scraper instance for fetching company data from B3.
         """
-        logging_utils.log_message("Start CompanyService", level="info")
+        self.logger.log("Start CompanyService", level="info")
 
         self.sync_usecase = SyncCompaniesUseCase(repository, scraper)
 

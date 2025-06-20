@@ -1,41 +1,44 @@
-import utils.logging as logging_utils
-
-from infrastructure.repositories.company_repository import SQLiteCompanyRepository
+from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
 from application.services.company_services import CompanyService
 
-from infrastructure.repositories.nsd_repository import SQLiteNSDRepository
+from infrastructure.repositories import SQLiteNSDRepository
 from infrastructure.scrapers.nsd_scraper import NsdScraper
 from application.services.nsd_service import NsdService
 
-def main_cli():
+
+class CLIController:
     """
-    Entry point for the FLY CLI application.
-    This function initializes the logging, sets up the necessary dependencies for the
-    CompanyService (including the repository and scraper), and executes the main
-    company synchronization use case. Upon completion, it prints a confirmation message.
-    Raises:
-        Any exceptions raised by the CompanyService or its dependencies during execution.
+    Controller responsável por orquestrar a execução da aplicação FLY via CLI.
+    Coordena a sincronização de dados da B3, documentos NSD e configura os serviços necessários.
     """
-    # starts the application logging
-    logging_utils.log_message("Start FLY CLI", level="info")
 
-    # === COMPANY ===
-    logging_utils.log_message("Start Companies Sync Use Case", level="info")
-    company_repository = SQLiteCompanyRepository()
-    company_scraper = CompanyB3Scraper()
-    company_service = CompanyService(company_repository, company_scraper)
-    # Run the service to execute the main use case for Company
-    company_service.run()
+    def __init__(self, config, logger):
+        self.config = config
+        self.logger = logger
 
-    # === NSD ===
-    logging_utils.log_message("Start NSD Sync Use Case", level="info")
-    nsd_repository = SQLiteNSDRepository()
-    nsd_scraper = NsdScraper()
-    nsd_service = NsdService(nsd_repository, nsd_scraper)
-    nsd_service.run()
+    def run(self):
+        self.logger.log("Start FLY CLI", level="info")
 
+        self.run_company_sync()
+        self.run_nsd_sync()
 
+        print("done")
 
-    print("done")
+    def run_company_sync(self):
+        self.logger.log("Start Companies Sync Use Case", level="info")
 
+        repo = SQLiteCompanyRepository(config=self.config)
+        scraper = CompanyB3Scraper(config=self.config)
+        service = CompanyService(repo, scraper)
+
+        service.run()
+
+    def run_nsd_sync(self):
+        self.logger.log("Start NSD Sync Use Case", level="info")
+
+        repo = SQLiteNSDRepository(config=self.config)
+        scraper = NsdScraper(config=self.config)
+        service = NsdService(repo, scraper)
+
+        service.run()

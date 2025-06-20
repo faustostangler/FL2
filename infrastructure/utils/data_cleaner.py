@@ -5,7 +5,7 @@ import unidecode
 from typing import Optional
 
 import utils.logging as logging_utils
-from config import Config
+from infrastructure.config import Config
 
 config = Config()
 
@@ -28,7 +28,7 @@ class DataCleaner:
                 text = re.sub(pattern, "", text)
                 text = re.sub(r"\s+", " ", text).strip()
         except Exception as e:
-            # logging_utils.log_message(f"erro {e}", level="warning")
+            # self.logger.log(f"erro {e}", level="warning")
             pass
 
         return text
@@ -42,7 +42,7 @@ class DataCleaner:
         try:
             return float(text)
         except Exception as e:
-            # logging_utils.log_message(f"erro {e}", level="warning")
+            # self.logger.log(f"erro {e}", level="warning")
             return None
 
     @staticmethod
@@ -63,6 +63,6 @@ class DataCleaner:
             try:
                 return datetime.strptime(text.strip(), fmt)
             except Exception as e:
-                # logging_utils.log_message(f"erro {e}", level="warning")
+                # self.logger.log(f"erro {e}", level="warning")
                 continue
         return None
