@@ -2,7 +2,7 @@ import re
 import string
 from datetime import datetime
 import unidecode
-
+from typing import Optional
 
 import utils.logging as logging_utils
 from config import Config
@@ -11,10 +11,10 @@ config = Config()
 
 class DataCleaner:
     @staticmethod
-    def clean_text(text: str, words_to_remove: list = None) -> str:
+    def clean_text(text: Optional[str], words_to_remove: list = None) -> str:
         """Normaliza texto: remove pontuação, acentos, espaços extras e palavras específicas."""
         try:
-            words_to_remove = words_to_remove or config.domain['words_to_remove']
+            words_to_remove = words_to_remove or config.domain.words_to_remove
 
             if not text:
                 return None
@@ -46,7 +46,7 @@ class DataCleaner:
             return None
 
     @staticmethod
-    def clean_date(text: str) -> datetime:
+    def clean_date(text: Optional[str]) -> datetime:
         """Tenta converter string em datetime a partir de padrões comuns."""
         if not text:
             return None

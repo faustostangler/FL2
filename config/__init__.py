@@ -3,6 +3,8 @@ from config.database import load_database_config, DatabaseConfig
 from config.b3_api import load_b3_api_config, B3ApiConfig
 from config.scraping import load_scraping_config, ScrapingConfig
 from config.logging import load_logging_config, LoggingConfig
+from config.global_settings import load_global_settings_config, GlobalSettingsConfig
+from config.domain import load_domain_config, DomainConfig
 
 class Config:
     """
@@ -28,3 +30,5 @@ class Config:
         self.b3 : B3ApiConfig = load_b3_api_config()
         self.scraping : ScrapingConfig = load_scraping_config()
         self.logging : LoggingConfig = load_logging_config()
+        self.global_settings : GlobalSettingsConfig = load_global_settings_config()
+        self.domain : DomainConfig = load_domain_config()

@@ -2,9 +2,9 @@ from typing import List
 
 import utils.logging as logging_utils
 from config import Config
-from domain.models.company_dto import CompanyDTO
+from domain.dto.company_dto import CompanyDTO
 from infrastructure.repositories.company_repository import SQLiteCompanyRepository
-from infrastructure.scrapers.company_scraper import CompanyScraper
+from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
 
 config = Config()
 
@@ -13,7 +13,7 @@ class SyncCompaniesUseCase:
     UseCase responsável por sincronizar os dados das empresas da fonte externa com o repositório local.
     """
 
-    def __init__(self, repository: SQLiteCompanyRepository, scraper: CompanyScraper):
+    def __init__(self, repository: SQLiteCompanyRepository, scraper: CompanyB3Scraper):
         logging_utils.log_message("Start SyncCompaniesUseCase", level="info")
 
         self.repository = repository

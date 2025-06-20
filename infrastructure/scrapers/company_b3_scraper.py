@@ -12,20 +12,20 @@ from utils.data_cleaner import DataCleaner
 
 config = Config()
 
-class CompanyScraper:
+class CompanyB3Scraper:
     """
     Scraper adapter responsible for fetching raw company data.
     In a real implementation, this could use requests, BeautifulSoup, or Selenium.
     """
     def __init__(self):
         """
-        Initializes the SQLite database connection and ensures table creation.
+        companies_listizes the SQLite database connection and ensures table creation.
         """
-        logging_utils.log_message("Start CompanyScraper", level="info")
+        logging_utils.log_message("Start CompanyB3Scraper", level="info")
 
         self.language = config.b3.language
-        self.endpoint_initial = config.b3.endpoints["initial"]
-        self.endpoint_detail = config.b3.endpoints['detail']
+        self.endpoint_companies_list = config.b3.endpoints["initial"]
+        self.endpoint_detail = config.b3.endpoints["detail"]
         self.endpoint_financial = config.b3.endpoints["financial"]
 
         self.session = requests.Session()
@@ -36,44 +36,15 @@ class CompanyScraper:
 
         :return: List of dictionaries representing raw company data
         """
-        logging_utils.log_message("Get Existing Companies", level="info")
-
         skip_cvm_codes = skip_cvm_codes or set()
-        save_threshold = save_threshold or config.global_settings['save_threshold'] or 50
+        save_threshold = save_threshold or config.global_settings.save_threshold or 50
 
-        buffer = []
-        results = []
-        initial = self._fetch_companies()
-
-        logging_utils.log_message("Start CompanyScraper fetch_all", level="info")
-        start_time = time.time()
-
-        for i, entry in enumerate(initial):
-            cvm_code = entry.get("codeCVM")
-            if not cvm_code or cvm_code in skip_cvm_codes:
-                continue
-
-            try:
-                detail = self._fetch_detail(str(cvm_code))
-                parsed = self._parse_company(entry, detail)
-                buffer.append(parsed)
-
-                progress={"index": i, "size": len(initial), "start_time": start_time}
-                logging_utils.log_message(f"cvm_code: {cvm_code} ", level="info", progress=progress)
-
-                remaining_items = len(initial) - i - 1
-                if (remaining_items % save_threshold == 0) or (remaining_items == 0):
-                   if callable(save_callback):
-                        save_callback(buffer)
-                        logging_utils.log_message(f"Saved {len(buffer)} companies (partial)", level="info")
-                        buffer.clear()
-
-            except Exception as e:
-                logging_utils.log_message(f"erro {e}", level="warning")
+        companies_list = self._fetch_companies_list(skip_cvm_codes, save_threshold)
+        results = self._fetch_companies_details(companies_list, skip_cvm_codes, save_callback, save_threshold)
 
         return results
 
-    def _fetch_companies(self) -> List[Dict]:
+    def _fetch_companies_list(self, skip_cvm_codes: Optional[Set[str]] = None, save_threshold: Optional[int] = None) -> List[Dict]:
         """
         Busca o conjunto inicial de empresas disponíveis na B3.
 
@@ -81,6 +52,8 @@ class CompanyScraper:
         """
         PAGE_NUMBER = 1
         PAGE_SIZE = 120
+        logging_utils.log_message("Get Existing Companies", level="info")
+
         results = []
         start_time = time.time()
 
@@ -91,7 +64,7 @@ class CompanyScraper:
                 "pageSize": PAGE_SIZE,
             }
             token = self._encode_payload(payload)
-            url = self.endpoint_initial + token
+            url = self.endpoint_companies_list + token
             response = _fetch_with_retry(self.session, url)
             data = response.json()
 
@@ -123,6 +96,39 @@ class CompanyScraper:
         """
         return base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
 
+    def _fetch_companies_details(self, companies_list: List[Dict], skip_cvm_codes: Optional[Set[str]] = None, save_callback: Optional[Callable[[List[dict]], None]] = None, save_threshold: Optional[int] = None) -> List[Dict]:
+
+        logging_utils.log_message("Start CompanyB3Scraper fetch_all", level="info")
+        buffer = []
+        results = []
+        start_time = time.time()
+
+        for i, entry in enumerate(companies_list):
+            cvm_code = entry.get("codeCVM")
+            if not cvm_code or cvm_code in skip_cvm_codes:
+                continue
+
+            try:
+                detail = self._fetch_detail(str(cvm_code))
+                parsed = self._parse_company(entry, detail)
+                buffer.append(parsed)
+                results.append(parsed)
+
+                progress={"index": i, "size": len(companies_list), "start_time": start_time}
+                logging_utils.log_message(f"cvm_code: {cvm_code} ", level="info", progress=progress)
+
+                remaining_items = len(companies_list) - i - 1
+                if (remaining_items % save_threshold == 0) or (remaining_items == 0):
+                    if callable(save_callback):
+                        save_callback(buffer)
+                        logging_utils.log_message(f"Saved {len(buffer)} companies (partial)", level="info")
+                        buffer.clear()
+
+            except Exception as e:
+                logging_utils.log_message(f"erro {e}", level="warning")
+
+        return results
+
     def _fetch_detail(self, cvm_code: str) -> Dict:
         """
         Busca os detalhes de uma empresa a partir do código CVM.
@@ -143,7 +149,7 @@ class CompanyScraper:
         """
         Combina os dados do resultado base com os detalhes e retorna um dicionário padronizado.
 
-        :param base: Dados iniciais da empresa (GetInitialCompanies)
+        :param base: Dados iniciais da empresa (Getcompanies_listCompanies)
         :param detail: Detalhes adicionais da empresa (GetDetail)
         :return: Dicionário padronizado
         """
