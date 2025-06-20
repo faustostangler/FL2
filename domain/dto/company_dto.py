@@ -1,47 +1,69 @@
 from dataclasses import dataclass
 from typing import Optional
-from datetime import datetime
 
 @dataclass(frozen=True)
-class NSDDTO:
-    nsd: int
-    company_name: Optional[str]
-    quarter: Optional[str]
-    version: Optional[str]
-    nsd_type: Optional[str]
-    dri: Optional[str]
-    auditor: Optional[str]
-    responsible_auditor: Optional[str]
-    protocol: Optional[str]
-    sent_date: Optional[str]
-    reason: Optional[str]
+class CompanyDTO:
+    """Representa os dados estruturados de uma empresa listada na B3."""
+
+    cvm_code: Optional[str]
+    company_name: str
+    ticker: str
+    ticker_codes: Optional[str]
+    isin_codes: Optional[str]
+    trading_name: Optional[str]
+    sector: Optional[str]
+    subsector: Optional[str]
+    segment: Optional[str]
+    listing: Optional[str]
+    activity: Optional[str]
+    registrar: Optional[str]
+    cnpj: Optional[str]
+    website: Optional[str]
+
+    company_type: Optional[str]
+    status: Optional[str]
+    b3_code: Optional[str]
+    company_category: Optional[str]
+    corporate_name: Optional[str]
+    registration_date: Optional[str]
+    start_situation_date: Optional[str]
+    situation: Optional[str]
+    situation_date: Optional[str]
+    country: Optional[str]
+    state: Optional[str]
+    city: Optional[str]
 
     @staticmethod
-    def from_dict(raw: dict) -> "NSDDTO":
+    def from_dict(raw: dict) -> "CompanyDTO":
         """
-        Constrói um NSDDTO a partir de um dicionário bruto vindo do scraping.
-
-        Converte valores de datas para string no formato 'YYYY-MM-DD' ou 'YYYY-MM-DD HH:MM:SS',
-        caso já estejam como datetime. Não realiza parsing — espera-se que o HTML já tenha
-        sido transformado em tipos Python apropriados.
+        Constrói um DTO imutável a partir de um dicionário bruto (normalmente vindo do scraper).
         """
-        def format_date(val: Optional[datetime]) -> Optional[str]:
-            if isinstance(val, datetime):
-                return val.strftime("%Y-%m-%d %H:%M:%S")
-            if isinstance(val, str):
-                return val.strip()
-            return None
+        return CompanyDTO(
+            cvm_code=raw.get("cvm_code"),
+            company_name=raw["company_name"],
+            ticker=raw["ticker"],
+            ticker_codes=raw.get("ticker_codes"),
+            isin_codes=raw.get("isin_codes"),
+            trading_name=raw.get("trading_name"),
+            sector=raw.get("sector"),
+            subsector=raw.get("subsector"),
+            segment=raw.get("segment"),
+            listing=raw.get("listing"),
+            activity=raw.get("activity"),
+            registrar=raw.get("registrar"),
+            cnpj=raw.get("cnpj"),
+            website=raw.get("website"),
 
-        return NSDDTO(
-            nsd=int(raw.get("nsd", 0)),
-            company_name=raw.get("company_name"),
-            quarter=format_date(raw.get("quarter")),
-            version=raw.get("version"),
-            nsd_type=raw.get("nsd_type"),
-            dri=raw.get("dri"),
-            auditor=raw.get("auditor"),
-            responsible_auditor=raw.get("responsible_auditor"),
-            protocol=raw.get("protocol"),
-            sent_date=format_date(raw.get("sent_date")),
-            reason=raw.get("reason")
+            company_type=raw.get("company_type"),
+            status=raw.get("status"),
+            b3_code=raw.get("b3_code"),
+            company_category=raw.get("company_category"),
+            corporate_name=raw.get("corporate_name"),
+            registration_date=raw.get("registration_date"),
+            start_situation_date=raw.get("start_situation_date"),
+            situation=raw.get("situation"),
+            situation_date=raw.get("situation_date"),
+            country=raw.get("country"),
+            state=raw.get("state"),
+            city=raw.get("city"),
         )
