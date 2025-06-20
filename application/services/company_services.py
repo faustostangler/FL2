@@ -9,6 +9,12 @@ class CompanyService:
     """
 
     def __init__(self, repository: SQLiteCompanyRepository, scraper: CompanyB3Scraper):
+        """
+        Initializes the CompanyService with the provided repository and scraper.
+        Args:
+            repository (SQLiteCompanyRepository): The repository instance for company data persistence.
+            scraper (CompanyB3Scraper): The scraper instance for fetching company data from B3.
+        """
         logging_utils.log_message("Start CompanyService", level="info")
 
         self.sync_usecase = SyncCompaniesUseCase(repository, scraper)

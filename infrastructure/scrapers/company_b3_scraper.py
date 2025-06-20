@@ -40,9 +40,9 @@ class CompanyB3Scraper:
         save_threshold = save_threshold or config.global_settings.save_threshold or 50
 
         companies_list = self._fetch_companies_list(skip_cvm_codes, save_threshold)
-        results = self._fetch_companies_details(companies_list, skip_cvm_codes, save_callback, save_threshold)
+        companies = self._fetch_companies_details(companies_list, skip_cvm_codes, save_callback, save_threshold)
 
-        return results
+        return companies
 
     def _fetch_companies_list(self, skip_cvm_codes: Optional[Set[str]] = None, save_threshold: Optional[int] = None) -> List[Dict]:
         """
