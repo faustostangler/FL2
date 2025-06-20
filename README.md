@@ -4,6 +4,8 @@
 Finance Ledger Yearly (**FLY**) is a comprehensive **financial data app** designed to automate the extraction and processing of financial data from various online sources. The app retrieves detailed company information, financial documents, and **standardized financial statements**, storing this data in a local database for easy access and analysis.
 
 ## How It Works, Behind the Wheels
+FLY is designed following the Hexagonal Architecture (Ports and Adapters) pattern to ensure a clear separation between business logic and technical details. For a complete explanation of the design, see our [Architecture Document](ARCHITECTURE.md).
+
 1. **Company Information Scraping**  
    - Finds company names, tickers, sectors, and registration data.
    - Saves the latest updates to avoid redundant data.
@@ -25,18 +27,6 @@ Finance Ledger Yearly (**FLY**) is a comprehensive **financial data app** design
    - Uses a multi-threaded system to process data efficiently.
    - Tracks memory and execution time to keep things running smoothly.
 
-### Processing Flow
-
-```mermaid
-graph TD
-    A[CLI \`run_app\`] --> B[CompanyProcessor]
-    B --> C[NsdProcessor]
-    C --> D[StatementsProcessor]
-    D --> E[IntelProcessor]
-    E --> F[EventsStatementsProcessor]
-    F --> G[MarketProcessor / StockProcessor]
-    G --> H[(SQLite Databases)]
-```
 
 ## How to Install
 
