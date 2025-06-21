@@ -171,6 +171,11 @@ class CompanyB3Scraper:
         # Iterate over each company entry in the list
         for i, entry in enumerate(companies_list):
             cvm_code = entry.get("codeCVM")
+
+            # Log progress
+            progress = {"index": i, "size": len(companies_list), "start_time": start_time}
+            self.logger.log(f"cvm_code: {cvm_code} ", level="info", progress=progress)
+
             # Skip if cvm_code is missing or in the skip list
             if not cvm_code or cvm_code in skip_cvm_codes:
                 continue
@@ -182,10 +187,6 @@ class CompanyB3Scraper:
                 parsed = self._parse_company(entry, detail)
                 buffer.append(parsed)
                 results.append(parsed)
-
-                # Log progress
-                progress = {"index": i, "size": len(companies_list), "start_time": start_time}
-                self.logger.log(f"cvm_code: {cvm_code} ", level="info", progress=progress)
 
                 # Check if it's time to save the buffer
                 remaining_items = len(companies_list) - i - 1
