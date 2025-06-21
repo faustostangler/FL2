@@ -16,7 +16,7 @@ class NsdService:
         logger.log("Start NsdService", level="info")
 
         self.sync_usecase = SyncNSDUseCase(
-            logger=logger, repository=repository, scraper=scraper
+            logger=self.logger, repository=repository, scraper=scraper
         )
 
     def run(self) -> None:
