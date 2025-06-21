@@ -3,11 +3,10 @@ from infrastructure.logging import Logger
 
 from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
+from infrastructure.scrapers.nsd_scraper import NsdScraper
 from application.services.company_services import CompanyService
-
-# from infrastructure.repositories.nsd_repository import SQLiteNSDRepository
-# from infrastructure.scrapers.nsd_scraper import NsdScraper
-# from application.services.nsd_service import NsdService
+from application.services.nsd_service import NsdService
+from infrastructure.repositories.nsd_repository import SQLiteNSDRepository
 
 
 class CLIController:
@@ -31,7 +30,7 @@ class CLIController:
         self.logger.log("Start FLY CLI", level="info")
 
         self.run_company_sync()
-        # self.run_nsd_sync()
+        self.run_nsd_sync()
 
         print("done")
 
@@ -42,19 +41,21 @@ class CLIController:
         self.logger.log("Start Companies Sync Use Case", level="info")
 
         repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
-        scraper = CompanyB3Scraper(config=self.config, logger=self.logger, data_cleaner=self.data_cleaner)
+        scraper = CompanyB3Scraper(
+            config=self.config, logger=self.logger, data_cleaner=self.data_cleaner
+        )
         service = CompanyService(logger=self.logger, repository=repo, scraper=scraper)
 
         service.run()
 
-    # def run_nsd_sync(self):
-    #     """Run the NSD synchronization workflow."""
+    def run_nsd_sync(self):
+        """Run the NSD synchronization workflow."""
 
-    #     # Log the start of the NSD synchronization
-    #     self.logger.log("Start NSD Sync Use Case", level="info")
+        # Log the start of the NSD synchronization
+        self.logger.log("Start NSD Sync Use Case", level="info")
 
-    #     repo = SQLiteNSDRepository(config=self.config)
-    #     scraper = NsdScraper(config=self.config)
-    #     service = NsdService(repo, scraper)
+        repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
+        scraper = NsdScraper(config=self.config, logger=self.logger)
+        service = NsdService(logger=self.logger, repository=repo, scraper=scraper)
 
-    #     service.run()
+        service.run()
