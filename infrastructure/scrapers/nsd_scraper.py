@@ -9,16 +9,21 @@ from bs4 import BeautifulSoup
 from infrastructure.config import Config
 from infrastructure.logging import Logger
 from infrastructure.helpers import FetchUtils
+from infrastructure.helpers.data_cleaner import DataCleaner
 
 
 class NsdScraper:
     """Scraper adapter responsible for fetching raw NSD documents."""
 
-    BASE_URL = "https://example.com/nsd/{nsd}"
+    BASE_URL = (
+        "https://www.rad.cvm.gov.br/ENET/frmGerenciaPaginaFRE.aspx?"
+        "NumeroSequencialDocumento={nsd}&CodigoTipoInstituicao=1"
+    )
 
-    def __init__(self, config: Config, logger: Logger):
+    def __init__(self, config: Config, logger: Logger, data_cleaner: DataCleaner):
         self.config = config
         self.logger = logger
+        self.data_cleaner = data_cleaner
         self.fetch_utils = FetchUtils(config, logger)
         self.session = requests.Session()
 
@@ -58,6 +63,8 @@ class NsdScraper:
                 break
 
             parsed = self._parse_html(nsd, response.text)
+            if not parsed:
+                break
             results.append(parsed)
 
             self.logger.log(
@@ -75,22 +82,33 @@ class NsdScraper:
 
         soup = BeautifulSoup(html, "html.parser")
 
-        def get_value(label: str) -> Optional[str]:
-            cell = soup.find("td", string=lambda x: x and label in x)
-            if cell and cell.find_next("td"):
-                return cell.find_next("td").get_text(strip=True)
-            return None
+        def text_of(selector: str) -> Optional[str]:
+            el = soup.select_one(selector)
+            return el.get_text(strip=True) if el else None
 
-        return {
+        data: Dict[str, Optional[str]] = {
             "nsd": nsd,
-            "company_name": get_value("Companhia"),
-            "quarter": get_value("Refer\u00eancia"),
-            "version": get_value("Vers\u00e3o"),
-            "nsd_type": get_value("Tipo"),
-            "dri": get_value("Diretor"),
-            "auditor": get_value("Auditor"),
-            "responsible_auditor": get_value("Resp."),
-            "protocol": get_value("Protocolo"),
-            "sent_date": get_value("Envio"),
-            "reason": get_value("Assunto"),
+            "company_name": self.data_cleaner.clean_text(text_of("#lblNomeCompanhia")),
+            "dri": self.data_cleaner.clean_text(text_of("#lblNomeDRI")),
+            "auditor": self.data_cleaner.clean_text(text_of("#lblAuditor")),
+            "responsible_auditor": self.data_cleaner.clean_text(text_of("#lblResponsavelTecnico")),
+            "protocol": self.data_cleaner.clean_text(text_of("#lblProtocolo")),
+            "reason": self.data_cleaner.clean_text(text_of("#lblMotivoCancelamentoReapresentacao")),
         }
+
+        nsd_type_version = text_of("#lblDescricaoCategoria")
+        quarter = text_of("#lblDataDocumento")
+        sent_date = text_of("#lblDataEnvio")
+
+        if nsd_type_version:
+            parts = nsd_type_version.split()
+            data["version"] = parts[-1]
+            data["nsd_type"] = " ".join(parts[:-2])
+
+        data["quarter"] = self.data_cleaner.clean_date(quarter)
+        data["sent_date"] = self.data_cleaner.clean_date(sent_date)
+
+        if data["sent_date"] is None:
+            return {}
+
+        return data

@@ -55,7 +55,9 @@ class CLIController:
         self.logger.log("Start NSD Sync Use Case", level="info")
 
         repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
-        scraper = NsdScraper(config=self.config, logger=self.logger)
+        scraper = NsdScraper(
+            config=self.config, logger=self.logger, data_cleaner=self.data_cleaner
+        )
         service = NsdService(logger=self.logger, repository=repo, scraper=scraper)
 
         service.run()
