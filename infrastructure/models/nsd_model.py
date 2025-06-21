@@ -1,12 +1,11 @@
 from sqlalchemy.orm import Mapped, mapped_column
 from typing import Optional
-
-from infrastructure.models.company_model import Base
+from .company_model import Base
 from domain.dto.nsd_dto import NSDDTO
-
 
 class NSDModel(Base):
     """ORM model for the tbl_nsd table."""
+
     __tablename__ = "tbl_nsd"
 
     nsd: Mapped[int] = mapped_column(primary_key=True)
