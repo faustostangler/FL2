@@ -1,47 +1,57 @@
-# infrastructure/repositories/nsd_repository.py
-
 from typing import List
-from sqlalchemy.orm import Session
-from sqlalchemy import select
-from domain.dto.nsd_dto import NSDDTO
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-# from domain.ports.nsd_repository import NSDRepository
+from infrastructure.repositories.base_repository import BaseRepository
+from infrastructure.models.nsd_model import Base, NSDModel
+from domain.dto.nsd_dto import NSDDTO
 from infrastructure.config import Config
 from infrastructure.logging import Logger
-# from infrastructure.models import NSDModel  # Assumindo que foi movido de database.models
 
 
-# class SQLiteNSDRepository(NSDRepository):
-#     """
-#     Implementação concreta do repositório NSD usando SQLite + SQLAlchemy.
-#     Responsável por persistir objetos NSDDTO na tabela 'nsd_documents'.
-#     """
+class SQLiteNSDRepository(BaseRepository[NSDDTO]):
+    """Concrete repository for NSDDTO using SQLite via SQLAlchemy."""
 
-#     def __init__(self, db_path: str = None):
-#         self.db_path = db_path
+    def __init__(self, config: Config, logger: Logger):
+        self.config = config
+        self.logger = logger
+        self.logger.log("Start SQLiteNSDRepository", level="info")
 
-#     def list_existing_ids(self) -> List[str]:
-#         """
-#         Retorna uma lista dos identificadores únicos dos documentos NSD
-#         já salvos no banco (e.g., hash ou url).
-#         """
-#         with create_sqlite_session(self.db_path) as session:
-#             result = session.execute(select(NSDModel.document_url)).scalars().all()
-#             return result
+        self.engine = create_engine(config.database.connection_string)
+        self.Session = sessionmaker(bind=self.engine)
+        Base.metadata.create_all(self.engine)
 
-#     def save_all(self, data: List[NSDDTO]) -> None:
-#         """
-#         Salva uma lista de documentos NSD no banco. Usa upsert simples
-#         baseado em document_url como chave natural.
-#         """
-#         if not data:
-#             return
+    def save_all(self, items: List[NSDDTO]) -> None:
+        session = self.Session()
+        try:
+            for dto in items:
+                obj = NSDModel.from_dto(dto)
+                session.merge(obj)
+            session.commit()
+        finally:
+            session.close()
 
-#         with create_sqlite_session(self.db_path) as session:
-#             for dto in data:
-#                 existing = session.get(NSDModel, dto.document_url)
-#                 if existing is None:
-#                     model = NSDModel.from_dto(dto)
-#                     session.add(model)
-#             session.commit()
+    def get_all(self) -> List[NSDDTO]:
+        session = self.Session()
+        try:
+            results = session.query(NSDModel).all()
+            return [obj.to_dto() for obj in results]
+        finally:
+            session.close()
 
+    def has_item(self, identifier: int) -> bool:
+        session = self.Session()
+        try:
+            return session.query(NSDModel).filter_by(nsd=identifier).first() is not None
+        finally:
+            session.close()
+
+    def get_by_id(self, id: int) -> NSDDTO:
+        session = self.Session()
+        try:
+            obj = session.query(NSDModel).filter_by(nsd=id).first()
+            if not obj:
+                raise ValueError(f"NSD not found: {id}")
+            return obj.to_dto()
+        finally:
+            session.close()
