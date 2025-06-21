@@ -16,8 +16,24 @@ class CompanyB3Scraper:
     In a real implementation, this could use requests, BeautifulSoup, or Selenium.
     """
     def __init__(self, config: Config, logger: Logger, data_cleaner: DataCleaner):
-        """
-        companies_listizes the SQLite database connection and ensures table creation.
+        """Set up configuration, logger and helper utilities for the scraper.
+
+        Args:
+            config (Config): Global configuration with B3 endpoints.
+            logger (Logger): Logger used for progress and error messages.
+
+        Attributes:
+            config (Config): Stored configuration instance.
+            logger (Logger): Stored logger instance.
+            fetch_utils (FetchUtils): Utility for HTTP requests with retries.
+            language (str): Language code for B3 API requests.
+            endpoint_companies_list (str): URL for the companies list endpoint.
+            endpoint_detail (str): URL for the company detail endpoint.
+            endpoint_financial (str): URL for the financial data endpoint.
+            session (requests.Session): Reusable HTTP session.
+
+        Returns:
+            None
         """
         # Store configuration and logger for use throughout the scraper
         self.config = config
