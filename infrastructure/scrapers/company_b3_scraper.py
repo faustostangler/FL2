@@ -19,7 +19,7 @@ class CompanyB3Scraper:
         """Set up configuration, logger and helper utilities for the scraper.
 
         Args:
-            config (Config): Global configuration with B3 endpoints.
+            config (Config): Global configuration with B3 company_endpoint.
             logger (Logger): Logger used for progress and error messages.
 
         Attributes:
@@ -46,16 +46,16 @@ class CompanyB3Scraper:
         # Initialize FetchUtils for HTTP request utilities
         self.fetch_utils = FetchUtils(config, logger)
 
-        # Set language and API endpoints from configuration
+        # Set language and API company_endpoint from configuration
         self.language = config.b3.language
-        self.endpoint_companies_list = config.b3.endpoints["initial"]
-        self.endpoint_detail = config.b3.endpoints["detail"]
-        self.endpoint_financial = config.b3.endpoints["financial"]
+        self.endpoint_companies_list = config.b3.company_endpoint["initial"]
+        self.endpoint_detail = config.b3.company_endpoint["detail"]
+        self.endpoint_financial = config.b3.company_endpoint["financial"]
 
         # Initialize a requests session for HTTP requests
         self.session = requests.Session()
 
-    def fetch_all(self, skip_cvm_codes: Optional[Set[str]] = None, save_callback: Optional[Callable[[List[dict]], None]] = None, save_threshold: Optional[int] = None) -> List[Dict]:
+    def fetch_all(self, skip_cvm_codes: Optional[Set[str]] = None, save_callback: Optional[Callable[[List[dict]], None]] = None, threshold: Optional[int] = None) -> List[Dict]:
         """
         Fetches raw data for all companies.
 
@@ -64,17 +64,17 @@ class CompanyB3Scraper:
         # Ensure skip_cvm_codes is a set (to avoid None and allow fast lookup)
         skip_cvm_codes = skip_cvm_codes or set()
         # Determine the save threshold (number of companies before saving buffer)
-        save_threshold = save_threshold or self.config.global_settings.save_threshold or 50
+        threshold = threshold or self.config.global_settings.threshold or 50
 
         # Fetch the initial list of companies from B3, possibly skipping some CVM codes
-        companies_list = self._fetch_companies_list(skip_cvm_codes, save_threshold)
+        companies_list = self._fetch_companies_list(skip_cvm_codes, threshold)
         # Fetch and parse detailed information for each company, with optional skipping and periodic saving
-        companies = self._fetch_companies_details(companies_list, skip_cvm_codes, save_callback, save_threshold)
+        companies = self._fetch_companies_details(companies_list, skip_cvm_codes, save_callback, threshold)
 
         # Return the complete list of parsed company details
         return companies
 
-    def _fetch_companies_list(self, skip_cvm_codes: Optional[Set[str]] = None, save_threshold: Optional[int] = None) -> List[Dict]:
+    def _fetch_companies_list(self, skip_cvm_codes: Optional[Set[str]] = None, threshold: Optional[int] = None) -> List[Dict]:
         """
         Busca o conjunto inicial de empresas disponíveis na B3.
 
@@ -138,14 +138,14 @@ class CompanyB3Scraper:
         """
         return base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
 
-    def _fetch_companies_details(self, companies_list: List[Dict], skip_cvm_codes: Optional[Set[str]] = None, save_callback: Optional[Callable[[List[dict]], None]] = None, save_threshold: Optional[int] = None) -> List[Dict]:
+    def _fetch_companies_details(self, companies_list: List[Dict], skip_cvm_codes: Optional[Set[str]] = None, save_callback: Optional[Callable[[List[dict]], None]] = None, threshold: Optional[int] = None) -> List[Dict]:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
         Args:
             companies_list (List[Dict]): List of company dictionaries, each containing at least a "codeCVM" key.
             skip_cvm_codes (Optional[Set[str]], optional): Set of CVM codes to skip during processing. Defaults to None.
             save_callback (Optional[Callable[[List[dict]], None]], optional): Callback function to save buffered company details periodically. Defaults to None.
-            save_threshold (Optional[int], optional): Number of companies to process before triggering the save_callback. If not provided, uses configuration or defaults to 50.
+            threshold (Optional[int], optional): Number of companies to process before triggering the save_callback. If not provided, uses configuration or defaults to 50.
         Returns:
             List[Dict]: List of parsed company detail dictionaries.
         Logs:
@@ -156,7 +156,7 @@ class CompanyB3Scraper:
         """
         
         # Determine the save threshold (number of companies before saving buffer)
-        save_threshold = save_threshold or self.config.global_settings.save_threshold or 50
+        threshold = threshold or self.config.global_settings.threshold or 50
 
         # Log the start of the fetch_all process for company details
         self.logger.log("Start CompanyB3Scraper fetch_all", level="info")
@@ -190,7 +190,7 @@ class CompanyB3Scraper:
 
                 # Check if it's time to save the buffer
                 remaining_items = len(companies_list) - i - 1
-                if (remaining_items % save_threshold == 0) or (remaining_items == 0):
+                if (remaining_items % threshold == 0) or (remaining_items == 0):
                     if callable(save_callback):
                         save_callback(buffer)
                         self.logger.log(f"Saved {len(buffer)} companies (partial)", level="info")

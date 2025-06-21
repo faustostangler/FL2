@@ -29,7 +29,8 @@ class CLIController:
         # Log the start of the CLI application
         self.logger.log("Start FLY CLI", level="info")
 
-        self.run_company_sync()
+        self.logger.log("Skip Companies", level="warning")
+        # self.run_company_sync()
         self.run_nsd_sync()
 
         print("done")
