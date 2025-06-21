@@ -11,26 +11,22 @@ WORDS_TO_REMOVE = [
 
 @dataclass(frozen=True)
 class DomainConfig:
-    """Domain-specific configuration settings.
+    """
+    GlobalSettingsConfig holds global configuration settings for the application.
 
     Attributes:
-        words_to_remove: List of words removed during text normalization.
-        nsd_columns: Default NSD column names used when loading data.
+        words_to_remove (list): A list of words to be removed, initialized with the default value from WORDS_TO_REMOVE.
     """
-
     # Configuration attributes with defaults from WORDS_TO_REMOVE
-    words_to_remove: list = field(
-        default_factory=lambda: WORDS_TO_REMOVE.copy()
-    )
+    words_to_remove: list = field(default_factory=lambda: WORDS_TO_REMOVE.copy())
 
 def load_domain_config() -> DomainConfig:
-    """Load domain settings.
+    """
+    Loads the global domain configuration settings.
 
     Returns:
-        DomainConfig: Instance with default ``words_to_remove`` and
-        ``nsd_columns`` values.
+        GlobalSettingsConfig: An instance of GlobalSettingsConfig initialized with default constants for wait and save_threshold.
     """
-
     # Load domain settings using default constants
     return DomainConfig(
         words_to_remove=WORDS_TO_REMOVE,
