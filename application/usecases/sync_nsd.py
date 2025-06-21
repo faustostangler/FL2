@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from infrastructure.logging import Logger
 from domain.dto.nsd_dto import NSDDTO
 from infrastructure.repositories.nsd_repository import SQLiteNSDRepository
@@ -20,6 +19,7 @@ class SyncNSDUseCase:
         self.scraper = scraper
 
     def execute(self) -> None:
+
         """Run the NSD synchronization workflow."""
         raw_list = self.scraper.fetch_all()
         dtos = [NSDDTO.from_dict(item) for item in raw_list]

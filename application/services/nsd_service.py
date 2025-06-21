@@ -11,7 +11,7 @@ class NsdService:
 
     def __init__(
         self, logger: Logger, repository: SQLiteNSDRepository, scraper: NsdScraper
-    ):
+    ) -> None:
         self.logger = logger
         logger.log("Start NsdService", level="info")
 
