@@ -22,6 +22,7 @@ class NSDModel(Base):
 
     @staticmethod
     def from_dto(dto: NSDDTO) -> "NSDModel":
+        """Converts a NSDDTO into an NSDModel for persistence."""
         return NSDModel(
             nsd=dto.nsd,
             company_name=dto.company_name,
@@ -37,6 +38,7 @@ class NSDModel(Base):
         )
 
     def to_dto(self) -> NSDDTO:
+        """Converts this ORM model back into a NSDDTO."""
         return NSDDTO(
             nsd=self.nsd,
             company_name=self.company_name,
