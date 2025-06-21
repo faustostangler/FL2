@@ -2,7 +2,7 @@ from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
 from application.services.company_services import CompanyService
 
-from infrastructure.repositories import SQLiteNSDRepository
+from infrastructure.repositories.nsd_repository import SQLiteNSDRepository
 from infrastructure.scrapers.nsd_scraper import NsdScraper
 from application.services.nsd_service import NsdService
 
