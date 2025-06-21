@@ -15,13 +15,14 @@ class CompanyB3Scraper:
     Scraper adapter responsible for fetching raw company data.
     In a real implementation, this could use requests, BeautifulSoup, or Selenium.
     """
-    def __init__(self, config: Config, logger: Logger):
+    def __init__(self, config: Config, logger: Logger, data_cleaner: DataCleaner):
         """
         companies_listizes the SQLite database connection and ensures table creation.
         """
         # Store configuration and logger for use throughout the scraper
         self.config = config
         self.logger = logger
+        self.data_cleaner = data_cleaner
 
         # Log the initialization of the CompanyB3Scraper
         self.logger.log("Start CompanyB3Scraper", level="info")
@@ -224,34 +225,34 @@ class CompanyB3Scraper:
             industry = detail.get("industryClassification", "")
             parts = [p.strip() for p in industry.split("/")]
 
-            ticker = DataCleaner.clean_text(base.get("issuingCompany"))
-            company_name = DataCleaner.clean_text(base.get("companyName"))
-            cvm_code = DataCleaner.clean_text(base.get("codeCVM"))
-            cnpj = DataCleaner.clean_text(detail.get("cnpj"))
-            trading_name = DataCleaner.clean_text(detail.get("tradingName"))
-            listing = DataCleaner.clean_text(detail.get("listingSegment"))
-            registrar = DataCleaner.clean_text(detail.get("registrar"))
+            ticker = self.data_cleaner.clean_text(base.get("issuingCompany"))
+            company_name = self.data_cleaner.clean_text(base.get("companyName"))
+            cvm_code = self.data_cleaner.clean_text(base.get("codeCVM"))
+            cnpj = self.data_cleaner.clean_text(detail.get("cnpj"))
+            trading_name = self.data_cleaner.clean_text(detail.get("tradingName"))
+            listing = self.data_cleaner.clean_text(detail.get("listingSegment"))
+            registrar = self.data_cleaner.clean_text(detail.get("registrar"))
             website = detail.get("website")
-            sector = DataCleaner.clean_text(parts[0]) if len(parts) > 0 else None
-            subsector = DataCleaner.clean_text(parts[1]) if len(parts) > 1 else None
-            segment = DataCleaner.clean_text(parts[2]) if len(parts) > 2 else None
+            sector = self.data_cleaner.clean_text(parts[0]) if len(parts) > 0 else None
+            subsector = self.data_cleaner.clean_text(parts[1]) if len(parts) > 1 else None
+            segment = self.data_cleaner.clean_text(parts[2]) if len(parts) > 2 else None
 
-            market_indicator = DataCleaner.clean_text(base.get("marketIndicator") or detail.get("marketIndicator"))
-            type_bdr = DataCleaner.clean_text(base.get("typeBDR") or detail.get("typeBDR"))
-            date_listing = DataCleaner.clean_date(base.get("dateListing"))
-            status = DataCleaner.clean_text(base.get("status") or detail.get("status"))
-            segment_b3 = DataCleaner.clean_text(base.get("segment"))
-            segment_eng = DataCleaner.clean_text(base.get("segmentEng"))
-            company_type = DataCleaner.clean_text(base.get("type"))
-            market = DataCleaner.clean_text(base.get("market") or detail.get("market"))
+            market_indicator = self.data_cleaner.clean_text(base.get("marketIndicator") or detail.get("marketIndicator"))
+            type_bdr = self.data_cleaner.clean_text(base.get("typeBDR") or detail.get("typeBDR"))
+            date_listing = self.data_cleaner.clean_date(base.get("dateListing"))
+            status = self.data_cleaner.clean_text(base.get("status") or detail.get("status"))
+            segment_b3 = self.data_cleaner.clean_text(base.get("segment"))
+            segment_eng = self.data_cleaner.clean_text(base.get("segmentEng"))
+            company_type = self.data_cleaner.clean_text(base.get("type"))
+            market = self.data_cleaner.clean_text(base.get("market") or detail.get("market"))
             industry = detail.get("industryClassification")
             industry_eng = detail.get("industryClassificationEng")
             activity = detail.get("activity")
-            institution_common = DataCleaner.clean_text(detail.get("institutionCommon"))
-            institution_pref = DataCleaner.clean_text(detail.get("institutionPreferred"))
-            last_date = DataCleaner.clean_date(detail.get("lastDate"))
-            category = DataCleaner.clean_text(detail.get("describleCategoryBVMF"))
-            quotation_date = DataCleaner.clean_date(detail.get("dateQuotation"))
+            institution_common = self.data_cleaner.clean_text(detail.get("institutionCommon"))
+            institution_pref = self.data_cleaner.clean_text(detail.get("institutionPreferred"))
+            last_date = self.data_cleaner.clean_date(detail.get("lastDate"))
+            category = self.data_cleaner.clean_text(detail.get("describleCategoryBVMF"))
+            quotation_date = self.data_cleaner.clean_date(detail.get("dateQuotation"))
 
             return {
                 "ticker": ticker,

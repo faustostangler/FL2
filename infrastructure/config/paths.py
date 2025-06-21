@@ -23,7 +23,7 @@ class PathConfig:
 
     def __post_init__(self):
         # Define o root_dir como o diretório do projeto
-        root = Path(__file__).parent.parent.resolve()
+        root = Path(__file__).resolve().parent.parent.parent
         object.__setattr__(self, "root_dir", root)
         object.__setattr__(self, "temp_dir", root / TEMP_DIR)
         object.__setattr__(self, "log_dir", root / LOG_DIR)

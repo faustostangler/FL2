@@ -7,7 +7,6 @@ from typing import Optional, List
 from infrastructure.config import Config
 from infrastructure.logging import Logger
 
-
 class DataCleaner:
     """
     Classe utilitária para normalização de dados brutos (textos, datas, números).

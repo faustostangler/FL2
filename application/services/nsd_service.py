@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from infrastructure.logging import Logger
-from infrastructure.repositories.nsd_repository import SQLiteNSDRepository
-from infrastructure.scrapers.nsd_scraper import NsdScraper
+# from infrastructure.repositories.nsd_repository import SQLiteNSDRepository
+# from infrastructure.scrapers.nsd_scraper import NsdScraper
 
 
 class NsdService:
