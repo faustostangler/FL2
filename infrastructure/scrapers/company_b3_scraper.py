@@ -202,7 +202,7 @@ class CompanyB3Scraper:
         # Build the full URL for the detail endpoint
         url = self.endpoint_detail + token
         # Fetch the company detail data with retry logic
-        response = _fetch_with_retry(self.session, url)
+        response = self.fetch_utils.fetch_with_retry(self.session, url)
         # Return the parsed JSON response
         return response.json()
 

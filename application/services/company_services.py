@@ -19,7 +19,7 @@ class CompanyService:
         self.logger = logger
         logger.log("Start CompanyService", level="info")
 
-        self.sync_usecase = SyncCompaniesUseCase(repository, scraper)
+        self.sync_usecase = SyncCompaniesUseCase(logger=self.logger, repository=repository, scraper=scraper)
 
     def run(self) -> None:
         """
