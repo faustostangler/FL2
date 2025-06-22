@@ -1,6 +1,7 @@
 from infrastructure.config import Config
 from infrastructure.logging import Logger
 from infrastructure.factories import create_data_cleaner
+
 from presentation import CLIController
 
 # Executa a aplicação principal se este arquivo for executado diretamente
