@@ -6,7 +6,7 @@ WORDS_TO_REMOVE = [
     "EXTRAJUDICIAL",
     "EM RECUPERACAO JUDICIAL",
     "EM REC JUDICIAL",
-    "EMPRESA FALIDA"
+    "EMPRESA FALIDA", 
 ]
 
 @dataclass(frozen=True)
@@ -25,7 +25,7 @@ def load_domain_config() -> DomainConfig:
     Loads the global domain configuration settings.
 
     Returns:
-        GlobalSettingsConfig: An instance of GlobalSettingsConfig initialized with default constants for wait and save_threshold.
+        GlobalSettingsConfig: An instance of GlobalSettingsConfig initialized with default constants for wait and threshold.
     """
     # Load domain settings using default constants
     return DomainConfig(

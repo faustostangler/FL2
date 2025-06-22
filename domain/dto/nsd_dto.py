@@ -9,14 +9,14 @@ from datetime import datetime
 class NSDDTO:
     nsd: int
     company_name: Optional[str]
-    quarter: Optional[str]
+    quarter: Optional[datetime]
     version: Optional[str]
     nsd_type: Optional[str]
     dri: Optional[str]
     auditor: Optional[str]
     responsible_auditor: Optional[str]
     protocol: Optional[str]
-    sent_date: Optional[str]
+    sent_date: Optional[datetime]
     reason: Optional[str]
 
     @staticmethod
@@ -38,13 +38,13 @@ class NSDDTO:
         return NSDDTO(
             nsd=int(raw.get("nsd", 0)),
             company_name=raw.get("company_name"),
-            quarter=format_date(raw.get("quarter")),
+            quarter=raw.get("quarter"),
             version=raw.get("version"),
             nsd_type=raw.get("nsd_type"),
             dri=raw.get("dri"),
             auditor=raw.get("auditor"),
             responsible_auditor=raw.get("responsible_auditor"),
             protocol=raw.get("protocol"),
-            sent_date=format_date(raw.get("sent_date")),
+            sent_date=raw.get("sent_date"),
             reason=raw.get("reason")
         )

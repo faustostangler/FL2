@@ -1,10 +1,12 @@
+from typing import List
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from typing import List
 
 from infrastructure.repositories.base_repository import BaseRepository
 from infrastructure.models.company_model import Base, CompanyModel
 from domain.dto.company_dto import CompanyDTO
+from infrastructure.config import Config
+from infrastructure.logging import Logger
 
 
 class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
@@ -13,7 +15,7 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
     using SQLite and SQLAlchemy for persistence.
     """
 
-    def __init__(self, config, logger):
+    def __init__(self, config: Config, logger: Logger):
         """
         Initializes the SQLite database connection and ensures table creation.
         """
@@ -84,7 +86,7 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
         finally:
             session.close()
 
-    def get_all_cvm_codes(self) -> set[str]:
+    def get_all_primary_keys(self) -> set[str]:
         """
         Retorna um conjunto com todos os códigos CVM já salvos no banco.
 
