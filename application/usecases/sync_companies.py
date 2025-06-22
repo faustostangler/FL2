@@ -11,7 +11,12 @@ class SyncCompaniesUseCase:
     UseCase responsável por sincronizar os dados das empresas da fonte externa com o repositório local.
     """
 
-    def __init__(self, logger: Logger, repository: SQLiteCompanyRepository, scraper: CompanyB3Scraper):
+    def __init__(
+        self,
+        logger: Logger,
+        repository: SQLiteCompanyRepository,
+        scraper: CompanyB3Scraper,
+    ):
         self.logger = logger
         self.logger.log("Start SyncCompaniesUseCase", level="info")
 
@@ -26,7 +31,15 @@ class SyncCompaniesUseCase:
         - Persiste no repositório
         """
         existing_codes = self.repository.get_all_primary_keys()
-        self.scraper.fetch_all(skip_codes=existing_codes, save_callback=self._save_batch)
+
+        # Split the scraping pipeline to reuse low level methods
+        companies_list = self.scraper._fetch_companies_list()
+
+        self.scraper._fetch_companies_details(
+            companies_list=companies_list,
+            skip_codes=existing_codes,
+            save_callback=self._save_batch,
+        )
 
     def _save_batch(self, buffer: List[dict]) -> None:
         dtos = [CompanyDTO.from_dict(d) for d in buffer]
