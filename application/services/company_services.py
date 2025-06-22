@@ -30,8 +30,9 @@ class CompanyService:
         self.logger = logger
         self.config = config
         logger.log("Start CompanyService", level="info")
+        self.max_workers = self.config.global_settings.max_workers
 
-        if (self.config.global_settings.max_workers or 1) > 1:
+        if (self.max_workers or 1) > 1:
             self.sync_usecase = MultiThreadedSyncCompaniesUseCase(
                 config=self.config,
                 logger=self.logger,

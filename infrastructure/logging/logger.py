@@ -73,6 +73,8 @@ class Logger:
             log_fn(full_message, extra=merged_extra)
         except Exception as e:
             print(f"Logging failed: {e} - {full_message}")
+
+
 class SafeFormatter(logging.Formatter):
     def format(self, record):
         # Define valores padrão
