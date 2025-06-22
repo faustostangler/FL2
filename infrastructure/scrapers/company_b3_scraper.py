@@ -35,6 +35,10 @@ class CompanyB3Scraper:
         Returns:
             None
         """
+        # hardcoded parameters
+        self.PAGE_NUMBER = 1
+        self.PAGE_SIZE = 120
+
         # Store configuration and logger for use throughout the scraper
         self.config = config
         self.logger = logger
@@ -84,9 +88,7 @@ class CompanyB3Scraper:
         :return: Lista de empresas com código CVM e nome base.
         """
         # Set initial pagination parameters
-        PAGE_NUMBER = 1
-        PAGE_SIZE = 120
-        self.logger.log("Get Existing Companies", level="info")
+        self.logger.log("Get Existing Companies from B3", level="info")
 
         results = []
         start_time = time.time()
@@ -96,8 +98,8 @@ class CompanyB3Scraper:
             # Build the payload for the current page
             payload = {
             "language": self.language,
-            "pageNumber": PAGE_NUMBER,
-            "pageSize": PAGE_SIZE,
+            "pageNumber": self.PAGE_NUMBER,
+            "pageSize": self.PAGE_SIZE,
             }
             # Encode the payload as required by the B3 API
             token = self._encode_payload(payload)
@@ -116,18 +118,18 @@ class CompanyB3Scraper:
 
             # Log progress for monitoring
             progress = {
-            "index": PAGE_NUMBER - 1,
+            "index": self.PAGE_NUMBER - 1,
             "size": total_pages,
             "start_time": start_time,
             }
-            self.logger.log(f"Page {PAGE_NUMBER}/{total_pages}", level="info", progress=progress)
+            self.logger.log(f"{self.PAGE_NUMBER}/{total_pages}", level="info", progress=progress)
 
             # Check if all pages have been processed
-            if PAGE_NUMBER >= total_pages:
+            if self.PAGE_NUMBER >= total_pages:
                 break
 
             # Move to the next page
-            PAGE_NUMBER += 1
+            self.PAGE_NUMBER += 1
 
         # Return the complete list of companies
         return results
