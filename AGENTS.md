@@ -36,11 +36,12 @@ They are orchestrated by the CLI controller (`CLIController`), which boots the s
 - **Dependencies:**  
   - `SQLiteCompanyRepository`  
   - `CompanyB3Scraper`  
-  - `Logger`  
-- **Behavior:**  
-  1. Load existing CVM codes  
-  2. Call `scraper.fetch_all(skip=existing, save_callback=self._save_batch)`  
-  3. Convert each raw dict to `CompanyDTO` and `repository.save_all(...)`
+  - `Logger`
+- **Behavior:**
+  1. Load existing CVM codes
+  2. Fetch company list using `scraper._fetch_companies_list()`
+  3. Fetch company details with `scraper._fetch_companies_details(...)`
+  4. Convert each raw dict to `CompanyDTO` and `repository.save_all(...)`
 
 ### NsdService
 - **Layer:** Application  

@@ -39,7 +39,7 @@ O `Service` é uma fachada, uma camada de coordenação ampla. A principal funç
 >
 > E o Especialista da Área então vai:
 > 1. Consultar as regras do arquivo (`Repository`) e pedir para o funcionário `SQLite` (`SQLiteRepository`) listar todas as companhias que já existem (`list_existing_codes`).
-> 2. Consultar as regras da Prospecção (`Source`) e pedir para o garimpeiro da B3 (`B3Scraper`) buscar dados novos de companhias (`fetch_all`).
+> 2. Consultar as regras da Prospecção (`Source`) e pedir para o garimpeiro da B3 (`B3Scraper`) buscar a lista e os detalhes das companhias.
 > 3. Comparar os dados recebidos para filtrar apenas os DTOs que ainda não existem.
 > 4. Dizer ao funcionário `SQLite` (`SQLiteRepository`) para arquivar (`save_all`) apenas o que for novo.
 

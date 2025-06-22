@@ -21,7 +21,13 @@ class SyncNSDUseCase:
     def execute(self) -> None:
         """Run the NSD synchronization workflow."""
         existing_ids = self.repository.get_all_primary_keys()
-        self.scraper.fetch_all(skip_codes=existing_ids, save_callback=self._save_batch)
+        last_nsd = self.scraper.find_last_existing_nsd()
+        nsd_list = list(range(1, last_nsd + 1))
+        self.scraper._fetch_nsd_range(
+            nsd_list=nsd_list,
+            skip_codes=existing_ids,
+            save_callback=self._save_batch,
+        )
 
     def _save_batch(self, buffer: list[dict]) -> None:
         dtos = [NSDDTO.from_dict(d) for d in buffer]

@@ -51,26 +51,33 @@ class NsdScraper:
         max_nsd = max_nsd or self.find_last_existing_nsd(start=start) or 50
         threshold = threshold or self.config.global_settings.threshold or 50
 
-        self.logger.log("Fetch NSD list", level="info")
+        nsd_list = list(range(start, max_nsd + 1))
+        return self._fetch_nsd_range(nsd_list, skip_codes, save_callback, threshold)
 
-        nsd = start
-        index = 0
+    def _fetch_nsd_range(
+        self,
+        nsd_list: List[int],
+        skip_codes: Optional[set[int]] = None,
+        save_callback: Optional[Callable[[list[dict]], None]] = None,
+        threshold: Optional[int] = None,
+    ) -> List[Dict]:
+        """Fetch and parse a sequential list of NSDs."""
+        skip_codes = skip_codes or set()
+        threshold = threshold or self.config.global_settings.threshold or 50
+
+        self.logger.log("Fetch NSD list", level="info")
 
         buffer: list[dict] = []
         results: List[Dict] = []
         start_time = time.time()
 
-        while nsd <= max_nsd:
+        for index, nsd in enumerate(nsd_list):
             if nsd in skip_codes:
-                nsd += 1
-                index += 1
                 continue
 
-            total = max_nsd - start + 1
-            completed = nsd - start + 1
             progress = {
-                "index": (completed - 1),
-                "size": (total) or (nsd - 1),
+                "index": index,
+                "size": len(nsd_list),
                 "start_time": start_time,
             }
 
@@ -91,7 +98,7 @@ class NsdScraper:
                 buffer.append(parsed)
 
             extra_info = [
-                f"{parsed.get('nsd', nsd)}",  # usa o valor original do loop como fallback
+                f"{parsed.get('nsd', nsd)}",
                 parsed["quarter"].strftime("%Y-%m-%d")
                 if parsed.get("quarter") is not None
                 else "",
@@ -108,17 +115,13 @@ class NsdScraper:
                 progress={**progress, "extra_info": extra_info},
             )
 
-            # Condição de salvamento
-            remaining = max_nsd - nsd
+            remaining = len(nsd_list) - index - 1
             if (remaining % threshold == 0) or (remaining == 0):
                 if callable(save_callback) and buffer:
                     save_callback(buffer)
                     results.extend(buffer)
                     self.logger.log(f"Saved {len(buffer)} NSDs", level="info")
                     buffer.clear()
-
-            nsd += 1
-            index += 1
 
         return results
 
