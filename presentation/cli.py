@@ -43,7 +43,12 @@ class CLIController:
         company_scraper = CompanyB3Scraper(
             config=self.config, logger=self.logger, data_cleaner=self.data_cleaner
         )
-        company_service = CompanyService(logger=self.logger, repository=company_repo, scraper=company_scraper)
+        company_service = CompanyService(
+            config=self.config,
+            logger=self.logger,
+            repository=company_repo,
+            scraper=company_scraper,
+        )
 
         company_service.run()
 
@@ -57,6 +62,8 @@ class CLIController:
         nsd_scraper = NsdScraper(
             config=self.config, logger=self.logger, data_cleaner=self.data_cleaner
         )
-        nsd_service = NsdService(logger=self.logger, repository=nsd_repo, scraper=nsd_scraper)
+        nsd_service = NsdService(
+            logger=self.logger, repository=nsd_repo, scraper=nsd_scraper
+        )
 
         nsd_service.run()
