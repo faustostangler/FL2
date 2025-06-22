@@ -12,7 +12,7 @@ if __name__ == "__main__":
     data_cleaner = create_data_cleaner(config, logger)
 
     # Start CLI
-    logger.log("Start FLY", level="info")
+    logger.log("Start FLY", level="info", )
 
     # Entry point for the FLY CLI application.
     controller = CLIController(config, logger, data_cleaner)
