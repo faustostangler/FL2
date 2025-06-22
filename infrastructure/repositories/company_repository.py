@@ -1,5 +1,5 @@
 from typing import List
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from infrastructure.repositories.base_repository import BaseRepository
@@ -23,7 +23,12 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
         self.logger = logger
         self.logger.log("Start SQLiteCompanyRepository", level="info")
 
-        self.engine = create_engine(config.database.connection_string)
+        self.engine = create_engine(
+            config.database.connection_string,
+            connect_args={"check_same_thread": False},
+        )
+        with self.engine.connect() as conn:
+            conn.execute(text("PRAGMA journal_mode=WAL"))
         self.Session = sessionmaker(bind=self.engine)
         Base.metadata.create_all(self.engine)
 
@@ -55,7 +60,7 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
         finally:
             session.close()
 
-    def has_item(self, identifier: str) -> bool: 
+    def has_item(self, identifier: str) -> bool:
         """
         Checks if a company with the given ticker exists in the database.
 
@@ -64,7 +69,10 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
         """
         session = self.Session()
         try:
-            return session.query(CompanyModel).filter_by(ticker=identifier).first() is not None
+            return (
+                session.query(CompanyModel).filter_by(ticker=identifier).first()
+                is not None
+            )
         finally:
             session.close()
 
@@ -98,4 +106,3 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
             return {row[0] for row in results if row[0]}
         finally:
             session.close()
-

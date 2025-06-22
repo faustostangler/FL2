@@ -1,5 +1,5 @@
 from typing import List
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from infrastructure.repositories.base_repository import BaseRepository
@@ -17,7 +17,12 @@ class SQLiteNSDRepository(BaseRepository[NSDDTO]):
         self.logger = logger
         self.logger.log("Start SQLiteNSDRepository", level="info")
 
-        self.engine = create_engine(config.database.connection_string)
+        self.engine = create_engine(
+            config.database.connection_string,
+            connect_args={"check_same_thread": False},
+        )
+        with self.engine.connect() as conn:
+            conn.execute(text("PRAGMA journal_mode=WAL"))
         self.Session = sessionmaker(bind=self.engine)
         Base.metadata.create_all(self.engine)
 
@@ -86,4 +91,3 @@ class SQLiteNSDRepository(BaseRepository[NSDDTO]):
             return {row[0] for row in results if row[0]}
         finally:
             session.close()
-

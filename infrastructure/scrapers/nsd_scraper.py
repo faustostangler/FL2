@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import time
-from typing import List, Dict, Optional, Set, Callable
+from typing import List, Dict, Optional, Callable
 
 import requests
 from bs4 import BeautifulSoup
@@ -27,11 +27,14 @@ class NsdScraper:
 
         self.logger.log("Start NsdScraper", level="info")
 
-    def fetch_all(self, start: int = 1, max_nsd: Optional[int] = None, 
-                  skip_codes: Optional[set[int]] = None, 
-                  save_callback: Optional[Callable[[list[dict]], None]] = None,
-                  threshold: Optional[int] = None, 
-                ) -> List[Dict]:
+    def fetch_all(
+        self,
+        start: int = 1,
+        max_nsd: Optional[int] = None,
+        skip_codes: Optional[set[int]] = None,
+        save_callback: Optional[Callable[[list[dict]], None]] = None,
+        threshold: Optional[int] = None,
+    ) -> List[Dict]:
         """Fetch and parse NSD pages.
 
         Args:
@@ -62,14 +65,22 @@ class NsdScraper:
                 index += 1
                 continue
 
-            progress = {"index": (index), "size": (max_nsd-start) or (nsd-1), "start_time": start_time}
+            progress = {
+                "index": (index),
+                "size": (max_nsd - start) or (nsd - 1),
+                "start_time": start_time,
+            }
             url = self.nsd_endpoint.format(nsd=nsd)
 
             try:
                 response = self.fetch_utils.fetch_with_retry(self.session, url)
                 parsed = self._parse_html(nsd, response.text)
             except Exception as e:
-                self.logger.log(f"Failed to fetch NSD {nsd}: {e}", level="warning", progress=progress, )
+                self.logger.log(
+                    f"Failed to fetch NSD {nsd}: {e}",
+                    level="warning",
+                    progress=progress,
+                )
                 break
 
             if parsed:
@@ -77,18 +88,24 @@ class NsdScraper:
 
             extra_info = [
                 f"{parsed.get('nsd', nsd)}",  # usa o valor original do loop como fallback
-                parsed["quarter"].strftime("%Y-%m-%d") if parsed.get("quarter") is not None else "",
+                parsed["quarter"].strftime("%Y-%m-%d")
+                if parsed.get("quarter") is not None
+                else "",
                 parsed.get("company_name", ""),
                 parsed.get("nsd_type", ""),
-                parsed["sent_date"].strftime("%Y-%m-%d %H:%M:%S") if parsed.get("sent_date") is not None else "",
+                parsed["sent_date"].strftime("%Y-%m-%d %H:%M:%S")
+                if parsed.get("sent_date") is not None
+                else "",
             ]
 
-            extra_str = " ".join(str(e) for e in extra_info if e)
-
-            self.logger.log(f"NSD", level="info", progress={**progress, "extra_info": extra_info}, )
+            self.logger.log(
+                "NSD",
+                level="info",
+                progress={**progress, "extra_info": extra_info},
+            )
 
             # Condição de salvamento
-            remaining = (max_nsd - nsd)
+            remaining = max_nsd - nsd
             if (remaining % threshold == 0) or (remaining == 0):
                 if callable(save_callback) and buffer:
                     save_callback(buffer)
@@ -118,18 +135,20 @@ class NsdScraper:
         data: Dict[str, str | int | datetime | None] = {
             "nsd": nsd,
             "company_name": self.data_cleaner.clean_text(text_of("#lblNomeCompanhia")),
-
             # quarter e sent_date serão preenchidos depois
             "quarter": None,
             "version": None,
             "nsd_type": None,
-
             "dri": self.data_cleaner.clean_text(text_of("#lblNomeDRI")),
             "auditor": self.data_cleaner.clean_text(text_of("#lblAuditor")),
-            "responsible_auditor": self.data_cleaner.clean_text(text_of("#lblResponsavelTecnico")),
+            "responsible_auditor": self.data_cleaner.clean_text(
+                text_of("#lblResponsavelTecnico")
+            ),
             "protocol": text_of("#lblProtocolo"),
             "sent_date": None,
-            "reason": self.data_cleaner.clean_text(text_of("#lblMotivoCancelamentoReapresentacao")),
+            "reason": self.data_cleaner.clean_text(
+                text_of("#lblMotivoCancelamentoReapresentacao")
+            ),
         }
 
         quarter = text_of("#lblDataDocumento")
@@ -141,10 +160,16 @@ class NsdScraper:
         if nsd_type_version:
             parts = [p.strip() for p in nsd_type_version.split(" - ")]
             if len(parts) >= 2:
-                data["version"] = self.data_cleaner.clean_text(parts[-1]) if parts[-1] else None
-                data["nsd_type"] = self.data_cleaner.clean_text(parts[0]) if parts[0] else None
+                data["version"] = (
+                    self.data_cleaner.clean_text(parts[-1]) if parts[-1] else None
+                )
+                data["nsd_type"] = (
+                    self.data_cleaner.clean_text(parts[0]) if parts[0] else None
+                )
 
-        data["sent_date"] = self.data_cleaner.clean_date(sent_date) if sent_date else None
+        data["sent_date"] = (
+            self.data_cleaner.clean_date(sent_date) if sent_date else None
+        )
 
         return data
 
@@ -160,7 +185,7 @@ class NsdScraper:
         Returns:
             Último NSD com conteúdo válido.
         """
-        self.logger.log(f"Finding last existing NSD", level="info")
+        self.logger.log("Finding last existing NSD", level="info")
         nsd = start
         last_valid = None
 
