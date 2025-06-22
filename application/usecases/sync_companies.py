@@ -25,8 +25,8 @@ class SyncCompaniesUseCase:
         - Converte para CompanyDTO
         - Persiste no repositório
         """
-        existing_codes = self.repository.get_all_cvm_codes()
-        self.scraper.fetch_all(skip_cvm_codes=existing_codes, save_callback=self._save_batch)
+        existing_codes = self.repository.get_all_primary_keys()
+        self.scraper.fetch_all(skip_codes=existing_codes, save_callback=self._save_batch)
 
     def _save_batch(self, buffer: List[dict]) -> None:
         dtos = [CompanyDTO.from_dict(d) for d in buffer]

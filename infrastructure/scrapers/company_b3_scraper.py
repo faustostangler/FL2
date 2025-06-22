@@ -55,26 +55,29 @@ class CompanyB3Scraper:
         # Initialize a requests session for HTTP requests
         self.session = requests.Session()
 
-    def fetch_all(self, skip_cvm_codes: Optional[Set[str]] = None, save_callback: Optional[Callable[[List[dict]], None]] = None, threshold: Optional[int] = None) -> List[Dict]:
+    def fetch_all(self, threshold: Optional[int] = None, 
+                  skip_codes: Optional[Set[str]] = None, 
+                  save_callback: Optional[Callable[[List[dict]], None]] = None, 
+                  ) -> List[Dict]:
         """
         Fetches raw data for all companies.
 
         :return: List of dictionaries representing raw company data
         """
-        # Ensure skip_cvm_codes is a set (to avoid None and allow fast lookup)
-        skip_cvm_codes = skip_cvm_codes or set()
+        # Ensure skip_codes is a set (to avoid None and allow fast lookup)
+        skip_codes = skip_codes or set()
         # Determine the save threshold (number of companies before saving buffer)
         threshold = threshold or self.config.global_settings.threshold or 50
 
         # Fetch the initial list of companies from B3, possibly skipping some CVM codes
-        companies_list = self._fetch_companies_list(skip_cvm_codes, threshold)
+        companies_list = self._fetch_companies_list(skip_codes, threshold)
         # Fetch and parse detailed information for each company, with optional skipping and periodic saving
-        companies = self._fetch_companies_details(companies_list, skip_cvm_codes, save_callback, threshold)
+        companies = self._fetch_companies_details(companies_list, skip_codes, save_callback, threshold)
 
         # Return the complete list of parsed company details
         return companies
 
-    def _fetch_companies_list(self, skip_cvm_codes: Optional[Set[str]] = None, threshold: Optional[int] = None) -> List[Dict]:
+    def _fetch_companies_list(self, skip_codes: Optional[Set[str]] = None, threshold: Optional[int] = None) -> List[Dict]:
         """
         Busca o conjunto inicial de empresas disponíveis na B3.
 
@@ -138,12 +141,12 @@ class CompanyB3Scraper:
         """
         return base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
 
-    def _fetch_companies_details(self, companies_list: List[Dict], skip_cvm_codes: Optional[Set[str]] = None, save_callback: Optional[Callable[[List[dict]], None]] = None, threshold: Optional[int] = None) -> List[Dict]:
+    def _fetch_companies_details(self, companies_list: List[Dict], skip_codes: Optional[Set[str]] = None, save_callback: Optional[Callable[[List[dict]], None]] = None, threshold: Optional[int] = None) -> List[Dict]:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
         Args:
             companies_list (List[Dict]): List of company dictionaries, each containing at least a "codeCVM" key.
-            skip_cvm_codes (Optional[Set[str]], optional): Set of CVM codes to skip during processing. Defaults to None.
+            skip_codes (Optional[Set[str]], optional): Set of CVM codes to skip during processing. Defaults to None.
             save_callback (Optional[Callable[[List[dict]], None]], optional): Callback function to save buffered company details periodically. Defaults to None.
             threshold (Optional[int], optional): Number of companies to process before triggering the save_callback. If not provided, uses configuration or defaults to 50.
         Returns:
@@ -177,7 +180,7 @@ class CompanyB3Scraper:
             self.logger.log(f"cvm_code: {cvm_code} ", level="info", progress=progress)
 
             # Skip if cvm_code is missing or in the skip list
-            if not cvm_code or cvm_code in skip_cvm_codes:
+            if not cvm_code or cvm_code in skip_codes:
                 continue
 
             try:
@@ -186,15 +189,15 @@ class CompanyB3Scraper:
                 # Parse and standardize company data
                 parsed = self._parse_company(entry, detail)
                 buffer.append(parsed)
-                results.append(parsed)
 
                 # Check if it's time to save the buffer
                 remaining_items = len(companies_list) - i - 1
                 if (remaining_items % threshold == 0) or (remaining_items == 0):
                     if callable(save_callback):
                         save_callback(buffer)
-                        self.logger.log(f"Saved {len(buffer)} companies (partial)", level="info")
+                        results.extend(buffer)
                         buffer.clear()
+                        self.logger.log(f"Saved {len(buffer)} companies (partial)", level="info")
 
             except Exception as e:
                 # Log any exception as a warning

@@ -19,8 +19,17 @@ class SyncNSDUseCase:
         self.scraper = scraper
 
     def execute(self) -> None:
-
         """Run the NSD synchronization workflow."""
-        raw_list = self.scraper.fetch_all()
-        dtos = [NSDDTO.from_dict(item) for item in raw_list]
+        existing_ids = self.repository.get_all_primary_keys()
+        self.scraper.fetch_all(skip_codes=existing_ids, save_callback=self._save_batch)
+
+    def _save_batch(self, buffer: list[dict]) -> None:
+        dtos = [NSDDTO.from_dict(d) for d in buffer]
         self.repository.save_all(dtos)
+
+    # def execute(self) -> None:
+
+    #     """Run the NSD synchronization workflow."""
+    #     raw_list = self.scraper.fetch_all()
+    #     dtos = [NSDDTO.from_dict(item) for item in raw_list]
+    #     self.repository.save_all(dtos)

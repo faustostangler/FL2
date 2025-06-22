@@ -33,21 +33,19 @@ class CLIController:
         # self.run_company_sync()
         self.run_nsd_sync()
 
-        print("done")
-
     def run_company_sync(self):
         """Run the company synchronization workflow."""
 
         # Log the start of the company synchronization
         self.logger.log("Start Companies Sync Use Case", level="info")
 
-        repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
-        scraper = CompanyB3Scraper(
+        company_repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
+        company_scraper = CompanyB3Scraper(
             config=self.config, logger=self.logger, data_cleaner=self.data_cleaner
         )
-        service = CompanyService(logger=self.logger, repository=repo, scraper=scraper)
+        company_service = CompanyService(logger=self.logger, repository=company_repo, scraper=company_scraper)
 
-        service.run()
+        company_service.run()
 
     def run_nsd_sync(self):
         """Run the NSD synchronization workflow."""
@@ -55,10 +53,10 @@ class CLIController:
         # Log the start of the NSD synchronization
         self.logger.log("Start NSD Sync Use Case", level="info")
 
-        repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
-        scraper = NsdScraper(
+        nsd_repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
+        nsd_scraper = NsdScraper(
             config=self.config, logger=self.logger, data_cleaner=self.data_cleaner
         )
-        service = NsdService(logger=self.logger, repository=repo, scraper=scraper)
+        nsd_service = NsdService(logger=self.logger, repository=nsd_repo, scraper=nsd_scraper)
 
-        service.run()
+        nsd_service.run()

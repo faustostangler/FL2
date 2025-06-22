@@ -28,7 +28,7 @@ class ProgressFormatter:
                 m, s = divmod(rem, 60)
                 return f"{h}h{m:02}m{s:02}s"
 
-            base = f"{completed}/{size} | {percent:.2%} | {fmt(elapsed)} + {fmt(remaining)} = {fmt(total_est)}"
+            base = f"{size - completed}+{completed}={size} | {percent:.2%} | {fmt(remaining)} + {fmt(elapsed)} = {fmt(total_est)}"
 
             extra_info = progress.get("extra_info", [])
             if isinstance(extra_info, list):

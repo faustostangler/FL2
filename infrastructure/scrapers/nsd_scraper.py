@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 import time
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Set, Callable
 
 import requests
 from bs4 import BeautifulSoup
@@ -27,7 +27,11 @@ class NsdScraper:
 
         self.logger.log("Start NsdScraper", level="info")
 
-    def fetch_all(self, start: int = 1, max_nsd: Optional[int] = None) -> List[Dict]:
+    def fetch_all(self, start: int = 1, max_nsd: Optional[int] = None, 
+                  skip_codes: Optional[set[int]] = None, 
+                  save_callback: Optional[Callable[[list[dict]], None]] = None,
+                  threshold: Optional[int] = None, 
+                ) -> List[Dict]:
         """Fetch and parse NSD pages.
 
         Args:
@@ -38,48 +42,59 @@ class NsdScraper:
         Returns:
             List of dictionaries compatible with ``NSDDTO.from_dict``.
         """
-        max_nsd = max_nsd or self.config.global_settings.threshold or 50
+        skip_codes = skip_codes or set()
+        start = max(start, max(skip_codes, default=0) + 1)
+        max_nsd = max_nsd or self.find_last_existing_nsd(start=start) or 50
+        threshold = threshold or self.config.global_settings.threshold or 50
+
         self.logger.log("Fetch NSD list", level="info")
 
         nsd = start
         index = 0
 
+        buffer: list[dict] = []
         results: List[Dict] = []
         start_time = time.time()
 
-        while True:
-            progress = {"index": index, "size": max_nsd or 0, "start_time": start_time}
+        while nsd <= max_nsd:
+            if nsd in skip_codes:
+                nsd += 1
+                index += 1
+                continue
+
+            progress = {"index": (index), "size": (max_nsd-start) or (nsd-1), "start_time": start_time}
             url = self.nsd_endpoint.format(nsd=nsd)
+
             try:
                 response = self.fetch_utils.fetch_with_retry(self.session, url)
+                parsed = self._parse_html(nsd, response.text)
             except Exception as e:
-                self.logger.log(
-                    f"Failed to fetch NSD {nsd}: {e}", level="warning",
-                    progress=progress,
-                )
+                self.logger.log(f"Failed to fetch NSD {nsd}: {e}", level="warning", progress=progress, )
                 break
 
-            parsed = self._parse_html(nsd, response.text)
-
-            results.append(parsed) if parsed else None
+            if parsed:
+                buffer.append(parsed)
 
             extra_info = [
                 f"{parsed.get('nsd', nsd)}",  # usa o valor original do loop como fallback
-                parsed["sent_date"].strftime("%Y-%m-%d %H:%M:%S") if parsed.get("sent_date") is not None else "",
-                parsed.get("nsd_type", ""),
+                parsed["quarter"].strftime("%Y-%m-%d") if parsed.get("quarter") is not None else "",
                 parsed.get("company_name", ""),
-                parsed["quarter"].strftime("%Y-%m") if parsed.get("quarter") is not None else "",
+                parsed.get("nsd_type", ""),
+                parsed["sent_date"].strftime("%Y-%m-%d %H:%M:%S") if parsed.get("sent_date") is not None else "",
             ]
 
             extra_str = " ".join(str(e) for e in extra_info if e)
 
-            self.logger.log(
-                f"NSD", level="info",
-                progress={**progress, "extra_info": extra_info},
-            )
+            self.logger.log(f"NSD", level="info", progress={**progress, "extra_info": extra_info}, )
 
-            if nsd >= max_nsd:
-                break
+            # Condição de salvamento
+            remaining = (max_nsd - nsd)
+            if (remaining % threshold == 0) or (remaining == 0):
+                if callable(save_callback) and buffer:
+                    save_callback(buffer)
+                    results.extend(buffer)
+                    self.logger.log(f"Saved {len(buffer)} NSDs", level="info")
+                    buffer.clear()
 
             nsd += 1
             index += 1
@@ -133,3 +148,70 @@ class NsdScraper:
 
         return data
 
+    def find_last_existing_nsd(self, start: int = 1, max_limit: int = 10**10) -> int:
+        """
+        Busca o maior NSD que realmente existe (tem conteúdo válido),
+        usando busca exponencial seguida de busca binária.
+
+        Args:
+            start: valor inicial do NSD para tentar.
+            max_limit: limite máximo de NSD a testar (fail-safe).
+
+        Returns:
+            Último NSD com conteúdo válido.
+        """
+        self.logger.log(f"Finding last existing NSD", level="info")
+        nsd = start
+        last_valid = None
+
+        max_linear_holes = self.config.global_settings.max_linear_holes or 2000
+        hole_count = 0
+
+        # Fase 1: busca linear até encontrar o primeiro válido
+        while nsd <= max_limit and hole_count < max_linear_holes:
+            # self.logger.log(f"Trying NSD {nsd} linear", level="info")
+            parsed = self._try_nsd(nsd)
+            if parsed:
+                last_valid = nsd
+                break
+            nsd += 1
+            hole_count += 1
+
+        # Fase 2: Busca exponencial para achar um ponto inválido
+        while nsd <= max_limit and hole_count < max_linear_holes:
+            # self.logger.log(f"Trying NSD {nsd} exponential", level="info")
+            parsed = self._try_nsd(nsd)
+            if parsed:
+                last_valid = nsd
+                nsd *= 2
+            else:
+                break
+
+        # Se nada válido foi encontrado, retorna o início
+        if last_valid is None:
+            return start
+
+        # Fase 3: Busca binária entre último válido e primeiro inválido
+        low = last_valid or 1
+        high = nsd - 1
+
+        while low < high:
+            mid = (low + high + 1) // 2  # arredonda para cima para evitar loop infinito
+            # self.logger.log(f"Trying NSD {mid} binary", level="info")
+            parsed = self._try_nsd(mid)
+
+            if parsed:
+                low = mid  # é válido, sobe o piso
+            else:
+                high = mid - 1  # é inválido, desce o teto
+
+        return low
+
+    def _try_nsd(self, nsd: int) -> Optional[dict]:
+        try:
+            url = self.nsd_endpoint.format(nsd=nsd)
+            response = self.fetch_utils.fetch_with_retry(self.session, url)
+            parsed = self._parse_html(nsd, response.text)
+            return parsed if parsed.get("sent_date") else None
+        except Exception:
+            return None

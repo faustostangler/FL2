@@ -2,6 +2,7 @@ from dataclasses import dataclass, field
 
 WAIT = 2 # Default wait time in seconds
 THRESOLD = 50 # Default threshold for saving data
+MAX_LINEAR_HOLES = 2000 # Maximum number of linear holes allowed
 
 
 @dataclass(frozen=True)
@@ -22,6 +23,7 @@ class GlobalSettingsConfig:
     # Configuration attributes with defaults from WAIT and THRESOLD
     wait: int = field(default=WAIT)
     threshold: int = field(default=THRESOLD)
+    max_linear_holes: int = field(default=MAX_LINEAR_HOLES)
 
 def load_global_settings_config() -> GlobalSettingsConfig:
     """
@@ -38,4 +40,5 @@ def load_global_settings_config() -> GlobalSettingsConfig:
     return GlobalSettingsConfig(
         wait=WAIT,
         threshold=THRESOLD,
+        max_linear_holes=MAX_LINEAR_HOLES, 
     )
