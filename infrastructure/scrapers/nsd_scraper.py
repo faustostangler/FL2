@@ -68,7 +68,11 @@ class NsdScraper:
 
             total = max_nsd - start + 1
             completed = nsd - start + 1
-            progress = {"index": (completed - 1), "size": (total) or (nsd-1), "start_time": start_time}
+            progress = {
+                "index": (completed - 1),
+                "size": (total) or (nsd - 1),
+                "start_time": start_time,
+            }
 
             url = self.nsd_endpoint.format(nsd=nsd)
 
@@ -140,8 +144,10 @@ class NsdScraper:
             "version": None,
             "nsd_type": None,
             "dri": None,
-            "auditor": None, 
-            "responsible_auditor": self.data_cleaner.clean_text(text_of("#lblResponsavelTecnico")),
+            "auditor": None,
+            "responsible_auditor": self.data_cleaner.clean_text(
+                text_of("#lblResponsavelTecnico")
+            ),
             "protocol": text_of("#lblProtocolo"),
             "sent_date": None,
             "reason": self.data_cleaner.clean_text(
@@ -152,13 +158,13 @@ class NsdScraper:
         # Limpeza do padrão FCA
         dri = self.data_cleaner.clean_text(text_of("#lblNomeDRI")) or ""
         dri_pattern = r"\s+FCA(?:\s+V\d+)?\b"
-        data['dri'] = re.sub(dri_pattern, "", dri)
-        data['dri'] = re.sub(r"\s{2,}", " ", data['dri']).strip()
+        data["dri"] = re.sub(dri_pattern, "", dri)
+        data["dri"] = re.sub(r"\s{2,}", " ", data["dri"]).strip()
 
         auditor = self.data_cleaner.clean_text(text_of("#lblAuditor")) or ""
         auditor_pattern = r"\s+FCA\s+\d{4}(?:\s+V\d+)?\b"
-        data['auditor'] = re.sub(auditor_pattern, "", auditor)
-        data['auditor'] = re.sub(r"\s{2,}", " ", data['auditor']).strip()
+        data["auditor"] = re.sub(auditor_pattern, "", auditor)
+        data["auditor"] = re.sub(r"\s{2,}", " ", data["auditor"]).strip()
 
         quarter = text_of("#lblDataDocumento")
         if quarter and quarter.strip().isdigit() and len(quarter.strip()) == 4:
@@ -194,7 +200,7 @@ class NsdScraper:
         Returns:
             Último NSD com conteúdo válido.
         """
-        self.logger.log(f"Finding last existing NSD", level="info")
+        self.logger.log("Finding last existing NSD", level="info")
         nsd = start - 1
         last_valid = None
 
@@ -230,7 +236,6 @@ class NsdScraper:
         high = nsd - 1
 
         while low < high:
-            diff = high - low
             mid = (low + high + 1) // 2  # arredonda para cima para evitar loop infinito
             # self.logger.log(f"Trying NSD {mid} binary", level="info")
             parsed = self._try_nsd(mid)
