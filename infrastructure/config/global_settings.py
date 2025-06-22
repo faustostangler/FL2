@@ -4,7 +4,7 @@ APP_NAME = "FLY" # Application name
 
 WAIT = 2 # Default wait time in seconds
 THRESHOLD = 50 # Default threshold for saving data
-MAX_LINEAR_HOLES = 2000 # Maximum number of linear holes allowed
+MAX_LINEAR_HOLES = 500 # Maximum number of linear holes allowed
 
 
 @dataclass(frozen=True)

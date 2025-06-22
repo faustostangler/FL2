@@ -26,10 +26,3 @@ class SyncNSDUseCase:
     def _save_batch(self, buffer: list[dict]) -> None:
         dtos = [NSDDTO.from_dict(d) for d in buffer]
         self.repository.save_all(dtos)
-
-    # def execute(self) -> None:
-
-    #     """Run the NSD synchronization workflow."""
-    #     raw_list = self.scraper.fetch_all()
-    #     dtos = [NSDDTO.from_dict(item) for item in raw_list]
-    #     self.repository.save_all(dtos)

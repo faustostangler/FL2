@@ -6,6 +6,7 @@ from typing import List, Dict, Optional, Set, Callable
 
 import requests
 from bs4 import BeautifulSoup
+import re
 
 from infrastructure.config import Config
 from infrastructure.logging import Logger
@@ -62,7 +63,10 @@ class NsdScraper:
                 index += 1
                 continue
 
-            progress = {"index": (index), "size": (max_nsd-start) or (nsd-1), "start_time": start_time}
+            total = max_nsd - start + 1
+            completed = nsd - start + 1
+
+            progress = {"index": (completed - 1), "size": (total) or (nsd-1), "start_time": start_time}
             url = self.nsd_endpoint.format(nsd=nsd)
 
             try:
@@ -124,13 +128,24 @@ class NsdScraper:
             "version": None,
             "nsd_type": None,
 
-            "dri": self.data_cleaner.clean_text(text_of("#lblNomeDRI")),
-            "auditor": self.data_cleaner.clean_text(text_of("#lblAuditor")),
+            "dri": None,
+            "auditor": None, 
             "responsible_auditor": self.data_cleaner.clean_text(text_of("#lblResponsavelTecnico")),
             "protocol": text_of("#lblProtocolo"),
             "sent_date": None,
             "reason": self.data_cleaner.clean_text(text_of("#lblMotivoCancelamentoReapresentacao")),
         }
+
+        # Limpeza do padrão FCA
+        dri = self.data_cleaner.clean_text(text_of("#lblNomeDRI")) or ""
+        dri_pattern = r"\s+FCA(?:\s+V\d+)?\b"
+        data['dri'] = re.sub(dri_pattern, "", dri)
+        data['dri'] = re.sub(r"\s{2,}", " ", data['dri']).strip()
+
+        auditor = self.data_cleaner.clean_text(text_of("#lblAuditor")) or ""
+        auditor_pattern = r"\s+FCA\s+\d{4}(?:\s+V\d+)?\b"
+        data['auditor'] = re.sub(auditor_pattern, "", auditor)
+        data['auditor'] = re.sub(r"\s{2,}", " ", data['auditor']).strip()
 
         quarter = text_of("#lblDataDocumento")
         if quarter and quarter.strip().isdigit() and len(quarter.strip()) == 4:
@@ -161,10 +176,10 @@ class NsdScraper:
             Último NSD com conteúdo válido.
         """
         self.logger.log(f"Finding last existing NSD", level="info")
-        nsd = start
+        nsd = start - 1
         last_valid = None
 
-        max_linear_holes = self.config.global_settings.max_linear_holes or 2000
+        max_linear_holes = self.config.global_settings.max_linear_holes or 500
         hole_count = 0
 
         # Fase 1: busca linear até encontrar o primeiro válido
@@ -178,7 +193,7 @@ class NsdScraper:
             hole_count += 1
 
         # Fase 2: Busca exponencial para achar um ponto inválido
-        while nsd <= max_limit and hole_count < max_linear_holes:
+        while nsd <= max_limit:
             # self.logger.log(f"Trying NSD {nsd} exponential", level="info")
             parsed = self._try_nsd(nsd)
             if parsed:
@@ -196,6 +211,7 @@ class NsdScraper:
         high = nsd - 1
 
         while low < high:
+            diff = high - low
             mid = (low + high + 1) // 2  # arredonda para cima para evitar loop infinito
             # self.logger.log(f"Trying NSD {mid} binary", level="info")
             parsed = self._try_nsd(mid)
