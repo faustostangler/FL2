@@ -204,7 +204,7 @@ class NsdScraper:
         nsd = start - 1
         last_valid = None
 
-        max_linear_holes = self.config.global_settings.max_linear_holes or 500
+        max_linear_holes = self.config.global_settings.max_linear_holes or 2000
         hole_count = 0
 
         # Fase 1: busca linear até encontrar o primeiro válido
@@ -218,7 +218,7 @@ class NsdScraper:
             hole_count += 1
 
         # Fase 2: Busca exponencial para achar um ponto inválido
-        while nsd <= max_limit:
+        while nsd <= max_limit and hole_count < max_linear_holes:
             # self.logger.log(f"Trying NSD {nsd} exponential", level="info")
             parsed = self._try_nsd(nsd)
             if parsed:
