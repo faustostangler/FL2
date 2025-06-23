@@ -1,9 +1,11 @@
-from typing import List, Dict, Optional, Set, Callable
+from typing import Callable, Dict, List, Optional, Set
 
-import json
 import base64
-import requests
+import json
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+import requests
 
 from infrastructure.config import Config
 from infrastructure.logging import Logger
@@ -189,59 +191,29 @@ class CompanyB3Scraper:
             - Does not raise exceptions; logs warnings instead.
         """
 
-        # Determine the save threshold (number of companies before saving buffer)
         threshold = threshold or self.config.global_settings.threshold or 50
+        skip_codes = skip_codes or set()
 
-        # Log the start of the fetch_all process for company details
         self.logger.log("Start CompanyB3Scraper fetch_all", level="info")
-
-        # Initialize buffer for periodic saving and results for all parsed companies
-        buffer = []
-        results = []
-
-        # Record the start time for progress logging
         start_time = time.time()
 
-        # Iterate over each company entry in the list
-        for i, entry in enumerate(companies_list):
-            cvm_code = entry.get("codeCVM")
+        if (max_workers or 1) <= 1:
+            return self._fetch_companies_details_single(
+                companies_list,
+                skip_codes,
+                save_callback,
+                threshold,
+                start_time,
+            )
 
-            # Log progress
-            progress = {
-                "index": i,
-                "size": len(companies_list),
-                "start_time": start_time,
-            }
-            self.logger.log(f"cvm_code: {cvm_code} ", level="info", progress=progress)
-
-            # Skip if cvm_code is missing or in the skip list
-            if not cvm_code or cvm_code in skip_codes:
-                continue
-
-            try:
-                # Fetch detailed company data
-                detail = self._fetch_detail(str(cvm_code))
-                # Parse and standardize company data
-                parsed = self._parse_company(entry, detail)
-                buffer.append(parsed)
-
-                # Check if it's time to save the buffer
-                remaining_items = len(companies_list) - i - 1
-                if (remaining_items % threshold == 0) or (remaining_items == 0):
-                    if callable(save_callback):
-                        save_callback(buffer)
-                        results.extend(buffer)
-                        buffer.clear()
-                        self.logger.log(
-                            f"Saved {len(buffer)} companies (partial)", level="info"
-                        )
-
-            except Exception as e:
-                # Log any exception as a warning
-                self.logger.log(f"erro {e}", level="warning")
-
-        # Return the list of all parsed company details
-        return results
+        return self._fetch_companies_details_threaded(
+            companies_list,
+            skip_codes,
+            save_callback,
+            threshold,
+            max_workers or 1,
+            start_time,
+        )
 
     def _fetch_detail(self, cvm_code: str) -> Dict:
         """
@@ -360,3 +332,105 @@ class CompanyB3Scraper:
         except Exception as e:
             self.logger.log(f"erro {e}", level="debug")
             return None
+
+    def _fetch_companies_details_single(
+        self,
+        companies_list: List[Dict],
+        skip_codes: Set[str],
+        save_callback: Optional[Callable[[List[dict]], None]],
+        threshold: int,
+        start_time: float,
+    ) -> List[Dict]:
+        buffer: list[dict] = []
+        results: list[dict] = []
+
+        for i, entry in enumerate(companies_list):
+            progress = {
+                "index": i,
+                "size": len(companies_list),
+                "start_time": start_time,
+            }
+            cvm_code = entry.get("codeCVM")
+            self.logger.log(f"cvm_code: {cvm_code} ", level="info", progress=progress)
+
+            parsed = self._process_company_detail(entry, skip_codes)
+            if parsed:
+                buffer.append(parsed)
+
+            remaining_items = len(companies_list) - i - 1
+            self._handle_save(
+                buffer, results, save_callback, threshold, remaining_items
+            )
+
+        if buffer:
+            self._handle_save(buffer, results, save_callback, threshold, 0)
+
+        return results
+
+    def _fetch_companies_details_threaded(
+        self,
+        companies_list: List[Dict],
+        skip_codes: Set[str],
+        save_callback: Optional[Callable[[List[dict]], None]],
+        threshold: int,
+        max_workers: int,
+        start_time: float,
+    ) -> List[Dict]:
+        buffer: list[dict] = []
+        results: list[dict] = []
+
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            futures = [
+                executor.submit(self._process_company_detail, e, skip_codes)
+                for e in companies_list
+            ]
+            for i, future in enumerate(as_completed(futures)):
+                result = future.result()
+                progress = {
+                    "index": i,
+                    "size": len(futures),
+                    "start_time": start_time,
+                }
+                self.logger.log("thread", level="info", progress=progress)
+                if result:
+                    buffer.append(result)
+
+                remaining_items = len(futures) - i - 1
+                self._handle_save(
+                    buffer, results, save_callback, threshold, remaining_items
+                )
+
+        if buffer:
+            self._handle_save(buffer, results, save_callback, threshold, 0)
+
+        return results
+
+    def _process_company_detail(
+        self, entry: Dict, skip_codes: Set[str]
+    ) -> Optional[Dict]:
+        cvm_code = entry.get("codeCVM")
+        if not cvm_code or cvm_code in skip_codes:
+            return None
+        try:
+            detail = self._fetch_detail(str(cvm_code))
+            return self._parse_company(entry, detail)
+        except Exception as exc:  # noqa: BLE001
+            self.logger.log(f"erro {exc}", level="warning")
+            return None
+
+    def _handle_save(
+        self,
+        buffer: List[Dict],
+        results: List[Dict],
+        save_callback: Optional[Callable[[List[dict]], None]],
+        threshold: int,
+        remaining_items: int,
+    ) -> None:
+        if (remaining_items % threshold == 0) or (remaining_items == 0):
+            if callable(save_callback) and buffer:
+                save_callback(buffer)
+                results.extend(buffer)
+                self.logger.log(
+                    f"Saved {len(buffer)} companies (partial)", level="info"
+                )
+                buffer.clear()
