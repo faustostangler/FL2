@@ -7,6 +7,8 @@ import time
 
 import certifi
 import requests
+from requests.adapters import HTTPAdapter
+import urllib3
 
 from infrastructure.config import Config
 from infrastructure.logging import Logger
@@ -116,11 +118,12 @@ class FetchUtils:
                         block_time = time.time() - block_start
                         self.logger.log(
                             f"Dodging server block: {block_time:.2f}s",
-                            level="debug",
+                            level="warning",
                         )
                     return response
             except Exception as exc:  # noqa: BLE001
-                self.logger.log(f"Attempt {attempt + 1} failed: {exc}", level="warning")
+                pass
+                # self.logger.log(f"Attempt {attempt + 1} failed: {exc}", level="warning")
 
             if block_start is None:
                 block_start = time.time()
@@ -128,3 +131,5 @@ class FetchUtils:
             attempt += 1
             TimeUtils(self.config).sleep_dynamic()
             scraper = self.create_scraper(insecure=insecure)
+            # self.logger.log("Recreating scraper due to block", level="info")
+
