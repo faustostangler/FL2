@@ -21,7 +21,14 @@ class SyncNSDUseCase:
     def execute(self) -> None:
         """Run the NSD synchronization workflow."""
         existing_ids = self.repository.get_all_primary_keys()
-        self.scraper.fetch_all(skip_codes=existing_ids, save_callback=self._save_batch)
+        self.scraper.fetch_all(
+            skip_codes=existing_ids,
+            save_callback=self._save_batch,
+        )
+        self.logger.log(
+            f"Downloaded {self.scraper.total_bytes_downloaded} bytes",
+            level="info",
+        )
 
     def _save_batch(self, buffer: list[dict]) -> None:
         dtos = [NSDDTO.from_dict(d) for d in buffer]

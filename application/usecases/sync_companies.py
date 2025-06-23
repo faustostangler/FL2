@@ -41,6 +41,10 @@ class SyncCompaniesUseCase:
             save_callback=self._save_batch,
             max_workers=self.config.global_settings.max_workers,
         )
+        self.logger.log(
+            f"Downloaded {self.scraper.total_bytes_downloaded} bytes",
+            level="info",
+        )
 
     def _save_batch(self, buffer: List[dict]) -> None:
         dtos = [CompanyDTO.from_dict(d) for d in buffer]

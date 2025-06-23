@@ -25,6 +25,8 @@ class NsdScraper:
 
         self.nsd_endpoint = self.config.b3.nsd_endpoint
 
+        self.total_bytes_downloaded = 0
+
         self.logger.log("Start NsdScraper", level="info")
 
     def fetch_all(
@@ -77,6 +79,7 @@ class NsdScraper:
 
             try:
                 response = self.fetch_utils.fetch_with_retry(self.session, url)
+                self.total_bytes_downloaded += len(response.content)
                 parsed = self._parse_html(nsd, response.text)
             except Exception as e:
                 self.logger.log(
@@ -99,6 +102,7 @@ class NsdScraper:
                 parsed["sent_date"].strftime("%Y-%m-%d %H:%M:%S")
                 if parsed.get("sent_date") is not None
                 else "",
+                str(len(response.content)),
             ]
 
             self.logger.log(
@@ -119,6 +123,10 @@ class NsdScraper:
             nsd += 1
             index += 1
 
+        self.logger.log(
+            f"Downloaded {self.total_bytes_downloaded} bytes",
+            level="info",
+        )
         return results
 
     def _parse_html(self, nsd: int, html: str) -> Dict:
