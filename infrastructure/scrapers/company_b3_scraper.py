@@ -345,17 +345,30 @@ class CompanyB3Scraper:
         results: list[dict] = []
 
         for i, entry in enumerate(companies_list):
+            entry['companyName'] = self.data_cleaner.clean_text(entry['companyName'])
+            entry['issuingCompany'] = self.data_cleaner.clean_text(entry['issuingCompany'])
+            entry['tradingName'] = self.data_cleaner.clean_text(entry['tradingName'])
+
             progress = {
                 "index": i,
                 "size": len(companies_list),
                 "start_time": start_time,
             }
             cvm_code = entry.get("codeCVM")
-            self.logger.log(f"cvm_code: {cvm_code} ", level="info", progress=progress)
+            extra_info = {
+                # "cvm_code": cvm_code,
+                "ticker": entry.get("issuingCompany"),
+                "trading_name": entry.get("tradingName"),
+                "company_name": entry.get("companyName"),
+            }
+            self.logger.log(f"{cvm_code} ", level="info", progress=progress, extra=extra_info)
 
             parsed = self._process_company_detail(entry, skip_codes)
             if parsed:
-                buffer.append(parsed)
+                pass
+
+            buffer.append({**entry, **(parsed or {})})
+            results.append({**entry, **(parsed or {})})
 
             remaining_items = len(companies_list) - i - 1
             self._handle_save(
@@ -421,7 +434,7 @@ class CompanyB3Scraper:
     def _handle_save(
         self,
         buffer: List[Dict],
-        results: List[Dict],
+        results: Optional[List[dict]],
         save_callback: Optional[Callable[[List[dict]], None]],
         threshold: int,
         remaining_items: int,
@@ -429,8 +442,8 @@ class CompanyB3Scraper:
         if (remaining_items % threshold == 0) or (remaining_items == 0):
             if callable(save_callback) and buffer:
                 save_callback(buffer)
-                results.extend(buffer)
                 self.logger.log(
                     f"Saved {len(buffer)} companies (partial)", level="info"
                 )
                 buffer.clear()
+ 

@@ -65,11 +65,18 @@ class Logger:
         if progress_msg:
             full_message += f" | {progress_msg}"
 
+        if extra:
+            extra_str = " ".join(
+                    str(v)
+                    for v in extra.values()
+                    if v not in (None, "")
+                )
+            full_message += f" | {extra_str}"
+
         try:
             log_fn = getattr(self._logger, level.lower(), self._logger.info)
             merged_extra = {"run_id": self._run_id, "worker_id": ""}
-            if extra:
-                merged_extra.update(extra)
+
             log_fn(full_message, extra=merged_extra)
         except Exception as e:
             print(f"Logging failed: {e} - {full_message}")
