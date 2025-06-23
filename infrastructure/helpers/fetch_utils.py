@@ -3,9 +3,9 @@ from __future__ import annotations
 import random
 import ssl
 from typing import Optional
+import time
 
 import certifi
-import cloudscraper
 import requests
 
 from infrastructure.config import Config
@@ -41,16 +41,20 @@ class FetchUtils:
                 "Accept-Language": "en-US,en;q=0.9",
             }
 
-    def create_scraper(self, insecure: bool = False):
-        """Return a configured cloudscraper session.
+    def create_scraper(self, insecure: bool = False) -> requests.Session:
+        """Return a configured requests session.
 
         Args:
-            insecure: Whether to disable SSL verification (useful for some domains).
+            insecure: Whether to disable SSL verification.
 
         Returns:
-            Configured cloudscraper session.
+            Configured ``requests.Session`` instance.
         """
+
         headers = self.header_random()
+
+        session = requests.Session()
+        session.headers.update(headers)
 
         if insecure:
             context = ssl.create_default_context()
@@ -66,16 +70,12 @@ class FetchUtils:
                         )
                     )
 
-            session = requests.Session()
             session.mount("https://", InsecureAdapter())
-            session.headers.update(headers)
-            scraper = cloudscraper.create_scraper(sess=session)
+            session.verify = False
         else:
-            scraper = cloudscraper.create_scraper()
-            scraper.headers.update(headers)
-            scraper.verify = certifi.where()
+            session.verify = certifi.where()
 
-        return scraper
+        return session
 
     def test_internet(
         self, url: Optional[str] = None, timeout: Optional[int] = None
@@ -97,25 +97,34 @@ class FetchUtils:
         self,
         scraper: Optional[requests.Session],
         url: str,
-        max_attempts: Optional[int] = None,
         timeout: Optional[int] = None,
         insecure: bool = False,
-    ):
-        """Fetch a URL with retries, recreating the scraper on failure."""
+    ) -> requests.Response:
+        """Fetch a URL, recreating the scraper when blocked."""
 
-        max_attempts = max_attempts or self.config.scraping.max_attempts or 5
         timeout = timeout or self.config.scraping.timeout or 5
         scraper = scraper or self.create_scraper(insecure=insecure)
 
-        for attempt in range(1, max_attempts + 1):
+        block_start = None
+        attempt = 0
+
+        while True:
             try:
                 response = scraper.get(url, timeout=timeout)
                 if response.status_code == 200:
+                    if block_start:
+                        block_time = time.time() - block_start
+                        self.logger.log(
+                            f"Dodging server block: {block_time:.2f}s",
+                            level="debug",
+                        )
                     return response
-            except Exception as e:
-                self.logger.log(f"Attempt {attempt} failed: {e}", level="warning")
+            except Exception as exc:  # noqa: BLE001
+                self.logger.log(f"Attempt {attempt + 1} failed: {exc}", level="warning")
 
+            if block_start is None:
+                block_start = time.time()
+
+            attempt += 1
             TimeUtils(self.config).sleep_dynamic()
             scraper = self.create_scraper(insecure=insecure)
-
-        raise ConnectionError(f"Failed to fetch {url} after {max_attempts} attempts.")
