@@ -3,7 +3,9 @@ from typing import Callable, Dict, List, Optional, Set
 import base64
 import json
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor
+from queue import Queue
+import threading
 
 import requests
 
@@ -333,6 +335,36 @@ class CompanyB3Scraper:
             self.logger.log(f"erro {e}", level="debug")
             return None
 
+    def _process_entry(
+        self,
+        index: int,
+        entry: Dict,
+        total_size: int,
+        skip_codes: Set[str],
+        start_time: float,
+    ) -> Dict:
+        entry["companyName"] = self.data_cleaner.clean_text(entry["companyName"])
+        entry["issuingCompany"] = self.data_cleaner.clean_text(entry["issuingCompany"])
+        entry["tradingName"] = self.data_cleaner.clean_text(entry["tradingName"])
+
+        progress = {
+            "index": index,
+            "size": total_size,
+            "start_time": start_time,
+        }
+        cvm_code = entry.get("codeCVM")
+        extra_info = {
+            "ticker": entry.get("issuingCompany"),
+            "trading_name": entry.get("tradingName"),
+            "company_name": entry.get("companyName"),
+        }
+        self.logger.log(
+            f"{cvm_code} ", level="info", progress=progress, extra=extra_info
+        )
+
+        parsed = self._process_company_detail(entry, skip_codes)
+        return {**entry, **(parsed or {})}
+
     def _fetch_companies_details_single(
         self,
         companies_list: List[Dict],
@@ -343,34 +375,16 @@ class CompanyB3Scraper:
     ) -> List[Dict]:
         buffer: list[dict] = []
         results: list[dict] = []
+        total_size = len(companies_list)
 
         for i, entry in enumerate(companies_list):
-            entry['companyName'] = self.data_cleaner.clean_text(entry['companyName'])
-            entry['issuingCompany'] = self.data_cleaner.clean_text(entry['issuingCompany'])
-            entry['tradingName'] = self.data_cleaner.clean_text(entry['tradingName'])
+            processed = self._process_entry(
+                i, entry, total_size, skip_codes, start_time
+            )
+            buffer.append(processed)
+            results.append(processed)
 
-            progress = {
-                "index": i,
-                "size": len(companies_list),
-                "start_time": start_time,
-            }
-            cvm_code = entry.get("codeCVM")
-            extra_info = {
-                # "cvm_code": cvm_code,
-                "ticker": entry.get("issuingCompany"),
-                "trading_name": entry.get("tradingName"),
-                "company_name": entry.get("companyName"),
-            }
-            self.logger.log(f"{cvm_code} ", level="info", progress=progress, extra=extra_info)
-
-            parsed = self._process_company_detail(entry, skip_codes)
-            if parsed:
-                pass
-
-            buffer.append({**entry, **(parsed or {})})
-            results.append({**entry, **(parsed or {})})
-
-            remaining_items = len(companies_list) - i - 1
+            remaining_items = total_size - i - 1
             self._handle_save(
                 buffer, results, save_callback, threshold, remaining_items
             )
@@ -391,27 +405,40 @@ class CompanyB3Scraper:
     ) -> List[Dict]:
         buffer: list[dict] = []
         results: list[dict] = []
+        total_size = len(companies_list)
+
+        task_queue: Queue = Queue(self.config.global_settings.queue_size)
+        lock = threading.Lock()
+        sentinel = object()
+
+        def worker() -> None:
+            while True:
+                item = task_queue.get()
+                if item is sentinel:
+                    task_queue.task_done()
+                    break
+                index, entry = item
+                processed = self._process_entry(
+                    index, entry, total_size, skip_codes, start_time
+                )
+                with lock:
+                    buffer.append(processed)
+                    results.append(processed)
+                    remaining_items = total_size - index - 1
+                    self._handle_save(
+                        buffer, results, save_callback, threshold, remaining_items
+                    )
+                task_queue.task_done()
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            futures = [
-                executor.submit(self._process_company_detail, e, skip_codes)
-                for e in companies_list
-            ]
-            for i, future in enumerate(as_completed(futures)):
-                result = future.result()
-                progress = {
-                    "index": i,
-                    "size": len(futures),
-                    "start_time": start_time,
-                }
-                self.logger.log("thread", level="info", progress=progress)
-                if result:
-                    buffer.append(result)
-
-                remaining_items = len(futures) - i - 1
-                self._handle_save(
-                    buffer, results, save_callback, threshold, remaining_items
-                )
+            futures = [executor.submit(worker) for _ in range(max_workers)]
+            for index, entry in enumerate(companies_list):
+                task_queue.put((index, entry))
+            for _ in range(max_workers):
+                task_queue.put(sentinel)
+            task_queue.join()
+            for future in futures:
+                future.result()
 
         if buffer:
             self._handle_save(buffer, results, save_callback, threshold, 0)
@@ -446,4 +473,3 @@ class CompanyB3Scraper:
                     f"Saved {len(buffer)} companies (partial)", level="info"
                 )
                 buffer.clear()
- 
