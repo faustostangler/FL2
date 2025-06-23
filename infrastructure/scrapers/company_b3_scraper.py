@@ -64,6 +64,8 @@ class CompanyB3Scraper:
         # Initialize a requests session for HTTP requests
         self.session = self.fetch_utils.create_scraper()
 
+        self.total_bytes_downloaded = 0
+
     def fetch_all(
         self,
         threshold: Optional[int] = None,
@@ -98,6 +100,11 @@ class CompanyB3Scraper:
             max_workers,
         )
 
+        self.logger.log(
+            f"Downloaded {self.total_bytes_downloaded} bytes",
+            level="info",
+        )
+
         # Return the complete list of parsed company details
         return companies
 
@@ -129,6 +136,7 @@ class CompanyB3Scraper:
 
             # Fetch the current page of results with retry logic
             response = self.fetch_utils.fetch_with_retry(self.session, url)
+            self.total_bytes_downloaded += len(response.content)
             data = response.json()
 
             # Extract and accumulate results from the current page
@@ -143,9 +151,12 @@ class CompanyB3Scraper:
                 "index": self.PAGE_NUMBER - 1,
                 "size": total_pages,
                 "start_time": start_time,
+                "extra_info": [str(len(response.content))],
             }
             self.logger.log(
-                f"{self.PAGE_NUMBER}/{total_pages}", level="info", progress=progress
+                f"{self.PAGE_NUMBER}/{total_pages}",
+                level="info",
+                progress=progress,
             )
 
             # Check if all pages have been processed
@@ -231,6 +242,7 @@ class CompanyB3Scraper:
         url = self.endpoint_detail + token
         # Fetch the company detail data with retry logic
         response = self.fetch_utils.fetch_with_retry(self.session, url)
+        self.total_bytes_downloaded += len(response.content)
         # Return the parsed JSON response
         return response.json()
 
@@ -346,22 +358,30 @@ class CompanyB3Scraper:
         entry["issuingCompany"] = self.data_cleaner.clean_text(entry["issuingCompany"])
         entry["tradingName"] = self.data_cleaner.clean_text(entry["tradingName"])
 
+        cvm_code = entry.get("codeCVM")
+        before_bytes = self.total_bytes_downloaded
+        parsed = self._process_company_detail(entry, skip_codes)
+        delta_bytes = self.total_bytes_downloaded - before_bytes
+
         progress = {
             "index": index,
             "size": total_size,
             "start_time": start_time,
+            "extra_info": [str(delta_bytes)],
         }
-        cvm_code = entry.get("codeCVM")
+
         extra_info = {
             "ticker": entry.get("issuingCompany"),
             "trading_name": entry.get("tradingName"),
             "company_name": entry.get("companyName"),
         }
         self.logger.log(
-            f"{cvm_code} ", level="info", progress=progress, extra=extra_info
+            f"{cvm_code} ",
+            level="info",
+            progress=progress,
+            extra=extra_info,
         )
 
-        parsed = self._process_company_detail(entry, skip_codes)
         return {**entry, **(parsed or {})}
 
     def _fetch_companies_details_single(
