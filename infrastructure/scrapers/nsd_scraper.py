@@ -4,7 +4,6 @@ from datetime import datetime
 import time
 from typing import List, Dict, Optional, Callable
 
-import requests
 from bs4 import BeautifulSoup
 import re
 
@@ -22,7 +21,7 @@ class NsdScraper:
         self.logger = logger
         self.data_cleaner = data_cleaner
         self.fetch_utils = FetchUtils(config, logger)
-        self.session = requests.Session()
+        self.session = self.fetch_utils.create_scraper()
 
         self.nsd_endpoint = self.config.b3.nsd_endpoint
 
