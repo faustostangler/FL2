@@ -4,9 +4,6 @@ from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
 
 from application.usecases.sync_companies import SyncCompaniesUseCase
-from application.usecases.threaded_sync_companies import (
-    MultiThreadedSyncCompaniesUseCase,
-)
 
 
 class CompanyService:
@@ -30,21 +27,13 @@ class CompanyService:
         self.logger = logger
         self.config = config
         logger.log("Start CompanyService", level="info")
-        self.max_workers = self.config.global_settings.max_workers
 
-        if (self.max_workers or 1) > 1:
-            self.sync_usecase = MultiThreadedSyncCompaniesUseCase(
-                config=self.config,
-                logger=self.logger,
-                repository=repository,
-                scraper=scraper,
-            )
-        else:
-            self.sync_usecase = SyncCompaniesUseCase(
-                logger=self.logger,
-                repository=repository,
-                scraper=scraper,
-            )
+        self.sync_usecase = SyncCompaniesUseCase(
+            config=self.config,
+            logger=self.logger,
+            repository=repository,
+            scraper=scraper,
+        )
 
     def run(self) -> None:
         """

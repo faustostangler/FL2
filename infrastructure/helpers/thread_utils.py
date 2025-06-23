@@ -29,6 +29,4 @@ class WorkerThreadIdentifier:
         """
         if not hasattr(self._thread_local, "worker_name"):
             self._thread_local.worker_name = f"{next(self._counter)}"
-        numbered_worker_name = self._thread_local.worker_name
-        real_worker_name = str(threading.get_ident())
-        return real_worker_name
+        return str(threading.get_ident())
