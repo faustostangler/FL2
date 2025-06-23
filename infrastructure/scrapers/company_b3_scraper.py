@@ -7,7 +7,6 @@ from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 import threading
 
-import requests
 
 from infrastructure.config import Config
 from infrastructure.logging import Logger
@@ -62,8 +61,8 @@ class CompanyB3Scraper:
         self.endpoint_detail = config.b3.company_endpoint["detail"]
         self.endpoint_financial = config.b3.company_endpoint["financial"]
 
-        # Initialize a requests session for HTTP requests
-        self.session = requests.Session()
+        # Initialize a cloudscraper session for HTTP requests
+        self.session = self.fetch_utils.create_scraper()
 
     def fetch_all(
         self,
