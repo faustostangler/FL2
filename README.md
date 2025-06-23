@@ -24,7 +24,7 @@ FLY is designed following the Hexagonal Architecture (Ports and Adapters) patter
    - Matches stock performance with financial statements.
 
 5. **Performance & Optimization**
-   - Uses a multi-threaded system to process data efficiently.
+   - Processes data using a configurable number of workers.
    - Tracks memory and execution time to keep things running smoothly.
 
 

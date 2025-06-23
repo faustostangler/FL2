@@ -10,11 +10,13 @@ from infrastructure.logging import Logger
 from infrastructure.helpers import FetchUtils
 from infrastructure.helpers.data_cleaner import DataCleaner
 
+
 class CompanyB3Scraper:
     """
     Scraper adapter responsible for fetching raw company data.
     In a real implementation, this could use requests, BeautifulSoup, or Selenium.
     """
+
     def __init__(self, config: Config, logger: Logger, data_cleaner: DataCleaner):
         """Set up configuration, logger and helper utilities for the scraper.
 
@@ -59,14 +61,23 @@ class CompanyB3Scraper:
         # Initialize a requests session for HTTP requests
         self.session = requests.Session()
 
-    def fetch_all(self, threshold: Optional[int] = None, 
-                  skip_codes: Optional[Set[str]] = None, 
-                  save_callback: Optional[Callable[[List[dict]], None]] = None, 
-                  ) -> List[Dict]:
-        """
-        Fetches raw data for all companies.
+    def fetch_all(
+        self,
+        threshold: Optional[int] = None,
+        skip_codes: Optional[Set[str]] = None,
+        save_callback: Optional[Callable[[List[dict]], None]] = None,
+        max_workers: int | None = None,
+    ) -> List[Dict]:
+        """Fetch all companies from B3.
 
-        :return: List of dictionaries representing raw company data
+        Args:
+            threshold: Number of companies to buffer before saving.
+            skip_codes: CVM codes to ignore.
+            save_callback: Optional callback to persist partial results.
+            max_workers: Optional thread count for future parallelism.
+
+        Returns:
+            List of dictionaries representing raw company data.
         """
         # Ensure skip_codes is a set (to avoid None and allow fast lookup)
         skip_codes = skip_codes or set()
@@ -76,12 +87,20 @@ class CompanyB3Scraper:
         # Fetch the initial list of companies from B3, possibly skipping some CVM codes
         companies_list = self._fetch_companies_list(skip_codes, threshold)
         # Fetch and parse detailed information for each company, with optional skipping and periodic saving
-        companies = self._fetch_companies_details(companies_list, skip_codes, save_callback, threshold)
+        companies = self._fetch_companies_details(
+            companies_list,
+            skip_codes,
+            save_callback,
+            threshold,
+            max_workers,
+        )
 
         # Return the complete list of parsed company details
         return companies
 
-    def _fetch_companies_list(self, skip_codes: Optional[Set[str]] = None, threshold: Optional[int] = None) -> List[Dict]:
+    def _fetch_companies_list(
+        self, skip_codes: Optional[Set[str]] = None, threshold: Optional[int] = None
+    ) -> List[Dict]:
         """
         Busca o conjunto inicial de empresas disponíveis na B3.
 
@@ -97,9 +116,9 @@ class CompanyB3Scraper:
         while True:
             # Build the payload for the current page
             payload = {
-            "language": self.language,
-            "pageNumber": self.PAGE_NUMBER,
-            "pageSize": self.PAGE_SIZE,
+                "language": self.language,
+                "pageNumber": self.PAGE_NUMBER,
+                "pageSize": self.PAGE_SIZE,
             }
             # Encode the payload as required by the B3 API
             token = self._encode_payload(payload)
@@ -118,11 +137,13 @@ class CompanyB3Scraper:
 
             # Log progress for monitoring
             progress = {
-            "index": self.PAGE_NUMBER - 1,
-            "size": total_pages,
-            "start_time": start_time,
+                "index": self.PAGE_NUMBER - 1,
+                "size": total_pages,
+                "start_time": start_time,
             }
-            self.logger.log(f"{self.PAGE_NUMBER}/{total_pages}", level="info", progress=progress)
+            self.logger.log(
+                f"{self.PAGE_NUMBER}/{total_pages}", level="info", progress=progress
+            )
 
             # Check if all pages have been processed
             if self.PAGE_NUMBER >= total_pages:
@@ -143,7 +164,14 @@ class CompanyB3Scraper:
         """
         return base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
 
-    def _fetch_companies_details(self, companies_list: List[Dict], skip_codes: Optional[Set[str]] = None, save_callback: Optional[Callable[[List[dict]], None]] = None, threshold: Optional[int] = None) -> List[Dict]:
+    def _fetch_companies_details(
+        self,
+        companies_list: List[Dict],
+        skip_codes: Optional[Set[str]] = None,
+        save_callback: Optional[Callable[[List[dict]], None]] = None,
+        threshold: Optional[int] = None,
+        max_workers: int | None = None,
+    ) -> List[Dict]:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
         Args:
@@ -151,6 +179,7 @@ class CompanyB3Scraper:
             skip_codes (Optional[Set[str]], optional): Set of CVM codes to skip during processing. Defaults to None.
             save_callback (Optional[Callable[[List[dict]], None]], optional): Callback function to save buffered company details periodically. Defaults to None.
             threshold (Optional[int], optional): Number of companies to process before triggering the save_callback. If not provided, uses configuration or defaults to 50.
+            max_workers (int | None, optional): Reserved for future parallel fetching.
         Returns:
             List[Dict]: List of parsed company detail dictionaries.
         Logs:
@@ -159,7 +188,7 @@ class CompanyB3Scraper:
         Raises:
             - Does not raise exceptions; logs warnings instead.
         """
-        
+
         # Determine the save threshold (number of companies before saving buffer)
         threshold = threshold or self.config.global_settings.threshold or 50
 
@@ -178,7 +207,11 @@ class CompanyB3Scraper:
             cvm_code = entry.get("codeCVM")
 
             # Log progress
-            progress = {"index": i, "size": len(companies_list), "start_time": start_time}
+            progress = {
+                "index": i,
+                "size": len(companies_list),
+                "start_time": start_time,
+            }
             self.logger.log(f"cvm_code: {cvm_code} ", level="info", progress=progress)
 
             # Skip if cvm_code is missing or in the skip list
@@ -199,7 +232,9 @@ class CompanyB3Scraper:
                         save_callback(buffer)
                         results.extend(buffer)
                         buffer.clear()
-                        self.logger.log(f"Saved {len(buffer)} companies (partial)", level="info")
+                        self.logger.log(
+                            f"Saved {len(buffer)} companies (partial)", level="info"
+                        )
 
             except Exception as e:
                 # Log any exception as a warning
@@ -216,10 +251,7 @@ class CompanyB3Scraper:
         :return: Dicionário com detalhes estendidos da empresa
         """
         # Prepare the payload with the CVM code and language for the request
-        payload = {
-            "codeCVM": cvm_code,
-            "language": self.language
-        }
+        payload = {"codeCVM": cvm_code, "language": self.language}
         # Encode the payload as base64 to match B3 API requirements
         token = self._encode_payload(payload)
         # Build the full URL for the detail endpoint
@@ -256,22 +288,36 @@ class CompanyB3Scraper:
             registrar = self.data_cleaner.clean_text(detail.get("registrar"))
             website = detail.get("website")
             sector = self.data_cleaner.clean_text(parts[0]) if len(parts) > 0 else None
-            subsector = self.data_cleaner.clean_text(parts[1]) if len(parts) > 1 else None
+            subsector = (
+                self.data_cleaner.clean_text(parts[1]) if len(parts) > 1 else None
+            )
             segment = self.data_cleaner.clean_text(parts[2]) if len(parts) > 2 else None
 
-            market_indicator = self.data_cleaner.clean_text(base.get("marketIndicator") or detail.get("marketIndicator"))
-            type_bdr = self.data_cleaner.clean_text(base.get("typeBDR") or detail.get("typeBDR"))
+            market_indicator = self.data_cleaner.clean_text(
+                base.get("marketIndicator") or detail.get("marketIndicator")
+            )
+            type_bdr = self.data_cleaner.clean_text(
+                base.get("typeBDR") or detail.get("typeBDR")
+            )
             date_listing = self.data_cleaner.clean_date(base.get("dateListing"))
-            status = self.data_cleaner.clean_text(base.get("status") or detail.get("status"))
+            status = self.data_cleaner.clean_text(
+                base.get("status") or detail.get("status")
+            )
             segment_b3 = self.data_cleaner.clean_text(base.get("segment"))
             segment_eng = self.data_cleaner.clean_text(base.get("segmentEng"))
             company_type = self.data_cleaner.clean_text(base.get("type"))
-            market = self.data_cleaner.clean_text(base.get("market") or detail.get("market"))
+            market = self.data_cleaner.clean_text(
+                base.get("market") or detail.get("market")
+            )
             industry = detail.get("industryClassification")
             industry_eng = detail.get("industryClassificationEng")
             activity = detail.get("activity")
-            institution_common = self.data_cleaner.clean_text(detail.get("institutionCommon"))
-            institution_pref = self.data_cleaner.clean_text(detail.get("institutionPreferred"))
+            institution_common = self.data_cleaner.clean_text(
+                detail.get("institutionCommon")
+            )
+            institution_pref = self.data_cleaner.clean_text(
+                detail.get("institutionPreferred")
+            )
             last_date = self.data_cleaner.clean_date(detail.get("lastDate"))
             category = self.data_cleaner.clean_text(detail.get("describleCategoryBVMF"))
             quotation_date = self.data_cleaner.clean_date(detail.get("dateQuotation"))
@@ -291,7 +337,6 @@ class CompanyB3Scraper:
                 "sector": sector,
                 "subsector": subsector,
                 "segment": segment,
-
                 "marketIndicator": market_indicator,
                 "typeBDR": type_bdr,
                 "dateListing": date_listing,

@@ -1,5 +1,7 @@
 from typing import List
 
+from infrastructure.config import Config
+
 from infrastructure.logging import Logger
 from domain.dto.company_dto import CompanyDTO
 from infrastructure.repositories import SQLiteCompanyRepository
@@ -13,10 +15,12 @@ class SyncCompaniesUseCase:
 
     def __init__(
         self,
+        config: Config,
         logger: Logger,
         repository: SQLiteCompanyRepository,
         scraper: CompanyB3Scraper,
     ):
+        self.config = config
         self.logger = logger
         self.logger.log("Start SyncCompaniesUseCase", level="info")
 
@@ -32,13 +36,10 @@ class SyncCompaniesUseCase:
         """
         existing_codes = self.repository.get_all_primary_keys()
 
-        # Split the scraping pipeline to reuse low level methods
-        companies_list = self.scraper._fetch_companies_list()
-
-        self.scraper._fetch_companies_details(
-            companies_list=companies_list,
+        self.scraper.fetch_all(
             skip_codes=existing_codes,
             save_callback=self._save_batch,
+            max_workers=self.config.global_settings.max_workers,
         )
 
     def _save_batch(self, buffer: List[dict]) -> None:
