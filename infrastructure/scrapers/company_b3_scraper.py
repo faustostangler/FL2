@@ -2,6 +2,7 @@ from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import base64
 import json
+from dataclasses import asdict
 import time
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
@@ -13,6 +14,7 @@ from infrastructure.logging import Logger
 from infrastructure.helpers import FetchUtils
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.byte_formatter import ByteFormatter
+from domain.dto import CodeDTO, RawParsedCompanyDTO
 
 
 class CompanyB3Scraper:
@@ -75,9 +77,9 @@ class CompanyB3Scraper:
         self,
         threshold: Optional[int] = None,
         skip_codes: Optional[Set[str]] = None,
-        save_callback: Optional[Callable[[List[dict]], None]] = None,
+        save_callback: Optional[Callable[[List[RawParsedCompanyDTO]], None]] = None,
         max_workers: int | None = None,
-    ) -> List[Dict]:
+    ) -> List[RawParsedCompanyDTO]:
         """Fetch all companies from B3.
 
         Args:
@@ -162,9 +164,15 @@ class CompanyB3Scraper:
                 "start_time": start_time,
             }
             extra_info = {
-                "download_global": self.byte_formatter.format_bytes(self.download_bytes_total),
-                "download_total": self.byte_formatter.format_bytes(download_bytes_execution_mode),
-                "download_bytes_item": self.byte_formatter.format_bytes(download_bytes_item),
+                "download_global": self.byte_formatter.format_bytes(
+                    self.download_bytes_total
+                ),
+                "download_total": self.byte_formatter.format_bytes(
+                    download_bytes_execution_mode
+                ),
+                "download_bytes_item": self.byte_formatter.format_bytes(
+                    download_bytes_item
+                ),
             }
             self.logger.log(
                 f"{self.PAGE_NUMBER}/{total_pages}",
@@ -201,10 +209,10 @@ class CompanyB3Scraper:
         self,
         companies_list: List[Dict],
         skip_codes: Optional[Set[str]] = None,
-        save_callback: Optional[Callable[[List[dict]], None]] = None,
+        save_callback: Optional[Callable[[List[RawParsedCompanyDTO]], None]] = None,
         threshold: Optional[int] = None,
         max_workers: int | None = None,
-    ) -> Tuple[List[Dict], int]:
+    ) -> Tuple[List[RawParsedCompanyDTO], int]:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
         Args:
@@ -230,12 +238,14 @@ class CompanyB3Scraper:
         start_time = time.time()
 
         if (max_workers or 1) <= 1:
-            results, download_bytes_execution_mode = self._fetch_companies_details_single(
-                companies_list,
-                skip_codes,
-                save_callback,
-                threshold,
-                start_time,
+            results, download_bytes_execution_mode = (
+                self._fetch_companies_details_single(
+                    companies_list,
+                    skip_codes,
+                    save_callback,
+                    threshold,
+                    start_time,
+                )
             )
         results, download_bytes_execution_mode = self._fetch_companies_details_threaded(
             companies_list,
@@ -267,7 +277,7 @@ class CompanyB3Scraper:
         # Return the parsed JSON response
         return response.json()
 
-    def _parse_company(self, base: Dict, detail: Dict) -> Optional[Dict]:
+    def _parse_company(self, base: Dict, detail: Dict) -> Optional[RawParsedCompanyDTO]:
         """
         Combina os dados do resultado base com os detalhes e retorna um dicionário padronizado.
 
@@ -278,8 +288,11 @@ class CompanyB3Scraper:
         try:
             # Extract and clean company fields from base and detail data
             codes = detail.get("otherCodes", []) or []
-            ticker_codes = [c["code"] for c in codes if "code" in c]
-            isin_codes = [c["isin"] for c in codes if "isin" in c]
+            ticker_codes = [c.get("code") for c in codes if "code" in c]
+            isin_codes = [c.get("isin") for c in codes if "isin" in c]
+            other_codes = [
+                CodeDTO(code=c.get("code"), isin=c.get("isin")) for c in codes
+            ]
 
             # Classificação setorial
             industry = detail.get("industryClassification", "")
@@ -328,41 +341,41 @@ class CompanyB3Scraper:
             category = self.data_cleaner.clean_text(detail.get("describleCategoryBVMF"))
             quotation_date = self.data_cleaner.clean_date(detail.get("dateQuotation"))
 
-            return {
-                "ticker": ticker,
-                "company_name": company_name,
-                "cvm_code": cvm_code,
-                "cnpj": cnpj,
-                "trading_name": trading_name,
-                "listing": listing,
-                "registrar": registrar,
-                "website": website,
-                "ticker_codes": json.dumps(ticker_codes),
-                "isin_codes": json.dumps(isin_codes),
-                "otherCodes": codes,
-                "sector": sector,
-                "subsector": subsector,
-                "segment": segment,
-                "marketIndicator": market_indicator,
-                "typeBDR": type_bdr,
-                "dateListing": date_listing,
-                "status": status,
-                "segment_b3": segment_b3,
-                "segmentEng": segment_eng,
-                "type": company_type,
-                "market": market,
-                "industryClassification": industry,
-                "industryClassificationEng": industry_eng,
-                "activity": activity,
-                "hasQuotation": detail.get("hasQuotation"),
-                "institutionCommon": institution_common,
-                "institutionPreferred": institution_pref,
-                "lastDate": last_date,
-                "hasEmissions": detail.get("hasEmissions"),
-                "hasBDR": detail.get("hasBDR"),
-                "describleCategoryBVMF": category,
-                "dateQuotation": quotation_date,
-            }
+            return RawParsedCompanyDTO(
+                ticker=ticker,
+                company_name=company_name,
+                cvm_code=cvm_code,
+                cnpj=cnpj,
+                trading_name=trading_name,
+                listing=listing,
+                registrar=registrar,
+                website=website,
+                ticker_codes=ticker_codes,
+                isin_codes=isin_codes,
+                other_codes=other_codes,
+                sector=sector,
+                subsector=subsector,
+                segment=segment,
+                market_indicator=market_indicator,
+                bdr_type=type_bdr,
+                listing_date=date_listing,
+                status=status,
+                segment_b3=segment_b3,
+                segment_eng=segment_eng,
+                company_type=company_type,
+                market=market,
+                industry_classification=industry,
+                industry_classification_eng=industry_eng,
+                activity=activity,
+                has_quotation=detail.get("hasQuotation"),
+                institution_common=institution_common,
+                institution_preferred=institution_pref,
+                last_date=last_date,
+                has_emissions=detail.get("hasEmissions"),
+                has_bdr=detail.get("hasBDR"),
+                describle_category_bvmf=category,
+                quotation_date=quotation_date,
+            )
         except Exception as e:
             self.logger.log(f"erro {e}", level="debug")
             return None
@@ -371,31 +384,30 @@ class CompanyB3Scraper:
         self,
         entry: Dict,
         skip_codes: Set[str],
-    ) -> Dict:
+    ) -> Optional[RawParsedCompanyDTO]:
         entry["companyName"] = self.data_cleaner.clean_text(entry["companyName"])
         entry["issuingCompany"] = self.data_cleaner.clean_text(entry["issuingCompany"])
         entry["tradingName"] = self.data_cleaner.clean_text(entry["tradingName"])
 
         parsed = self._process_company_detail(entry, skip_codes)
 
-        return {**entry, **(parsed or {})}
+        return parsed
 
     def _fetch_companies_details_single(
         self,
         companies_list: List[Dict],
         skip_codes: Set[str],
-        save_callback: Optional[Callable[[List[dict]], None]],
+        save_callback: Optional[Callable[[List[RawParsedCompanyDTO]], None]],
         threshold: int,
         start_time: float,
-    ) -> Tuple[List[Dict], int]:
-        
-        buffer: list[dict] = []
-        results: list[dict] = []
+    ) -> Tuple[List[RawParsedCompanyDTO], int]:
+        buffer: list[RawParsedCompanyDTO] = []
+        results: list[RawParsedCompanyDTO] = []
         total_size = len(companies_list)
         download_bytes_execution_mode = 0
 
         for index, entry in enumerate(companies_list):
-            ticker = entry['issuingCompany']
+            ticker = entry["issuingCompany"]
             if ticker != "BBAS":
                 continue
 
@@ -412,7 +424,6 @@ class CompanyB3Scraper:
             }
 
             if cvm_code in skip_codes:
-
                 self.logger.log(
                     message,
                     level="info",
@@ -424,7 +435,9 @@ class CompanyB3Scraper:
 
             processed = self._process_entry(entry, skip_codes)
 
-            download_bytes_item = len(json.dumps(processed, default=str).encode('utf-8'))
+            download_bytes_item = len(
+                json.dumps(asdict(processed), default=str).encode("utf-8")
+            )
             download_bytes_execution_mode += download_bytes_item
             self.download_bytes_total += download_bytes_item
 
@@ -434,9 +447,15 @@ class CompanyB3Scraper:
             extra_info = {
                 "issuing_company": entry.get("issuingCompany", ""),
                 "company_name": entry.get("companyName", ""),
-                "download_global": self.byte_formatter.format_bytes(self.download_bytes_total),
-                "download_total": self.byte_formatter.format_bytes(download_bytes_execution_mode),
-                "download_bytes_item": self.byte_formatter.format_bytes(download_bytes_item),
+                "download_global": self.byte_formatter.format_bytes(
+                    self.download_bytes_total
+                ),
+                "download_total": self.byte_formatter.format_bytes(
+                    download_bytes_execution_mode
+                ),
+                "download_bytes_item": self.byte_formatter.format_bytes(
+                    download_bytes_item
+                ),
             }
 
             self.logger.log(
@@ -461,25 +480,23 @@ class CompanyB3Scraper:
 
         return results, download_bytes_execution_mode
 
-
     def _fetch_companies_details_threaded(
         self,
         companies_list: List[Dict],
         skip_codes: Set[str],
-        save_callback: Optional[Callable[[List[dict]], None]],
+        save_callback: Optional[Callable[[List[RawParsedCompanyDTO]], None]],
         threshold: int,
         max_workers: int,
         start_time: float,
-    ) -> Tuple[List[Dict], int]:
-
+    ) -> Tuple[List[RawParsedCompanyDTO], int]:
         # ========== 1. Initialization ==========
         # Instantiate buffer and results lists to hold processed data
-        buffer: list[dict] = []
-        results: list[dict] = []
+        buffer: list[RawParsedCompanyDTO] = []
+        results: list[RawParsedCompanyDTO] = []
 
         # Calculate the total size of the companies list for progress tracking
         total_size = len(companies_list)
-        
+
         # Create a thread-safe queue to distribute work tasks among threads
         task_queue: Queue = Queue(self.config.global_settings.queue_size)
 
@@ -492,7 +509,7 @@ class CompanyB3Scraper:
 
         # ========== 2. Worker Function Definition ==========
         # Worker function to process entries from the queue
-        def worker(worker_id: str) -> int: # type: ignore
+        def worker(worker_id: str) -> int:  # type: ignore
             # self.logger.log(f"Starting Worker {worker_id}", level="info")
 
             # Initialize variables
@@ -524,7 +541,9 @@ class CompanyB3Scraper:
                     processed = self._process_entry(entry, skip_codes)
 
                     # Log the progress of processing (bytes downloaded for item, execcution and total)
-                    download_bytes_item = len(json.dumps(processed, default=str).encode('utf-8'))
+                    download_bytes_item = len(
+                        json.dumps(asdict(processed), default=str).encode("utf-8")
+                    )
                     download_bytes_worker += download_bytes_item
                     self.download_bytes_total += download_bytes_item
                     # self.logger.log(f"Worker {worker_id} processed  Item {index} {cvm_code} {ticker} {trading_name} {self.byte_formatter.format_bytes(download_bytes_item)}", level="info")
@@ -541,7 +560,7 @@ class CompanyB3Scraper:
                         self._handle_save(
                             buffer, results, save_callback, threshold, remaining_items
                         )
-                    
+
                         # Task is done, notify the queue
                         progress = {
                             "index": total_size - remaining_items - 1,
@@ -551,15 +570,28 @@ class CompanyB3Scraper:
                         extra_info = {
                             "ticker": ticker,
                             "trading_name": trading_name,
-                            "download_global": self.byte_formatter.format_bytes(self.download_bytes_total),
+                            "download_global": self.byte_formatter.format_bytes(
+                                self.download_bytes_total
+                            ),
                             # "download_total": self.byte_formatter.format_bytes(download_bytes_execution_mode),
-                            "download_bytes_item": self.byte_formatter.format_bytes(download_bytes_item),
+                            "download_bytes_item": self.byte_formatter.format_bytes(
+                                download_bytes_item
+                            ),
                         }
-                        
-                        self.logger.log(f"{cvm_code}", level="info", progress=progress, extra=extra_info, worker_id=worker_id)
+
+                        self.logger.log(
+                            f"{cvm_code}",
+                            level="info",
+                            progress=progress,
+                            extra=extra_info,
+                            worker_id=worker_id,
+                        )
 
                 except Exception as e:
-                    self.logger.log(f"Worker {worker_id} falhou em {ticker} {trading_name}: {e}", level="warning")
+                    self.logger.log(
+                        f"Worker {worker_id} falhou em {ticker} {trading_name}: {e}",
+                        level="warning",
+                    )
 
                 finally:
                     task_queue.task_done()
@@ -572,9 +604,9 @@ class CompanyB3Scraper:
             # Submit worker tasks to the executor. Each submit call returns a Future object containing the result of the worker function.
             # 1.1. range(max_workers) repeats for the number of max_workers
             # 1.2. worker is a thread (unit of execution) that processes tasks from a queue. worker task, in this case, is processing a company entry.
-            # 2.1. list comprehension iterates over the range of max_workers, creating one Future for each worker. 
+            # 2.1. list comprehension iterates over the range of max_workers, creating one Future for each worker.
             ## A future object is a placeholder for the worker's future result.
-            # 2.2. executor.submit(worker) submits each worker function to the thread pool, the '_' is an unused placeholder for the loop variable. 
+            # 2.2. executor.submit(worker) submits each worker function to the thread pool, the '_' is an unused placeholder for the loop variable.
             # 2.4. executor returns a future object representing the execution of the worker function.
             ## executor (ThreadPoolExecutor) is a (high-level) interface for managing a pool of threads asynchronously (simultaneously).
             ## A thread pool is a (high-level) collection of pre-instantiated worker threads that execute tasks from a queue, so multiple threads can run simultaneously.
@@ -635,7 +667,7 @@ class CompanyB3Scraper:
 
     def _process_company_detail(
         self, entry: Dict, skip_codes: Set[str]
-    ) -> Optional[Dict]:
+    ) -> Optional[RawParsedCompanyDTO]:
         try:
             cvm_code = entry.get("codeCVM")
             detail = self._fetch_detail(str(cvm_code))
@@ -647,9 +679,9 @@ class CompanyB3Scraper:
 
     def _handle_save(
         self,
-        buffer: List[Dict],
-        results: Optional[List[dict]],
-        save_callback: Optional[Callable[[List[dict]], None]],
+        buffer: List[RawParsedCompanyDTO],
+        results: Optional[List[RawParsedCompanyDTO]],
+        save_callback: Optional[Callable[[List[RawParsedCompanyDTO]], None]],
         threshold: int,
         remaining_items: int,
     ) -> None:

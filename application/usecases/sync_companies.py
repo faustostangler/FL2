@@ -4,6 +4,7 @@ from infrastructure.config import Config
 
 from infrastructure.logging import Logger
 from domain.dto.company_dto import CompanyDTO
+from domain.dto.raw_company_dto import RawParsedCompanyDTO
 from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
 
@@ -46,6 +47,6 @@ class SyncCompaniesUseCase:
             level="info",
         )
 
-    def _save_batch(self, buffer: List[dict]) -> None:
-        dtos = [CompanyDTO.from_dict(d) for d in buffer]
+    def _save_batch(self, buffer: List[RawParsedCompanyDTO]) -> None:
+        dtos = [CompanyDTO.from_raw(item) for item in buffer if item]
         self.repository.save_all(dtos)
