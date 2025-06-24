@@ -14,7 +14,13 @@ from infrastructure.logging import Logger
 from infrastructure.helpers import FetchUtils
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.byte_formatter import ByteFormatter
-from domain.dto import CodeDTO, RawParsedCompanyDTO
+from domain.dto import (
+    CodeDTO,
+    RawBaseCompanyDTO,
+    RawDetailCompanyDTO,
+    RawParsedCompanyDTO,
+)
+from application import CompanyMapper
 
 
 class CompanyB3Scraper:
@@ -23,7 +29,13 @@ class CompanyB3Scraper:
     In a real implementation, this could use requests, BeautifulSoup, or Selenium.
     """
 
-    def __init__(self, config: Config, logger: Logger, data_cleaner: DataCleaner):
+    def __init__(
+        self,
+        config: Config,
+        logger: Logger,
+        data_cleaner: DataCleaner,
+        mapper: CompanyMapper,
+    ):
         """Set up configuration, logger and helper utilities for the scraper.
 
         Args:
@@ -51,6 +63,7 @@ class CompanyB3Scraper:
         self.config = config
         self.logger = logger
         self.data_cleaner = data_cleaner
+        self.mapper = mapper
 
         # Log the initialization of the CompanyB3Scraper
         self.logger.log("Start CompanyB3Scraper", level="info")
@@ -258,7 +271,7 @@ class CompanyB3Scraper:
 
         return results, download_bytes_execution_mode
 
-    def _fetch_detail(self, cvm_code: str) -> Dict:
+    def _fetch_detail(self, cvm_code: str) -> RawDetailCompanyDTO:
         """
         Busca os detalhes de uma empresa a partir do código CVM.
 
@@ -271,112 +284,19 @@ class CompanyB3Scraper:
         token = self._encode_payload(payload)
         # Build the full URL for the detail endpoint
         url = self.endpoint_detail + token
-        # Fetch the company detail data with retry logic
         response = self.fetch_utils.fetch_with_retry(self.session, url)
         self.download_bytes_total += len(response.content)
-        # Return the parsed JSON response
-        return response.json()
 
-    def _parse_company(self, base: Dict, detail: Dict) -> Optional[RawParsedCompanyDTO]:
-        """
-        Combina os dados do resultado base com os detalhes e retorna um dicionário padronizado.
+        return RawDetailCompanyDTO.from_dict(response.json())
 
-        :param base: Dados iniciais da empresa (Getcompanies_listCompanies)
-        :param detail: Detalhes adicionais da empresa (GetDetail)
-        :return: Dicionário padronizado
-        """
+    def _parse_company(
+        self, base: RawBaseCompanyDTO, detail: RawDetailCompanyDTO
+    ) -> Optional[RawParsedCompanyDTO]:
+        """Merge base and detail DTOs into a parsed DTO."""
+
         try:
-            # Extract and clean company fields from base and detail data
-            codes = detail.get("otherCodes", []) or []
-            ticker_codes = [c.get("code") for c in codes if "code" in c]
-            isin_codes = [c.get("isin") for c in codes if "isin" in c]
-            other_codes = [
-                CodeDTO(code=c.get("code"), isin=c.get("isin")) for c in codes
-            ]
-
-            # Classificação setorial
-            industry = detail.get("industryClassification", "")
-            parts = [p.strip() for p in industry.split("/")]
-
-            ticker = self.data_cleaner.clean_text(base.get("issuingCompany"))
-            company_name = self.data_cleaner.clean_text(base.get("companyName"))
-            cvm_code = self.data_cleaner.clean_text(base.get("codeCVM"))
-            cnpj = self.data_cleaner.clean_text(detail.get("cnpj"))
-            trading_name = self.data_cleaner.clean_text(detail.get("tradingName"))
-            listing = self.data_cleaner.clean_text(detail.get("listingSegment"))
-            registrar = self.data_cleaner.clean_text(detail.get("registrar"))
-            website = detail.get("website")
-            sector = self.data_cleaner.clean_text(parts[0]) if len(parts) > 0 else None
-            subsector = (
-                self.data_cleaner.clean_text(parts[1]) if len(parts) > 1 else None
-            )
-            segment = self.data_cleaner.clean_text(parts[2]) if len(parts) > 2 else None
-
-            market_indicator = self.data_cleaner.clean_text(
-                base.get("marketIndicator") or detail.get("marketIndicator")
-            )
-            type_bdr = self.data_cleaner.clean_text(
-                base.get("typeBDR") or detail.get("typeBDR")
-            )
-            date_listing = self.data_cleaner.clean_date(base.get("dateListing"))
-            status = self.data_cleaner.clean_text(
-                base.get("status") or detail.get("status")
-            )
-            segment_b3 = self.data_cleaner.clean_text(base.get("segment"))
-            segment_eng = self.data_cleaner.clean_text(base.get("segmentEng"))
-            company_type = self.data_cleaner.clean_text(base.get("type"))
-            market = self.data_cleaner.clean_text(
-                base.get("market") or detail.get("market")
-            )
-            industry = detail.get("industryClassification")
-            industry_eng = detail.get("industryClassificationEng")
-            activity = detail.get("activity")
-            institution_common = self.data_cleaner.clean_text(
-                detail.get("institutionCommon")
-            )
-            institution_pref = self.data_cleaner.clean_text(
-                detail.get("institutionPreferred")
-            )
-            last_date = self.data_cleaner.clean_date(detail.get("lastDate"))
-            category = self.data_cleaner.clean_text(detail.get("describleCategoryBVMF"))
-            quotation_date = self.data_cleaner.clean_date(detail.get("dateQuotation"))
-
-            return RawParsedCompanyDTO(
-                ticker=ticker,
-                company_name=company_name,
-                cvm_code=cvm_code,
-                cnpj=cnpj,
-                trading_name=trading_name,
-                listing=listing,
-                registrar=registrar,
-                website=website,
-                ticker_codes=ticker_codes,
-                isin_codes=isin_codes,
-                other_codes=other_codes,
-                sector=sector,
-                subsector=subsector,
-                segment=segment,
-                market_indicator=market_indicator,
-                bdr_type=type_bdr,
-                listing_date=date_listing,
-                status=status,
-                segment_b3=segment_b3,
-                segment_eng=segment_eng,
-                company_type=company_type,
-                market=market,
-                industry_classification=industry,
-                industry_classification_eng=industry_eng,
-                activity=activity,
-                has_quotation=detail.get("hasQuotation"),
-                institution_common=institution_common,
-                institution_preferred=institution_pref,
-                last_date=last_date,
-                has_emissions=detail.get("hasEmissions"),
-                has_bdr=detail.get("hasBDR"),
-                describle_category_bvmf=category,
-                quotation_date=quotation_date,
-            )
-        except Exception as e:
+            return self.mapper.merge(base, detail)
+        except Exception as e:  # noqa: BLE001
             self.logger.log(f"erro {e}", level="debug")
             return None
 
@@ -389,7 +309,9 @@ class CompanyB3Scraper:
         entry["issuingCompany"] = self.data_cleaner.clean_text(entry["issuingCompany"])
         entry["tradingName"] = self.data_cleaner.clean_text(entry["tradingName"])
 
-        parsed = self._process_company_detail(entry, skip_codes)
+        base_dto = RawBaseCompanyDTO.from_dict(entry)
+
+        parsed = self._process_company_detail(base_dto, skip_codes)
 
         return parsed
 
@@ -666,12 +588,12 @@ class CompanyB3Scraper:
         return results, download_bytes_execution_mode
 
     def _process_company_detail(
-        self, entry: Dict, skip_codes: Set[str]
+        self, base: RawBaseCompanyDTO, skip_codes: Set[str]
     ) -> Optional[RawParsedCompanyDTO]:
         try:
-            cvm_code = entry.get("codeCVM")
+            cvm_code = base.cvm_code
             detail = self._fetch_detail(str(cvm_code))
-            parsed = self._parse_company(entry, detail)
+            parsed = self._parse_company(base, detail)
             return parsed
         except Exception as exc:  # noqa: BLE001
             self.logger.log(f"erro {exc}", level="warning")

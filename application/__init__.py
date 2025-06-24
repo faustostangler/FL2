@@ -1,1 +1,3 @@
-# Aplication layer entry point (kept empty to avoid tight coupling between submodules)
+from .mappers.company_mapper import CompanyMapper
+
+__all__ = ["CompanyMapper"]
