@@ -1,12 +1,10 @@
 import logging
 import uuid
 from typing import Optional
-import hashlib
 
 from infrastructure.config.config import Config
 from infrastructure.logging.progress_formatter import ProgressFormatter
 from infrastructure.logging.context_tracker import ContextTracker
-
 
 
 class Logger:
@@ -18,14 +16,13 @@ class Logger:
 
     def __init__(self, config: Config, level: str = "DEBUG", logger_name: Optional[str] = None):
         self._run_id = uuid.uuid4().hex[:8]
-        self.worker_id = hashlib.sha256(self._run_id.encode()).hexdigest()[:8]
+        self.worker_id = uuid.uuid4().hex[:8]
 
         self.config = config
         self.logger_name = logger_name or self.config.global_settings.app_name or "FLY"
         self.progress_formatter = ProgressFormatter()
         self.context_tracker = ContextTracker(config.paths.root_dir)
         self._logger = self._setup_logger(level)
-
 
     def _setup_logger(self, level: str) -> logging.LoggerAdapter:
         """

@@ -1,4 +1,3 @@
-from concurrent import futures
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import base64
@@ -7,7 +6,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 import threading
-import hashlib
+import uuid
 
 from infrastructure.config import Config
 from infrastructure.logging import Logger
@@ -66,7 +65,6 @@ class CompanyB3Scraper:
         # Initialize a requests session for HTTP requests
         self.session = self.fetch_utils.create_scraper()
 
-        self.download_bytes_execution_mode = 0
         self.download_bytes_total = 0
         self.byte_formatter = ByteFormatter()
 
@@ -239,9 +237,8 @@ class CompanyB3Scraper:
                 threshold,
                 start_time,
             )
-        self.logger.log("Fetching limited companies number", level="warning")
         results, download_bytes_execution_mode = self._fetch_companies_details_threaded(
-            companies_list[:105],
+            companies_list,
             skip_codes,
             save_callback,
             threshold,
@@ -398,6 +395,10 @@ class CompanyB3Scraper:
         download_bytes_execution_mode = 0
 
         for index, entry in enumerate(companies_list):
+            ticker = entry['issuingCompany']
+            if ticker != "BBAS":
+                continue
+
             cvm_code = entry.get("codeCVM")
             message = f"{cvm_code}"
             progress = {
@@ -494,16 +495,24 @@ class CompanyB3Scraper:
         def worker(worker_id: str) -> int: # type: ignore
             # self.logger.log(f"Starting Worker {worker_id}", level="info")
 
+            # Initialize variables
+            download_bytes_worker = 0
+            ticker = ""
+            trading_name = ""
+
             # Continuously fetch items from the queue until a sentinel is received
             while True:
                 # Block until an item is available and retrieve it from the queue
+                # self.logger.log(f"Worker {worker_id} gets Queue Item {index} {cvm_code} {ticker} {trading_name}", level="info")
                 item = task_queue.get()
 
+                # If the item is the sentinel, mark the task as done and exit the loop
+                if item is sentinel:
+                    # self.logger.log(f"Queue Get Item {item} is sentinel {sentinel}", level="info")
+                    task_queue.task_done()
+                    return download_bytes_worker
+
                 try:
-                    # first thing: did we receive the end‐of‐stream marker?
-                    if item is sentinel:
-                        return self.download_bytes_execution_mode    # exit the thread loop
-                        
                     index, entry = item
 
                     cvm_code = entry.get("codeCVM", "")
@@ -511,20 +520,12 @@ class CompanyB3Scraper:
                     ticker = entry.get("issuingCompany", "")
                     trading_name = entry.get("tradingName", "")
 
-                    # self.logger.log(f"Worker {worker_id} gets Queue Item {index} {cvm_code} {ticker} {trading_name}", level="info")
-
-                    # If the item is the sentinel, mark the task as done and exit the loop
-                    if item is sentinel:
-                        # self.logger.log(f"Queue Get Item {item} is sentinel {sentinel}", level="info")
-                        task_queue.task_done()
-                        break
-
                     # Entry processing logic returning a processed dictionary
                     processed = self._process_entry(entry, skip_codes)
 
                     # Log the progress of processing (bytes downloaded for item, execcution and total)
                     download_bytes_item = len(json.dumps(processed, default=str).encode('utf-8'))
-                    self.download_bytes_execution_mode += download_bytes_item
+                    download_bytes_worker += download_bytes_item
                     self.download_bytes_total += download_bytes_item
                     # self.logger.log(f"Worker {worker_id} processed  Item {index} {cvm_code} {ticker} {trading_name} {self.byte_formatter.format_bytes(download_bytes_item)}", level="info")
 
@@ -541,29 +542,30 @@ class CompanyB3Scraper:
                             buffer, results, save_callback, threshold, remaining_items
                         )
                     
-                    # Task is done, notify the queue
-                    progress = {
-                        "index": total_size - remaining_items - 1,
-                        "size": total_size,
-                        "start_time": start_time,
-                    }
-                    extra_info = {
-                        "ticker": ticker,
-                        "trading_name": trading_name,
-                        "download_global": self.byte_formatter.format_bytes(self.download_bytes_total),
-                        "download_total": self.byte_formatter.format_bytes(download_bytes_execution_mode),
-                        "download_bytes_item": self.byte_formatter.format_bytes(download_bytes_item),
-                    }
-                    
-                    self.logger.log(f"{cvm_code}", level="info", progress=progress, extra=extra_info, worker_id=worker_id)
+                        # Task is done, notify the queue
+                        progress = {
+                            "index": total_size - remaining_items - 1,
+                            "size": total_size,
+                            "start_time": start_time,
+                        }
+                        extra_info = {
+                            "ticker": ticker,
+                            "trading_name": trading_name,
+                            "download_global": self.byte_formatter.format_bytes(self.download_bytes_total),
+                            # "download_total": self.byte_formatter.format_bytes(download_bytes_execution_mode),
+                            "download_bytes_item": self.byte_formatter.format_bytes(download_bytes_item),
+                        }
+                        
+                        self.logger.log(f"{cvm_code}", level="info", progress=progress, extra=extra_info, worker_id=worker_id)
+
+                except Exception as e:
+                    self.logger.log(f"Worker {worker_id} falhou em {ticker} {trading_name}: {e}", level="warning")
 
                 finally:
                     task_queue.task_done()
 
         # ========== 3. Thread Pool Execution ==========
         # Create a thread pool executor to manage worker threads
-        max_workers = 2
-        self.logger.log(f"Limited to only {max_workers} workers", level="warning")
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # self.logger.log(f"Start ThreadPoolExecutor {executor._thread_name_prefix} threads:{executor._threads}", level="info")
 
@@ -584,7 +586,7 @@ class CompanyB3Scraper:
             # futures = [executor.submit(worker) for _ in range(max_workers)]
             futures = []
             for worker_index in range(max_workers):
-                worker_id = hashlib.sha256(str(worker_index).encode()).hexdigest()[:8]
+                worker_id = uuid.uuid4().hex[:8]
 
                 futures.append(executor.submit(worker, worker_id))
                 # self.logger.log(f"Future executor submit worker {worker_id}", level="info")
@@ -610,9 +612,15 @@ class CompanyB3Scraper:
             task_queue.join()
             # self.logger.log("Join Done!", level="info")
 
-
-
             # Wait for all futures to complete and handle any exceptions, and sum up all bytes
+            # # Inicializa o total em zero
+            # download_bytes_execution_mode = 0
+
+            # Para cada Future, aguarda o resultado e acumula
+            # for future in futures:
+            #     # future.result() bloqueia até a thread terminar e retorna o int de bytes baixados
+            #     bytes_do_worker = future.result()
+            #     download_bytes_execution_mode += bytes_do_worker
             download_bytes_execution_mode = sum(f.result() for f in futures)
             # self.logger.log(f"Future result {future}", level="info")
 
@@ -631,7 +639,8 @@ class CompanyB3Scraper:
         try:
             cvm_code = entry.get("codeCVM")
             detail = self._fetch_detail(str(cvm_code))
-            return self._parse_company(entry, detail)
+            parsed = self._parse_company(entry, detail)
+            return parsed
         except Exception as exc:  # noqa: BLE001
             self.logger.log(f"erro {exc}", level="warning")
             return None
