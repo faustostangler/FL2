@@ -1,5 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
+import json
+
+from .raw_company_dto import RawParsedCompanyDTO
 
 
 @dataclass(frozen=True)
@@ -38,7 +41,7 @@ class CompanyDTO:
     def from_dict(raw: dict) -> "CompanyDTO":
         """
         Constrói um DTO imutável a partir de um dicionário bruto (normalmente vindo do scraper).
-        """        
+        """
         return CompanyDTO(
             cvm_code=raw.get("cvm_code") or raw.get("codeCVM"),
             company_name=raw.get("company_name") or raw.get("companyName"),
@@ -54,7 +57,6 @@ class CompanyDTO:
             registrar=raw.get("registrar"),
             cnpj=raw.get("cnpj"),
             website=raw.get("website"),
-
             company_type=raw.get("company_type"),
             status=raw.get("status"),
             b3_code=raw.get("b3_code"),
@@ -67,4 +69,39 @@ class CompanyDTO:
             country=raw.get("country"),
             state=raw.get("state"),
             city=raw.get("city"),
+        )
+
+    @staticmethod
+    def from_raw(raw: RawParsedCompanyDTO) -> "CompanyDTO":
+        """Builds a CompanyDTO from a RawParsedCompanyDTO instance."""
+
+        return CompanyDTO(
+            cvm_code=raw.cvm_code,
+            company_name=raw.company_name,
+            ticker=raw.ticker,
+            ticker_codes=json.dumps(raw.ticker_codes) if raw.ticker_codes else None,
+            isin_codes=json.dumps(raw.isin_codes) if raw.isin_codes else None,
+            trading_name=raw.trading_name,
+            sector=raw.sector,
+            subsector=raw.subsector,
+            segment=raw.segment,
+            listing=raw.listing,
+            activity=raw.activity,
+            registrar=raw.registrar,
+            cnpj=raw.cnpj,
+            website=raw.website,
+            company_type=raw.company_type,
+            status=raw.status,
+            b3_code=None,
+            company_category=None,
+            corporate_name=None,
+            registration_date=(
+                raw.listing_date.strftime("%Y-%m-%d") if raw.listing_date else None
+            ),
+            start_situation_date=None,
+            situation=None,
+            situation_date=None,
+            country=None,
+            state=None,
+            city=None,
         )
