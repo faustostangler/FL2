@@ -4,6 +4,7 @@ from infrastructure.logging import Logger
 from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
 from infrastructure.scrapers.nsd_scraper import NsdScraper
+from application import CompanyMapper
 from application.services.company_services import CompanyService
 from application.services.nsd_service import NsdService
 from infrastructure.repositories.nsd_repository import SQLiteNSDRepository
@@ -40,8 +41,12 @@ class CLIController:
         self.logger.log("Start Companies Sync Use Case", level="info")
 
         company_repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
+        mapper = CompanyMapper(self.data_cleaner)
         company_scraper = CompanyB3Scraper(
-            config=self.config, logger=self.logger, data_cleaner=self.data_cleaner
+            config=self.config,
+            logger=self.logger,
+            data_cleaner=self.data_cleaner,
+            mapper=mapper,
         )
         company_service = CompanyService(
             config=self.config,
