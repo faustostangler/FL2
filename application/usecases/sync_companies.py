@@ -42,7 +42,7 @@ class SyncCompaniesUseCase:
             max_workers=self.config.global_settings.max_workers,
         )
         self.logger.log(
-            f"Downloaded {self.scraper.download_total_bytes} bytes",
+            f"Downloaded {self.scraper.total_bytes_downloaded} bytes",
             level="info",
         )
 

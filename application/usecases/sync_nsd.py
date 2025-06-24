@@ -26,7 +26,7 @@ class SyncNSDUseCase:
             save_callback=self._save_batch,
         )
         self.logger.log(
-            f"Downloaded {self.scraper.download_total_bytes} bytes",
+            f"Downloaded {self.scraper.total_bytes_downloaded} bytes",
             level="info",
         )
 

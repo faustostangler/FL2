@@ -178,6 +178,11 @@ class CompanyB3Scraper:
             # Move to the next page
             self.PAGE_NUMBER += 1
 
+        self.logger.log(
+            f"Global download: {self.byte_formatter.format_bytes(self.download_global_bytes)} | Total download: {self.byte_formatter.format_bytes(download_total_bytes)}",
+            level="info",
+        )
+
         # Return the complete list of companies
         return results
 
@@ -440,6 +445,11 @@ class CompanyB3Scraper:
 
         if buffer:
             self._handle_save(buffer, results, save_callback, threshold, 0)
+
+        self.logger.log(
+            f"Global download: {self.byte_formatter.format_bytes(self.download_global_bytes)} | Total download: {self.byte_formatter.format_bytes(download_total_bytes)}",
+            level="info",
+        )
 
         return results
 

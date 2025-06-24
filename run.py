@@ -15,7 +15,7 @@ if __name__ == "__main__":
     logger.log("Start FLY", level="info", )
 
     # Entry point for the FLY CLI application.
-    controller = CLIController(config, logger, data_cleaner)
+    controller = CLIController(config=config, logger=logger, data_cleaner=data_cleaner)
     controller.run()
 
 # Finaliza a execução com uma mensagem de confirmação
