@@ -25,7 +25,7 @@ class NsdScraper:
 
         self.nsd_endpoint = self.config.b3.nsd_endpoint
 
-        self.total_bytes_downloaded = 0
+        self.download_total_bytes = 0
 
         self.logger.log("Start NsdScraper", level="info")
 
@@ -79,7 +79,7 @@ class NsdScraper:
 
             try:
                 response = self.fetch_utils.fetch_with_retry(self.session, url)
-                self.total_bytes_downloaded += len(response.content)
+                self.download_total_bytes += len(response.content)
                 parsed = self._parse_html(nsd, response.text)
             except Exception as e:
                 self.logger.log(
@@ -124,7 +124,7 @@ class NsdScraper:
             index += 1
 
         self.logger.log(
-            f"Downloaded {self.total_bytes_downloaded} bytes",
+            f"Downloaded {self.download_total_bytes} bytes",
             level="info",
         )
         return results

@@ -12,6 +12,7 @@ from infrastructure.config import Config
 from infrastructure.logging import Logger
 from infrastructure.helpers import FetchUtils
 from infrastructure.helpers.data_cleaner import DataCleaner
+from infrastructure.helpers.byte_formatter import ByteFormatter
 
 
 class CompanyB3Scraper:
@@ -64,7 +65,9 @@ class CompanyB3Scraper:
         # Initialize a requests session for HTTP requests
         self.session = self.fetch_utils.create_scraper()
 
-        self.total_bytes_downloaded = 0
+        self.download_global_bytes = 0
+        self.byte_formatter = ByteFormatter()
+
 
     def fetch_all(
         self,
@@ -101,7 +104,7 @@ class CompanyB3Scraper:
         )
 
         self.logger.log(
-            f"Downloaded {self.total_bytes_downloaded} bytes",
+            f"Downloaded {self.download_global_bytes} bytes",
             level="info",
         )
 
@@ -119,6 +122,7 @@ class CompanyB3Scraper:
         # Set initial pagination parameters
         self.logger.log("Get Existing Companies from B3", level="info")
 
+        download_total_bytes = 0
         results = []
         start_time = time.time()
 
@@ -136,7 +140,10 @@ class CompanyB3Scraper:
 
             # Fetch the current page of results with retry logic
             response = self.fetch_utils.fetch_with_retry(self.session, url)
-            self.total_bytes_downloaded += len(response.content)
+            download_size = len(response.content if response else b"")
+            download_total_bytes += download_size
+            self.download_global_bytes += download_size
+
             data = response.json()
 
             # Extract and accumulate results from the current page
@@ -151,12 +158,17 @@ class CompanyB3Scraper:
                 "index": self.PAGE_NUMBER - 1,
                 "size": total_pages,
                 "start_time": start_time,
-                "extra_info": [str(len(response.content))],
+            }
+            extra_info = {
+                "download_global": self.byte_formatter.format_bytes(self.download_global_bytes),
+                "download_total": self.byte_formatter.format_bytes(download_total_bytes),
+                "download_size": self.byte_formatter.format_bytes(download_size),
             }
             self.logger.log(
                 f"{self.PAGE_NUMBER}/{total_pages}",
                 level="info",
                 progress=progress,
+                extra=extra_info,
             )
 
             # Check if all pages have been processed
@@ -242,7 +254,7 @@ class CompanyB3Scraper:
         url = self.endpoint_detail + token
         # Fetch the company detail data with retry logic
         response = self.fetch_utils.fetch_with_retry(self.session, url)
-        self.total_bytes_downloaded += len(response.content)
+        self.download_global_bytes += len(response.content)
         # Return the parsed JSON response
         return response.json()
 
@@ -348,39 +360,14 @@ class CompanyB3Scraper:
 
     def _process_entry(
         self,
-        index: int,
         entry: Dict,
-        total_size: int,
         skip_codes: Set[str],
-        start_time: float,
     ) -> Dict:
         entry["companyName"] = self.data_cleaner.clean_text(entry["companyName"])
         entry["issuingCompany"] = self.data_cleaner.clean_text(entry["issuingCompany"])
         entry["tradingName"] = self.data_cleaner.clean_text(entry["tradingName"])
 
-        cvm_code = entry.get("codeCVM")
-        before_bytes = self.total_bytes_downloaded
         parsed = self._process_company_detail(entry, skip_codes)
-        delta_bytes = self.total_bytes_downloaded - before_bytes
-
-        progress = {
-            "index": index,
-            "size": total_size,
-            "start_time": start_time,
-            "extra_info": [str(delta_bytes)],
-        }
-
-        extra_info = {
-            "ticker": entry.get("issuingCompany"),
-            "trading_name": entry.get("tradingName"),
-            "company_name": entry.get("companyName"),
-        }
-        self.logger.log(
-            f"{cvm_code} ",
-            level="info",
-            progress=progress,
-            extra=extra_info,
-        )
 
         return {**entry, **(parsed or {})}
 
@@ -395,15 +382,58 @@ class CompanyB3Scraper:
         buffer: list[dict] = []
         results: list[dict] = []
         total_size = len(companies_list)
+        download_total_bytes = 0
 
-        for i, entry in enumerate(companies_list):
-            processed = self._process_entry(
-                i, entry, total_size, skip_codes, start_time
-            )
+        for index, entry in enumerate(companies_list):
+            cvm_code = entry.get("codeCVM")
+            message = f"{cvm_code}"
+            progress = {
+                "index": index,
+                "size": total_size,
+                "start_time": start_time,
+            }
+            extra_info = {
+                "issuing_company": entry.get("issuingCompany", ""),
+                "company_name": entry.get("companyName", ""),
+            }
+
+            if cvm_code in skip_codes:
+
+                self.logger.log(
+                    message,
+                    level="info",
+                    progress=progress,
+                    extra=extra_info,
+                )
+
+                continue
+
+            processed = self._process_entry(entry, skip_codes)
+
+            download_size = len(json.dumps(processed, default=str).encode('utf-8'))
+            download_total_bytes += download_size
+            self.download_global_bytes += download_size
+
             buffer.append(processed)
             results.append(processed)
 
-            remaining_items = total_size - i - 1
+            extra_info = {
+                "issuing_company": entry.get("issuingCompany", ""),
+                "company_name": entry.get("companyName", ""),
+                "download_global": self.byte_formatter.format_bytes(self.download_global_bytes),
+                "download_total": self.byte_formatter.format_bytes(download_total_bytes),
+                "download_size": self.byte_formatter.format_bytes(download_size),
+            }
+
+            self.logger.log(
+                message,
+                level="info",
+                progress=progress,
+                extra=extra_info,
+            )
+
+
+            remaining_items = total_size - index - 1
             self._handle_save(
                 buffer, results, save_callback, threshold, remaining_items
             )
@@ -467,10 +497,8 @@ class CompanyB3Scraper:
     def _process_company_detail(
         self, entry: Dict, skip_codes: Set[str]
     ) -> Optional[Dict]:
-        cvm_code = entry.get("codeCVM")
-        if not cvm_code or cvm_code in skip_codes:
-            return None
         try:
+            cvm_code = entry.get("codeCVM")
             detail = self._fetch_detail(str(cvm_code))
             return self._parse_company(entry, detail)
         except Exception as exc:  # noqa: BLE001

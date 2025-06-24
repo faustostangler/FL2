@@ -116,10 +116,10 @@ class FetchUtils:
                 if response.status_code == 200:
                     if block_start:
                         block_time = time.time() - block_start
-                        self.logger.log(
-                            f"Dodging server block: {block_time:.2f}s",
-                            level="warning",
-                        )
+                        # self.logger.log(
+                        #     f"Dodging server block: {block_time:.2f}s",
+                        #     level="warning",
+                        # )
                     return response
             except Exception as exc:  # noqa: BLE001
                 pass
