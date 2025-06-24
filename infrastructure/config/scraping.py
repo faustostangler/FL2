@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from typing import List
 
 TEST_INTERNET = "https://www.google.com"  # URL usada para verificar conectividade
-TIMEOUT = 5  # Tempo máximo de espera em cada requisição (em segundos)
+TIMEOUT = 1  # Tempo máximo de espera em cada requisição (em segundos)
 MAX_ATTEMPTS = 5  # Número máximo de tentativas em caso de falha
 
 USER_AGENTS_JSON = "user_agents.json"  # Arquivo JSON com User-Agents

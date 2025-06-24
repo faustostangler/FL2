@@ -1,6 +1,7 @@
 import logging
 import uuid
 from typing import Optional
+import hashlib
 
 from infrastructure.config.config import Config
 from infrastructure.logging.progress_formatter import ProgressFormatter
@@ -17,6 +18,8 @@ class Logger:
 
     def __init__(self, config: Config, level: str = "DEBUG", logger_name: Optional[str] = None):
         self._run_id = uuid.uuid4().hex[:8]
+        self.worker_id = hashlib.sha256(self._run_id.encode()).hexdigest()[:8]
+
         self.config = config
         self.logger_name = logger_name or self.config.global_settings.app_name or "FLY"
         self.progress_formatter = ProgressFormatter()
@@ -52,7 +55,7 @@ class Logger:
 
         return adapter
 
-    def log(self, message: str, level: str = "info", progress: Optional[dict] = None, extra: Optional[dict] = None):
+    def log(self, message: str, level: str = "info", progress: Optional[dict] = None, extra: Optional[dict] = None, worker_id: Optional[str] = None):
         """
         Registra uma mensagem com contexto e progresso, se aplicável.
         """
@@ -60,10 +63,10 @@ class Logger:
         progress_msg = self.progress_formatter.format(progress) if progress else ""
 
         full_message = message
-        if context_msg:
-            full_message += f" | {context_msg}"
         if progress_msg:
             full_message += f" | {progress_msg}"
+        if context_msg:
+            full_message += f" | {context_msg}"
 
         if extra:
             extra_str = " ".join(
@@ -75,7 +78,10 @@ class Logger:
 
         try:
             log_fn = getattr(self._logger, level.lower(), self._logger.info)
-            merged_extra = {"run_id": self._run_id, "worker_id": ""}
+            merged_extra = {
+                "run_id":    self._run_id,
+                "worker_id": worker_id or self.worker_id,
+            }
 
             log_fn(full_message, extra=merged_extra)
         except Exception as e:
@@ -86,8 +92,8 @@ class SafeFormatter(logging.Formatter):
     def format(self, record):
         # Define valores padrão
         defaults = {
-            "run_id": "1",
-            "worker_id": "1", 
+            "run_id": "0",
+            "worker_id": "0", 
         }
 
         for key, default in defaults.items():
