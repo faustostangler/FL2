@@ -22,11 +22,11 @@ They are orchestrated by the CLI controller (`CLIController`), which boots the s
 
 ### CompanyService
 - **Layer:** Application  
-- **Role:** Orchestrates synchronization of company metadata from B3 to the local database.  
+- **Role:** Coordinates synchronization of company metadata from B3 to the local database.  
 - **Dependencies:**  
   - `SyncCompaniesUseCase` (application use case)  
-  - `CompanyB3Scraper` (infrastructure scraper)  
-  - `SQLiteCompanyRepository` (persistence adapter)  
+  - `CompanyB3Scraper` (infrastructure scraper implementing `CompanySource`)  
+  - `SQLiteCompanyRepository` (persistence adapter implementing `CompanyRepository`)  
 - **Workflow:** logger → use case → repository  
 - **I/O:** `CompanyDTO`
 
@@ -41,12 +41,13 @@ They are orchestrated by the CLI controller (`CLIController`), which boots the s
   1. Load existing CVM codes  
   2. Call `scraper.fetch_all(skip=existing, save_callback=self._save_batch)`  
   3. Convert each raw dict to `CompanyDTO` and `repository.save_all(...)`
+- **Note:** This use case coordinates scraping and persistence, but only the repository performs writes. The use case itself has no direct side effects.
 
 ### NsdService
 - **Layer:** Application  
-- **Role:** Orchestrates scraping and persistence of NSD (document number) records.  
+- **Role:** Coordinates scraping and persistence of NSD (document number) records.  
 - **Dependencies:**  
-  - `SyncNSDUseCase` (if exists) or direct use of `NsdScraper` + `SQLiteNSDRepository`  
+  - `SyncNSDUseCase` (if exists) or direct use of `NsdScraper` (implements `NsdSource`) + `SQLiteNSDRepository` (implements `NSDRepository`)  
 - **I/O:** `NSDDTO`
 
 ---

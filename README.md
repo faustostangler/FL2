@@ -1,10 +1,10 @@
 # Finance Ledger Yearly (FLY)
 
 ### What is This?
-Finance Ledger Yearly (**FLY**) is a comprehensive **financial data app** designed to automate the extraction and processing of financial data from various online sources. The app retrieves detailed company information, financial documents, and **standardized financial statements**, storing this data in a local database for easy access and analysis.
+Finance Ledger Yearly (FLY) gathers financial documents from companies listed on B3. It scrapes company profiles, sequential document numbers (NSDs) and standardized statements, storing everything in a local database for analysis.
 
 ## How It Works, Behind the Wheels
-FLY is designed following the Hexagonal Architecture (Ports and Adapters) pattern to ensure a clear separation between business logic and technical details. For a complete explanation of the design, see our [Architecture Document](ARCHITECTURE.md).
+FLY follows the Hexagonal Architecture (Ports and Adapters) to keep business logic separate from infrastructure. The list below outlines the core steps in fetching company data and financial documents. For a complete explanation, see our [Architecture Document](ARCHITECTURE.md).
 
 1. **Company Information Scraping**  
    - Finds company names, tickers, sectors, and registration data.
@@ -24,7 +24,7 @@ FLY is designed following the Hexagonal Architecture (Ports and Adapters) patter
    - Matches stock performance with financial statements.
 
 5. **Performance & Optimization**
-   - Processes data using a configurable number of workers.
+   - Supports concurrent processing with a configurable number of workers for improved performance.
    - Tracks memory and execution time to keep things running smoothly.
 
 
@@ -54,7 +54,7 @@ pip install -r requirements.txt
 ### **Run the Full System**
 To run everything at once and process all available data:
 ```sh
-python b3.py
+python run.py
 ```
 
 ## Contributing

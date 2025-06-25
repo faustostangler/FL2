@@ -16,7 +16,11 @@ A estrutura segue o padrão da **Arquitetura Hexagonal (Ports and Adapters)** co
 >
 > O dono da FLY possui alguns cadernos DTOs diferentes. Um DTO para os dados cadastrais das companhias, como nome, CNPJ, ticker de negociação e outras informações desse tipo. Outro DTO para controlar a sequência das publicações dos relatórios da bolsa de valores (número serial de documento, NSD). Também existe outro DTO para registrar o conteúdo das publicações dos demonstrativos financeiros das companhias (DFP, ITR), que contém dados como patrimônio, lucro líquido do trimestre e outras informações periódicas.
 
-## 1.2. Portas e Interfaces
+## 1.2. Entidades
+As entidades representam objetos do domínio que encapsulam regras e comportamentos. Embora ainda não estejam implementadas neste projeto, elas futuramente concentrarão validações e lógica de negócio. Diferentemente dos DTOs, que são dados puros, as entidades manterão métodos e garantias de consistência.
+
+
+## 1.3. Portas e Interfaces
 São contratos abstratos formais que o domínio usa para padronizar a comunicação com o mundo exterior ao código. `Source` para obter dados e `Repository` para salvar e recuperar dados. Elas definem de forma agnóstica o que precisa ser feito, sem definir de que forma será feito. Apenas definem assinaturas de métodos, sem lógica interna. O objetivo é impor de forma radical um desacoplamento entre a lógica do negócio e as dependências de tecnologia da infraestrutura.
 
 > A **persistência** é como o **depósito** da empresa FLY, onde os arquivos ficam guardados de forma permanente e organizada. O `Repository` é como o **manual de regras do depósito**, que define as únicas operações permitidas no arquivo oficial.
