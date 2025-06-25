@@ -3,6 +3,12 @@
 ## **1. Objective**
 The **Finance Ledger Yearly (FLY)** project is designed to **capture, process, and store** financial data related to **companies, NSDs (Sequential Document Numbers), corporate events, and stock market data**. The system ensures **periodic updates** by identifying and processing only **new or modified** data.
 
+### Architecture Overview
+- **Presentation layer:** processors such as `company_processor.py` invoke application services.
+- **Application layer:** services like `CompanyService` and `NsdService` coordinate use cases.
+- **Domain layer:** DTOs and planned Entities hold the business rules.
+- **Infrastructure layer:** scrapers and repositories implement the external interfaces.
+
 ## **2. Data Capture Overview**
 The system extracts data from various online sources using **web scraping** and **automated data processing**. It is structured into the following main components:
 
@@ -34,7 +40,7 @@ The system extracts data from various online sources using **web scraping** and 
 **Modules:** `nsd_processor.py`
 - **Sequential NSD Capture:**
   - Extract published **NSD numbers, submission dates, and company associations**.
-  - Implement **gap filling & dynamic sequence tracking**:
+  - Detects and fills gaps in document sequences through intelligent backfilling and estimation logic:
     - Detect **missing NSD numbers** and intelligently estimate missing data.
     - Adjust for **irregular NSD publication** patterns.
 
@@ -43,7 +49,7 @@ The system extracts data from various online sources using **web scraping** and 
   - Exception handling ensures **no failures in sequential data processing**.
 
 - **Database Storage:**
-  - Data is saved to `tbl_nsd`, **maintaining historical versions**.
+  - The repository saves data in `tbl_nsd`, **maintaining historical versions**.
 
 ---
 
@@ -60,7 +66,7 @@ The system extracts data from various online sources using **web scraping** and 
     - **Accounts starting with '6' or '7'** → Ensure correct aggregation.
 
 - **Storage & Versioning:**
-  - Data is stored in:
+  - The repository stores data in:
     - `tbl_statements_raw` (Raw statements before processing)
     - `tbl_statements_normalized` (Standardized financial data)
   - Only the **latest version** is marked as "current" while preserving **historical changes**.

@@ -4,6 +4,24 @@ This manual outlines coding style guidelines to ensure consistency, readability,
 
 ---
 
+## 6. Architecture and Design
+- Use best softwarte architecture principles. Low Coupling and High Cohesion. 
+- Consider MVC (Model-View-Controller), DDD (Domain-Driven Design), Hexagonal Architecture (Ports and Adapters), Clean Architecture, Microservices, Monolith, and Event-Driven Architecture. 
+- Consider MVC, DDD, hexagonal, clean, microservices, monolith, event-driven and others.
+- Use logical layers (presentation, application, domain, infrastructure).
+- Use components within layers (Controller, Domain, Service, Repository, Entities)
+- VO, aggregates, business rules, DTO.
+- For persistence and ORM, SQLAlchemy and SQLite.
+
+### 6.1 Single Responsibility
+- **Focus**: Every function must implement exactly one business or technical responsibility, in accordance with the Single Responsibility Principle.
+
+### 6.2 Parameter Handling
+- **Descriptive Names**: Use clear and descriptive names for parameters.
+- **Default Values**: Provide default values for optional parameters.
+- **Grouping**: If a function requires many parameters, consider grouping them into a dictionary or passing an object. Use dataclasses and DTO whenever possible. 
+
+
 ## 1. Code Structure and Organization
 
 ### 1.1 Import Statements
@@ -206,25 +224,6 @@ ruff check . --fix  # aplicar lint e autofix
 
 ### 5.2 Indentation
 - **Spacing**: Use 4 spaces per indentation level. Do not use tabs.
-
-## 6. Architecture and Design
-- Use best softwarte architecture principles. Low Coupling and High Cohesion. 
-- Consider MVC (Model-View-Controller), DDD (Domain-Driven Design), Hexagonal Architecture (Ports and Adapters), Clean Architecture, Microservices, Monolith, and Event-Driven Architecture. 
-- Consider MVC, DDD, hexagonal, clean, microservices, monolith, event-driven and others.
-- Use logical layers (presentation, application, domain, infrastructure).
-- Use components within layers (Controller, Domain, Service, Repository, Entities)
-- VO, aggregates, business rules, DTO.
-- For persistence and ORM, SQLAlchemy and SQLite.
-
-### 6.1 Single Responsibility
-- **Focus**: Each function should have a single, well-defined responsibility. If a function does too much, refactor it into smaller, more focused functions.
-
-### 6.2 Parameter Handling
-- **Descriptive Names**: Use clear and descriptive names for parameters.
-- **Default Values**: Provide default values for optional parameters.
-- **Grouping**: If a function requires many parameters, consider grouping them into a dictionary or passing an object. Use dataclasses and DTO whenever possible. 
-
-## 7. Performance Logging and Benchmarking
 
 ### 7.1 Performance Logging
 - **Guidelines**: All time-based measurements should use a centralized performance logging function rather than time.time() directly. Purpose: Standardized performance logging ensures consistent reporting and benchmarking across modules.
