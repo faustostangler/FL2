@@ -1,4 +1,4 @@
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Callable, List, Optional, Set, Tuple
 
 import base64
 import json
@@ -14,12 +14,7 @@ from infrastructure.logging import Logger
 from infrastructure.helpers import FetchUtils
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.byte_formatter import ByteFormatter
-from domain.dto import (
-    CodeDTO,
-    RawBaseCompanyDTO,
-    RawDetailCompanyDTO,
-    RawParsedCompanyDTO,
-)
+from domain.dto import RawBaseCompanyDTO, RawDetailCompanyDTO, RawParsedCompanyDTO
 from application import CompanyMapper
 
 
@@ -130,7 +125,7 @@ class CompanyB3Scraper:
 
     def _fetch_companies_list(
         self, skip_codes: Optional[Set[str]] = None, threshold: Optional[int] = None
-    ) -> List[Dict]:
+    ) -> List[RawBaseCompanyDTO]:
         """
         Busca o conjunto inicial de empresas disponíveis na B3.
 
@@ -140,7 +135,7 @@ class CompanyB3Scraper:
         self.logger.log("Get Existing Companies from B3", level="info")
 
         download_bytes_execution_mode = 0
-        results = []
+        results: list[RawBaseCompanyDTO] = []
         start_time = time.time()
 
         # Loop through all pages of company data
@@ -164,7 +159,9 @@ class CompanyB3Scraper:
             data = response.json()
 
             # Extract and accumulate results from the current page
-            current_results = data.get("results", [])
+            current_results = [
+                RawBaseCompanyDTO.from_dict(raw) for raw in data.get("results", [])
+            ]
             results.extend(current_results)
 
             # Determine the total number of pages from the response
@@ -220,7 +217,7 @@ class CompanyB3Scraper:
 
     def _fetch_companies_details(
         self,
-        companies_list: List[Dict],
+        companies_list: List[RawBaseCompanyDTO],
         skip_codes: Optional[Set[str]] = None,
         save_callback: Optional[Callable[[List[RawParsedCompanyDTO]], None]] = None,
         threshold: Optional[int] = None,
@@ -229,13 +226,13 @@ class CompanyB3Scraper:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
         Args:
-            companies_list (List[Dict]): List of company dictionaries, each containing at least a "codeCVM" key.
+            companies_list (List[RawBaseCompanyDTO]): List of base company DTOs.
             skip_codes (Optional[Set[str]], optional): Set of CVM codes to skip during processing. Defaults to None.
             save_callback (Optional[Callable[[List[dict]], None]], optional): Callback function to save buffered company details periodically. Defaults to None.
             threshold (Optional[int], optional): Number of companies to process before triggering the save_callback. If not provided, uses configuration or defaults to 50.
             max_workers (int | None, optional): Reserved for future parallel fetching.
         Returns:
-            List[Dict]: List of parsed company detail dictionaries.
+            List[RawParsedCompanyDTO]: Parsed company detail objects.
         Logs:
             - Progress and status information at each step.
             - Warnings for any exceptions encountered during processing.
@@ -302,22 +299,16 @@ class CompanyB3Scraper:
 
     def _process_entry(
         self,
-        entry: Dict,
+        entry: RawBaseCompanyDTO,
         skip_codes: Set[str],
     ) -> Optional[RawParsedCompanyDTO]:
-        entry["companyName"] = self.data_cleaner.clean_text(entry["companyName"])
-        entry["issuingCompany"] = self.data_cleaner.clean_text(entry["issuingCompany"])
-        entry["tradingName"] = self.data_cleaner.clean_text(entry["tradingName"])
-
-        base_dto = RawBaseCompanyDTO.from_dict(entry)
-
-        parsed = self._process_company_detail(base_dto, skip_codes)
+        parsed = self._process_company_detail(entry, skip_codes)
 
         return parsed
 
     def _fetch_companies_details_single(
         self,
-        companies_list: List[Dict],
+        companies_list: List[RawBaseCompanyDTO],
         skip_codes: Set[str],
         save_callback: Optional[Callable[[List[RawParsedCompanyDTO]], None]],
         threshold: int,
@@ -329,11 +320,11 @@ class CompanyB3Scraper:
         download_bytes_execution_mode = 0
 
         for index, entry in enumerate(companies_list):
-            ticker = entry["issuingCompany"]
+            ticker = entry.issuing_company
             if ticker != "BBAS":
                 continue
 
-            cvm_code = entry.get("codeCVM")
+            cvm_code = entry.cvm_code
             message = f"{cvm_code}"
             progress = {
                 "index": index,
@@ -341,8 +332,8 @@ class CompanyB3Scraper:
                 "start_time": start_time,
             }
             extra_info = {
-                "issuing_company": entry.get("issuingCompany", ""),
-                "company_name": entry.get("companyName", ""),
+                "issuing_company": entry.issuing_company or "",
+                "company_name": entry.company_name or "",
             }
 
             if cvm_code in skip_codes:
@@ -367,8 +358,8 @@ class CompanyB3Scraper:
             results.append(processed)
 
             extra_info = {
-                "issuing_company": entry.get("issuingCompany", ""),
-                "company_name": entry.get("companyName", ""),
+                "issuing_company": entry.issuing_company or "",
+                "company_name": entry.company_name or "",
                 "download_global": self.byte_formatter.format_bytes(
                     self.download_bytes_total
                 ),
@@ -404,7 +395,7 @@ class CompanyB3Scraper:
 
     def _fetch_companies_details_threaded(
         self,
-        companies_list: List[Dict],
+        companies_list: List[RawBaseCompanyDTO],
         skip_codes: Set[str],
         save_callback: Optional[Callable[[List[RawParsedCompanyDTO]], None]],
         threshold: int,
@@ -454,10 +445,9 @@ class CompanyB3Scraper:
                 try:
                     index, entry = item
 
-                    cvm_code = entry.get("codeCVM", "")
-                    # company_name = entry.get("companyName", "")
-                    ticker = entry.get("issuingCompany", "")
-                    trading_name = entry.get("tradingName", "")
+                    cvm_code = entry.cvm_code or ""
+                    ticker = entry.issuing_company or ""
+                    trading_name = entry.company_name or ""
 
                     # Entry processing logic returning a processed dictionary
                     processed = self._process_entry(entry, skip_codes)
