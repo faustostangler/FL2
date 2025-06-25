@@ -3,6 +3,7 @@ from infrastructure.logging import Logger
 
 from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
+from infrastructure.helpers import WorkerPool
 from infrastructure.scrapers.nsd_scraper import NsdScraper
 from application import CompanyMapper
 from application.services.company_services import CompanyService
@@ -42,11 +43,13 @@ class CLIController:
 
         company_repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
         mapper = CompanyMapper(self.data_cleaner)
+        executor = WorkerPool(self.config)
         company_scraper = CompanyB3Scraper(
             config=self.config,
             logger=self.logger,
             data_cleaner=self.data_cleaner,
             mapper=mapper,
+            executor=executor,
         )
         company_service = CompanyService(
             config=self.config,

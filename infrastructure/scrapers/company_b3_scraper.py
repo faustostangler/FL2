@@ -2,12 +2,7 @@ from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import base64
 import json
-from dataclasses import asdict
-import time
-from concurrent.futures import ThreadPoolExecutor
-from queue import Queue
-import threading
-import uuid
+from domain.ports import WorkerPoolPort
 
 from infrastructure.config import Config
 from infrastructure.logging import Logger
@@ -15,7 +10,6 @@ from infrastructure.helpers import FetchUtils
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.byte_formatter import ByteFormatter
 from domain.dto import (
-    CodeDTO,
     RawBaseCompanyDTO,
     RawDetailCompanyDTO,
     RawParsedCompanyDTO,
@@ -35,6 +29,7 @@ class CompanyB3Scraper:
         logger: Logger,
         data_cleaner: DataCleaner,
         mapper: CompanyMapper,
+        executor: WorkerPoolPort,
     ):
         """Set up configuration, logger and helper utilities for the scraper.
 
@@ -64,6 +59,7 @@ class CompanyB3Scraper:
         self.logger = logger
         self.data_cleaner = data_cleaner
         self.mapper = mapper
+        self.executor = executor
 
         # Log the initialization of the CompanyB3Scraper
         self.logger.log("Start CompanyB3Scraper", level="info")
@@ -136,77 +132,34 @@ class CompanyB3Scraper:
 
         :return: Lista de empresas com código CVM e nome base.
         """
-        # Set initial pagination parameters
         self.logger.log("Get Existing Companies from B3", level="info")
 
-        download_bytes_execution_mode = 0
-        results = []
-        start_time = time.time()
+        first_page, total_pages, bytes_first = self._fetch_page(1)
+        results = list(first_page)
+        download_bytes_execution_mode = bytes_first
 
-        # Loop through all pages of company data
-        while True:
-            # Build the payload for the current page
-            payload = {
-                "language": self.language,
-                "pageNumber": self.PAGE_NUMBER,
-                "pageSize": self.PAGE_SIZE,
-            }
-            # Encode the payload as required by the B3 API
-            token = self._encode_payload(payload)
-            url = self.endpoint_companies_list + token
+        if total_pages > 1:
+            pages = range(2, total_pages + 1)
 
-            # Fetch the current page of results with retry logic
-            response = self.fetch_utils.fetch_with_retry(self.session, url)
-            download_bytes_item = len(response.content if response else b"")
-            download_bytes_execution_mode += download_bytes_item
-            self.download_bytes_total += download_bytes_item
+            def processor(page: int) -> Tuple[List[Dict], int, int]:
+                return self._fetch_page(page)
 
-            data = response.json()
-
-            # Extract and accumulate results from the current page
-            current_results = data.get("results", [])
-            results.extend(current_results)
-
-            # Determine the total number of pages from the response
-            total_pages = data.get("page", {}).get("totalPages", 1)
-
-            # Log progress for monitoring
-            progress = {
-                "index": self.PAGE_NUMBER - 1,
-                "size": total_pages,
-                "start_time": start_time,
-            }
-            extra_info = {
-                "download_global": self.byte_formatter.format_bytes(
-                    self.download_bytes_total
-                ),
-                "download_total": self.byte_formatter.format_bytes(
-                    download_bytes_execution_mode
-                ),
-                "download_bytes_item": self.byte_formatter.format_bytes(
-                    download_bytes_item
-                ),
-            }
-            self.logger.log(
-                f"{self.PAGE_NUMBER}/{total_pages}",
-                level="info",
-                progress=progress,
-                extra=extra_info,
+            page_results, metrics = self.executor.run(
+                tasks=pages,
+                processor=processor,
+                logger=self.logger,
             )
 
-            # Check if all pages have been processed
-            if self.PAGE_NUMBER >= total_pages:
-                break
-
-            # Move to the next page
-            self.PAGE_NUMBER += 1
+            for page_data in page_results:
+                page_items, _, bts = page_data
+                results.extend(page_items)
+                download_bytes_execution_mode += bts
 
         self.logger.log(
             f"Global download: {self.byte_formatter.format_bytes(self.download_bytes_total)} | Total download: {self.byte_formatter.format_bytes(download_bytes_execution_mode)}",
             level="info",
         )
 
-        # Return the complete list of companies
         return results
 
     def _encode_payload(self, payload: dict) -> str:
@@ -217,6 +170,22 @@ class CompanyB3Scraper:
         :return: String base64
         """
         return base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
+
+    def _fetch_page(self, page_number: int) -> Tuple[List[Dict], int, int]:
+        payload = {
+            "language": self.language,
+            "pageNumber": page_number,
+            "pageSize": self.PAGE_SIZE,
+        }
+        token = self._encode_payload(payload)
+        url = self.endpoint_companies_list + token
+        response = self.fetch_utils.fetch_with_retry(self.session, url)
+        bytes_downloaded = len(response.content if response else b"")
+        self.download_bytes_total += bytes_downloaded
+        data = response.json()
+        results = data.get("results", [])
+        total_pages = data.get("page", {}).get("totalPages", 1)
+        return results, total_pages, bytes_downloaded
 
     def _fetch_companies_details(
         self,
@@ -245,31 +214,27 @@ class CompanyB3Scraper:
 
         threshold = threshold or self.config.global_settings.threshold or 50
         skip_codes = skip_codes or set()
-        download_bytes_execution_mode = 0
 
         self.logger.log("Start CompanyB3Scraper fetch_all", level="info")
-        start_time = time.time()
 
-        if (max_workers or 1) <= 1:
-            results, download_bytes_execution_mode = (
-                self._fetch_companies_details_single(
-                    companies_list,
-                    skip_codes,
-                    save_callback,
-                    threshold,
-                    start_time,
-                )
-            )
-        results, download_bytes_execution_mode = self._fetch_companies_details_threaded(
-            companies_list,
-            skip_codes,
-            save_callback,
-            threshold,
-            max_workers or 1,
-            start_time,
+        tasks = list(enumerate(companies_list))
+
+        def processor(item: Tuple[int, Dict]) -> Optional[RawParsedCompanyDTO]:
+            _, entry = item
+            return self._process_entry(entry, skip_codes)
+
+        results, metrics = self.executor.run(
+            tasks=tasks,
+            processor=processor,
+            logger=self.logger,
         )
 
-        return results, download_bytes_execution_mode
+        if callable(save_callback):
+            save_callback(results)
+
+        self.download_bytes_total += metrics.download_bytes
+
+        return results, metrics.download_bytes
 
     def _fetch_detail(self, cvm_code: str) -> RawDetailCompanyDTO:
         """
@@ -314,278 +279,6 @@ class CompanyB3Scraper:
         parsed = self._process_company_detail(base_dto, skip_codes)
 
         return parsed
-
-    def _fetch_companies_details_single(
-        self,
-        companies_list: List[Dict],
-        skip_codes: Set[str],
-        save_callback: Optional[Callable[[List[RawParsedCompanyDTO]], None]],
-        threshold: int,
-        start_time: float,
-    ) -> Tuple[List[RawParsedCompanyDTO], int]:
-        buffer: list[RawParsedCompanyDTO] = []
-        results: list[RawParsedCompanyDTO] = []
-        total_size = len(companies_list)
-        download_bytes_execution_mode = 0
-
-        for index, entry in enumerate(companies_list):
-            ticker = entry["issuingCompany"]
-            if ticker != "BBAS":
-                continue
-
-            cvm_code = entry.get("codeCVM")
-            message = f"{cvm_code}"
-            progress = {
-                "index": index,
-                "size": total_size,
-                "start_time": start_time,
-            }
-            extra_info = {
-                "issuing_company": entry.get("issuingCompany", ""),
-                "company_name": entry.get("companyName", ""),
-            }
-
-            if cvm_code in skip_codes:
-                self.logger.log(
-                    message,
-                    level="info",
-                    progress=progress,
-                    extra=extra_info,
-                )
-
-                continue
-
-            processed = self._process_entry(entry, skip_codes)
-
-            download_bytes_item = len(
-                json.dumps(asdict(processed), default=str).encode("utf-8")
-            )
-            download_bytes_execution_mode += download_bytes_item
-            self.download_bytes_total += download_bytes_item
-
-            buffer.append(processed)
-            results.append(processed)
-
-            extra_info = {
-                "issuing_company": entry.get("issuingCompany", ""),
-                "company_name": entry.get("companyName", ""),
-                "download_global": self.byte_formatter.format_bytes(
-                    self.download_bytes_total
-                ),
-                "download_total": self.byte_formatter.format_bytes(
-                    download_bytes_execution_mode
-                ),
-                "download_bytes_item": self.byte_formatter.format_bytes(
-                    download_bytes_item
-                ),
-            }
-
-            self.logger.log(
-                message,
-                level="info",
-                progress=progress,
-                extra=extra_info,
-            )
-
-            remaining_items = total_size - index - 1
-            self._handle_save(
-                buffer, results, save_callback, threshold, remaining_items
-            )
-
-        if buffer:
-            self._handle_save(buffer, results, save_callback, threshold, 0)
-
-        self.logger.log(
-            f"Global download: {self.byte_formatter.format_bytes(self.download_bytes_total)} | Total download: {self.byte_formatter.format_bytes(download_bytes_execution_mode)}",
-            level="info",
-        )
-
-        return results, download_bytes_execution_mode
-
-    def _fetch_companies_details_threaded(
-        self,
-        companies_list: List[Dict],
-        skip_codes: Set[str],
-        save_callback: Optional[Callable[[List[RawParsedCompanyDTO]], None]],
-        threshold: int,
-        max_workers: int,
-        start_time: float,
-    ) -> Tuple[List[RawParsedCompanyDTO], int]:
-        # ========== 1. Initialization ==========
-        # Instantiate buffer and results lists to hold processed data
-        buffer: list[RawParsedCompanyDTO] = []
-        results: list[RawParsedCompanyDTO] = []
-
-        # Calculate the total size of the companies list for progress tracking
-        total_size = len(companies_list)
-
-        # Create a thread-safe queue to distribute work tasks among threads
-        task_queue: Queue = Queue(self.config.global_settings.queue_size)
-
-        # Create a lock to synchronize and avoid concurrent access to shared resources
-        lock = threading.Lock()
-
-        #  Signal the end of processing for each worker
-        sentinel = object()
-        # self.logger.log("Queue Initialization", level="info")
-
-        # ========== 2. Worker Function Definition ==========
-        # Worker function to process entries from the queue
-        def worker(worker_id: str) -> int:  # type: ignore
-            # self.logger.log(f"Starting Worker {worker_id}", level="info")
-
-            # Initialize variables
-            download_bytes_worker = 0
-            ticker = ""
-            trading_name = ""
-
-            # Continuously fetch items from the queue until a sentinel is received
-            while True:
-                # Block until an item is available and retrieve it from the queue
-                # self.logger.log(f"Worker {worker_id} gets Queue Item {index} {cvm_code} {ticker} {trading_name}", level="info")
-                item = task_queue.get()
-
-                # If the item is the sentinel, mark the task as done and exit the loop
-                if item is sentinel:
-                    # self.logger.log(f"Queue Get Item {item} is sentinel {sentinel}", level="info")
-                    task_queue.task_done()
-                    return download_bytes_worker
-
-                try:
-                    index, entry = item
-
-                    cvm_code = entry.get("codeCVM", "")
-                    # company_name = entry.get("companyName", "")
-                    ticker = entry.get("issuingCompany", "")
-                    trading_name = entry.get("tradingName", "")
-
-                    # Entry processing logic returning a processed dictionary
-                    processed = self._process_entry(entry, skip_codes)
-
-                    # Log the progress of processing (bytes downloaded for item, execcution and total)
-                    download_bytes_item = len(
-                        json.dumps(asdict(processed), default=str).encode("utf-8")
-                    )
-                    download_bytes_worker += download_bytes_item
-                    self.download_bytes_total += download_bytes_item
-                    # self.logger.log(f"Worker {worker_id} processed  Item {index} {cvm_code} {ticker} {trading_name} {self.byte_formatter.format_bytes(download_bytes_item)}", level="info")
-
-                    # Add the processed entry to the buffer and results
-                    with lock:
-                        buffer.append(processed)
-                        results.append(processed)
-
-                        # Check if we need to save the current buffer
-                        self.processed_count += 1
-                        remaining_items = total_size - self.processed_count
-                        # self.logger.log(f"Worker {worker_id} says remaining Items {remaining_items}", level="info")
-                        self._handle_save(
-                            buffer, results, save_callback, threshold, remaining_items
-                        )
-
-                        # Task is done, notify the queue
-                        progress = {
-                            "index": total_size - remaining_items - 1,
-                            "size": total_size,
-                            "start_time": start_time,
-                        }
-                        extra_info = {
-                            "ticker": ticker,
-                            "trading_name": trading_name,
-                            "download_global": self.byte_formatter.format_bytes(
-                                self.download_bytes_total
-                            ),
-                            # "download_total": self.byte_formatter.format_bytes(download_bytes_execution_mode),
-                            "download_bytes_item": self.byte_formatter.format_bytes(
-                                download_bytes_item
-                            ),
-                        }
-
-                        self.logger.log(
-                            f"{cvm_code}",
-                            level="info",
-                            progress=progress,
-                            extra=extra_info,
-                            worker_id=worker_id,
-                        )
-
-                except Exception as e:
-                    self.logger.log(
-                        f"Worker {worker_id} falhou em {ticker} {trading_name}: {e}",
-                        level="warning",
-                    )
-
-                finally:
-                    task_queue.task_done()
-
-        # ========== 3. Thread Pool Execution ==========
-        # Create a thread pool executor to manage worker threads
-        with ThreadPoolExecutor(max_workers=max_workers) as executor:
-            # self.logger.log(f"Start ThreadPoolExecutor {executor._thread_name_prefix} threads:{executor._threads}", level="info")
-
-            # Submit worker tasks to the executor. Each submit call returns a Future object containing the result of the worker function.
-            # 1.1. range(max_workers) repeats for the number of max_workers
-            # 1.2. worker is a thread (unit of execution) that processes tasks from a queue. worker task, in this case, is processing a company entry.
-            # 2.1. list comprehension iterates over the range of max_workers, creating one Future for each worker.
-            ## A future object is a placeholder for the worker's future result.
-            # 2.2. executor.submit(worker) submits each worker function to the thread pool, the '_' is an unused placeholder for the loop variable.
-            # 2.4. executor returns a future object representing the execution of the worker function.
-            ## executor (ThreadPoolExecutor) is a (high-level) interface for managing a pool of threads asynchronously (simultaneously).
-            ## A thread pool is a (high-level) collection of pre-instantiated worker threads that execute tasks from a queue, so multiple threads can run simultaneously.
-            # 2. futures is a list of Future objects, each representing a worker thread that will process items from the task queue.
-            # 3. The worker function will run in parallel, processing items from the task queue.
-            # 4. The task queue will be filled with items to process, and each worker will pick up tasks from the queue, process them and store the results.
-
-            # Stores the Future objects placeholders for the worker results
-            # futures = [executor.submit(worker) for _ in range(max_workers)]
-            futures = []
-            for worker_index in range(max_workers):
-                worker_id = uuid.uuid4().hex[:8]
-
-                futures.append(executor.submit(worker, worker_id))
-                # self.logger.log(f"Future executor submit worker {worker_id}", level="info")
-            # executor.submit(worker) immediately calls/starts worker function in a separate asynchronous thread
-
-            # ========== 4. Populate the Task Queue ==========
-            # Populate the task queue with entries from the companies list and starts parallel processing
-            for index, entry in enumerate(companies_list):
-                # if index % 100 == 0:
-                #     pass
-                task_queue.put((index, entry))
-                # self.logger.log(f"Task {index+1}/{total_size} in queue, total {task_queue.qsize()}", level="info")
-
-            # ========== 5. Sentinel Objects ==========
-            # Add sentinel objects to the queue to signal the end of processing for each worker
-            for worker_id in range(max_workers):
-                task_queue.put(sentinel)
-                # self.logger.log(f"Sentinel in queue: {sentinel}", level="info")
-
-            # ========== 6. Wait for Completion ==========
-            # Wait for all tasks in the queue to be processed
-            # self.logger.log("Wait for all tasks in the queue to be processed", level="info")
-            task_queue.join()
-            # self.logger.log("Join Done!", level="info")
-
-            # Wait for all futures to complete and handle any exceptions, and sum up all bytes
-            # # Inicializa o total em zero
-            # download_bytes_execution_mode = 0
-
-            # Para cada Future, aguarda o resultado e acumula
-            # for future in futures:
-            #     # future.result() bloqueia até a thread terminar e retorna o int de bytes baixados
-            #     bytes_do_worker = future.result()
-            #     download_bytes_execution_mode += bytes_do_worker
-            download_bytes_execution_mode = sum(f.result() for f in futures)
-            # self.logger.log(f"Future result {future}", level="info")
-
-        # ========== 7. Finalization ==========
-        # Final save
-        if buffer:
-            self.logger.log("Final buffer save", level="info")
-            self._handle_save(buffer, results, save_callback, threshold, 0)
-
-        # return aggregated results
-        return results, download_bytes_execution_mode
 
     def _process_company_detail(
         self, base: RawBaseCompanyDTO, skip_codes: Set[str]
