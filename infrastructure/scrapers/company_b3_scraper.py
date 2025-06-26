@@ -2,6 +2,7 @@ from typing import Callable, Dict, List, Optional, Set, Tuple
 
 import base64
 import json
+import threading
 from domain.ports import WorkerPoolPort
 
 from infrastructure.config import Config
@@ -146,7 +147,10 @@ class CompanyB3Scraper:
 
             def processor(page: int) -> Tuple[List[Dict], int, int]:
                 fetch = self._fetch_page(page)
-                self.logger.log(f"processor {page} in _fetch_page", level="info", )
+                self.logger.log(
+                    f"processor {page} in _fetch_page",
+                    level="info",
+                )
                 return fetch
 
             page_results, metrics = self.executor.run(
@@ -154,11 +158,17 @@ class CompanyB3Scraper:
                 processor=processor,
                 logger=self.logger,
             )
-            self.logger.log("page_results done", level="info", )
+            self.logger.log(
+                "page_results done",
+                level="info",
+            )
 
             for page_data in page_results:
                 page_items, _, bts = page_data
-                self.logger.log(f"page_data {bts}", level="info", )
+                self.logger.log(
+                    f"page_data {bts}",
+                    level="info",
+                )
                 results.extend(page_items)
                 download_bytes_execution_mode += bts
 
@@ -224,6 +234,11 @@ class CompanyB3Scraper:
 
         self.logger.log("Start CompanyB3Scraper fetch_companies_details", level="info")
 
+        total_size = len(companies_list)
+        buffer: List[CompanyDTO] = []
+        results: List[CompanyDTO] = []
+        lock = threading.Lock()
+
         tasks = list(enumerate(companies_list))
 
         def processor(item: Tuple[int, Dict]) -> Optional[CompanyDTO]:
@@ -231,19 +246,28 @@ class CompanyB3Scraper:
             processed_entry = self._process_entry(entry, skip_codes)
             self.logger.log("Processor processed_entry", level="info")
 
+            if processed_entry:
+                with lock:
+                    buffer.append(processed_entry)
+                    results.append(processed_entry)
+                    self.processed_count += 1
+                    remaining_items = total_size - self.processed_count
+                    self._handle_save(
+                        buffer, results, save_callback, threshold, remaining_items
+                    )
+
             return processed_entry
 
-        results, metrics = self.executor.run(
+        _, metrics = self.executor.run(
             tasks=tasks,
             processor=processor,
             logger=self.logger,
         )
         self.logger.log("Processor processed_entry results", level="info")
 
-        if callable(save_callback):
-            self.logger.log("Save_callback", level="info")
-
-            save_callback(results)
+        if buffer:
+            self.logger.log("Final buffer save", level="info")
+            self._handle_save(buffer, results, save_callback, threshold, 0)
 
         self.download_bytes_total += metrics.download_bytes
 
@@ -291,7 +315,7 @@ class CompanyB3Scraper:
         entry["companyName"] = self.data_cleaner.clean_text(entry["companyName"])
         entry["issuingCompany"] = self.data_cleaner.clean_text(entry["issuingCompany"])
         entry["tradingName"] = self.data_cleaner.clean_text(entry["tradingName"])
-        entry['dateListing'] = self.data_cleaner.clean_date(entry['dateListing'])
+        entry["dateListing"] = self.data_cleaner.clean_date(entry["dateListing"])
 
         self.logger.log("Processor processing entry", level="info")
 
@@ -307,7 +331,9 @@ class CompanyB3Scraper:
         self, base_company_dto: BseCompanyDTO, skip_codes: Set[str]
     ) -> Optional[CompanyDTO]:
         try:
-            self.logger.log("Parsing company_detil _process_company_detail", level="info")
+            self.logger.log(
+                "Parsing company_detil _process_company_detail", level="info"
+            )
 
             cvm_code = base_company_dto.cvm_code
             detail_company_dto = self._fetch_detail(str(cvm_code))
