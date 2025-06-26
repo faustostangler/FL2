@@ -4,7 +4,7 @@ from infrastructure.helpers.data_cleaner import DataCleaner
 from domain.dto import (
     BseCompanyDTO,
     DetailCompanyDTO,
-    CompanyDTO,
+    RawCompanyDTO,
 )
 
 
@@ -18,7 +18,7 @@ class CompanyMapper:
         self,
         base: BseCompanyDTO,
         detail: DetailCompanyDTO,
-    ) -> CompanyDTO:
+    ) -> RawCompanyDTO:
         codes = detail.other_codes
         ticker_codes = [c.code for c in codes if c.code]
         isin_codes = [c.isin for c in codes if c.isin]
@@ -35,10 +35,10 @@ class CompanyMapper:
         registrar = self.data_cleaner.clean_text(detail.registrar)
         website = detail.website
         sector = self.data_cleaner.clean_text(parts[0]) if len(parts) > 0 else None
-        subsector = (
-            self.data_cleaner.clean_text(parts[1]) if len(parts) > 1 else None
+        subsector = self.data_cleaner.clean_text(parts[1]) if len(parts) > 1 else None
+        industry_segment = (
+            self.data_cleaner.clean_text(parts[2]) if len(parts) > 2 else None
         )
-        segment = self.data_cleaner.clean_text(parts[2]) if len(parts) > 2 else None
 
         market_indicator = self.data_cleaner.clean_text(
             base.market_indicator or detail.market_indicator
@@ -46,7 +46,7 @@ class CompanyMapper:
         bdr_type = self.data_cleaner.clean_text(base.type_bdr or detail.type_bdr)
         listing_date = self.data_cleaner.clean_date(base.listing_date)
         status = self.data_cleaner.clean_text(base.status or detail.status)
-        segment_b3 = self.data_cleaner.clean_text(base.segment_b3)
+        segment = self.data_cleaner.clean_text(base.segment)
         segment_eng = self.data_cleaner.clean_text(base.segment_eng)
         company_type = self.data_cleaner.clean_text(base.company_type)
         market = self.data_cleaner.clean_text(base.market or detail.market)
@@ -58,12 +58,10 @@ class CompanyMapper:
             detail.institution_preferred
         )
         last_date = self.data_cleaner.clean_date(detail.last_date)
-        describle_category_bvmf = self.data_cleaner.clean_text(
-            detail.describle_category_bvmf
-        )
+        company_category = self.data_cleaner.clean_text(detail.company_category)
         quotation_date = self.data_cleaner.clean_date(detail.date_quotation)
 
-        return CompanyDTO(
+        return RawCompanyDTO(
             ticker=ticker,
             company_name=company_name,
             cvm_code=cvm_code,
@@ -77,12 +75,12 @@ class CompanyMapper:
             other_codes=codes,
             sector=sector,
             subsector=subsector,
-            segment=segment,
+            industry_segment=industry_segment,
             market_indicator=market_indicator,
             bdr_type=bdr_type,
             listing_date=listing_date,
             status=status,
-            segment_b3=segment_b3,
+            segment=segment,
             segment_eng=segment_eng,
             company_type=company_type,
             market=market,
@@ -95,6 +93,6 @@ class CompanyMapper:
             last_date=last_date,
             has_emissions=detail.has_emissions,
             has_bdr=detail.has_bdr,
-            describle_category_bvmf=describle_category_bvmf,
+            company_category=company_category,
             quotation_date=quotation_date,
         )

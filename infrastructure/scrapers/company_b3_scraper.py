@@ -12,7 +12,7 @@ from infrastructure.helpers.byte_formatter import ByteFormatter
 from domain.dto import (
     BseCompanyDTO,
     DetailCompanyDTO,
-    CompanyDTO,
+    RawCompanyDTO,
 )
 from application import CompanyMapper
 
@@ -86,9 +86,9 @@ class CompanyB3Scraper:
         self,
         threshold: Optional[int] = None,
         skip_codes: Optional[Set[str]] = None,
-        save_callback: Optional[Callable[[List[CompanyDTO]], None]] = None,
+        save_callback: Optional[Callable[[List[RawCompanyDTO]], None]] = None,
         max_workers: int | None = None,
-    ) -> List[CompanyDTO]:
+    ) -> List[RawCompanyDTO]:
         """Fetch all companies from B3.
 
         Args:
@@ -146,7 +146,10 @@ class CompanyB3Scraper:
 
             def processor(page: int) -> Tuple[List[Dict], int, int]:
                 fetch = self._fetch_page(page)
-                self.logger.log(f"processor {page} in _fetch_page", level="info", )
+                self.logger.log(
+                    f"processor {page} in _fetch_page",
+                    level="info",
+                )
                 return fetch
 
             page_results, metrics = self.executor.run(
@@ -154,11 +157,17 @@ class CompanyB3Scraper:
                 processor=processor,
                 logger=self.logger,
             )
-            self.logger.log("page_results done", level="info", )
+            self.logger.log(
+                "page_results done",
+                level="info",
+            )
 
             for page_data in page_results:
                 page_items, _, bts = page_data
-                self.logger.log(f"page_data {bts}", level="info", )
+                self.logger.log(
+                    f"page_data {bts}",
+                    level="info",
+                )
                 results.extend(page_items)
                 download_bytes_execution_mode += bts
 
@@ -198,10 +207,10 @@ class CompanyB3Scraper:
         self,
         companies_list: List[Dict],
         skip_codes: Optional[Set[str]] = None,
-        save_callback: Optional[Callable[[List[CompanyDTO]], None]] = None,
+        save_callback: Optional[Callable[[List[RawCompanyDTO]], None]] = None,
         threshold: Optional[int] = None,
         max_workers: int | None = None,
-    ) -> Tuple[List[CompanyDTO], int]:
+    ) -> Tuple[List[RawCompanyDTO], int]:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
         Args:
@@ -226,24 +235,26 @@ class CompanyB3Scraper:
 
         tasks = list(enumerate(companies_list))
 
-        def processor(item: Tuple[int, Dict]) -> Optional[CompanyDTO]:
+        def processor(item: Tuple[int, Dict]) -> Optional[RawCompanyDTO]:
             index, entry = item
             processed_entry = self._process_entry(entry, skip_codes)
             self.logger.log(f"Processor processed_entry {index}", level="info")
 
             return processed_entry
 
-        buffer: List[CompanyDTO] = []
-        processed_results: List[CompanyDTO] = []
+        buffer: List[RawCompanyDTO] = []
+        processed_results: List[RawCompanyDTO] = []
         total_size = len(companies_list)
 
-        def handle_batch(item: Optional[CompanyDTO]) -> None:
+        def handle_batch(item: Optional[RawCompanyDTO]) -> None:
             if item is None:
                 return
             processed_results.append(item)
             buffer.append(item)
             remaining = total_size - len(processed_results)
-            self._handle_save(buffer, processed_results, save_callback, threshold, remaining)
+            self._handle_save(
+                buffer, processed_results, save_callback, threshold, remaining
+            )
 
         results_out, metrics = self.executor.run(
             tasks=tasks,
@@ -282,7 +293,7 @@ class CompanyB3Scraper:
 
     def _merge_company(
         self, base: BseCompanyDTO, detail: DetailCompanyDTO
-    ) -> Optional[CompanyDTO]:
+    ) -> Optional[RawCompanyDTO]:
         """Merge base and detail DTOs into a parsed DTO."""
 
         self.logger.log("fetch parse_company more details", level="info")
@@ -298,11 +309,11 @@ class CompanyB3Scraper:
         self,
         entry: Dict,
         skip_codes: Set[str],
-    ) -> Optional[CompanyDTO]:
+    ) -> Optional[RawCompanyDTO]:
         entry["companyName"] = self.data_cleaner.clean_text(entry["companyName"])
         entry["issuingCompany"] = self.data_cleaner.clean_text(entry["issuingCompany"])
         entry["tradingName"] = self.data_cleaner.clean_text(entry["tradingName"])
-        entry['dateListing'] = self.data_cleaner.clean_date(entry['dateListing'])
+        entry["dateListing"] = self.data_cleaner.clean_date(entry["dateListing"])
 
         self.logger.log("Processor processing entry", level="info")
 
@@ -316,9 +327,11 @@ class CompanyB3Scraper:
 
     def _process_company_detail(
         self, base_company_dto: BseCompanyDTO, skip_codes: Set[str]
-    ) -> Optional[CompanyDTO]:
+    ) -> Optional[RawCompanyDTO]:
         try:
-            self.logger.log("Parsing company_detil _process_company_detail", level="info")
+            self.logger.log(
+                "Parsing company_detil _process_company_detail", level="info"
+            )
 
             cvm_code = base_company_dto.cvm_code
             detail_company_dto = self._fetch_detail(str(cvm_code))
@@ -331,9 +344,9 @@ class CompanyB3Scraper:
 
     def _handle_save(
         self,
-        buffer: List[CompanyDTO],
-        results: Optional[List[CompanyDTO]],
-        save_callback: Optional[Callable[[List[CompanyDTO]], None]],
+        buffer: List[RawCompanyDTO],
+        results: Optional[List[RawCompanyDTO]],
+        save_callback: Optional[Callable[[List[RawCompanyDTO]], None]],
         threshold: int,
         remaining_items: int,
     ) -> None:

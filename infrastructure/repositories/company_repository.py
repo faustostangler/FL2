@@ -62,15 +62,15 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
 
     def has_item(self, identifier: str) -> bool:
         """
-        Checks if a company with the given ticker exists in the database.
+        Checks if a company with the given CVM code exists in the database.
 
-        :param identifier: Ticker symbol to verify
+        :param identifier: CVM code to verify
         :return: True if the company exists, False otherwise
         """
         session = self.Session()
         try:
             return (
-                session.query(CompanyModel).filter_by(ticker=identifier).first()
+                session.query(CompanyModel).filter_by(cvm_code=identifier).first()
                 is not None
             )
         finally:
@@ -78,15 +78,15 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
 
     def get_by_id(self, id: str) -> CompanyDTO:
         """
-        Retrieves a single company from the database by ticker.
+        Retrieves a single company from the database by CVM code.
 
-        :param id: The ticker identifier
+        :param id: The CVM code identifier
         :return: A CompanyDTO representing the retrieved company
         :raises ValueError: If no company is found
         """
         session = self.Session()
         try:
-            obj = session.query(CompanyModel).filter_by(ticker=id).first()
+            obj = session.query(CompanyModel).filter_by(cvm_code=id).first()
             if not obj:
                 raise ValueError(f"Company not found: {id}")
             return obj.to_dto()

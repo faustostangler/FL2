@@ -2,20 +2,23 @@ from sqlalchemy.orm import Mapped, mapped_column, DeclarativeBase
 from typing import Optional
 from domain.dto.company_dto import CompanyDTO
 
+
 class Base(DeclarativeBase):
     pass
+
 
 class CompanyModel(Base):
     """
     Modelo ORM da tabela de empresas no banco de dados.
     Serve como adaptador entre o domínio (DTO) e o banco (SQLAlchemy).
     """
+
     __tablename__ = "tbl_company"
 
-    ticker: Mapped[str] = mapped_column(primary_key=True)
+    cvm_code: Mapped[str] = mapped_column(primary_key=True)
+    ticker: Mapped[Optional[str]] = mapped_column()
     company_name: Mapped[str] = mapped_column()
     cnpj: Mapped[Optional[str]] = mapped_column()
-    cvm_code: Mapped[Optional[str]] = mapped_column()
     ticker_codes: Mapped[Optional[str]] = mapped_column()
     isin_codes: Mapped[Optional[str]] = mapped_column()
     trading_name: Mapped[Optional[str]] = mapped_column()
@@ -29,10 +32,9 @@ class CompanyModel(Base):
 
     company_type: Mapped[Optional[str]] = mapped_column()
     status: Mapped[Optional[str]] = mapped_column()
-    b3_code: Mapped[Optional[str]] = mapped_column()
     company_category: Mapped[Optional[str]] = mapped_column()
     corporate_name: Mapped[Optional[str]] = mapped_column()
-    registration_date: Mapped[Optional[str]] = mapped_column()
+    listing_date: Mapped[Optional[str]] = mapped_column()
     start_situation_date: Mapped[Optional[str]] = mapped_column()
     situation: Mapped[Optional[str]] = mapped_column()
     situation_date: Mapped[Optional[str]] = mapped_column()
@@ -60,19 +62,17 @@ class CompanyModel(Base):
             activity=dto.activity,
             registrar=dto.registrar,
             website=dto.website,
-
             company_type=dto.company_type,
             status=dto.status,
-            b3_code=dto.b3_code,
             company_category=dto.company_category,
             corporate_name=dto.corporate_name,
-            registration_date=dto.registration_date,
+            listing_date=dto.listing_date,
             start_situation_date=dto.start_situation_date,
             situation=dto.situation,
             situation_date=dto.situation_date,
             country=dto.country,
             state=dto.state,
-            city=dto.city
+            city=dto.city,
         )
 
     def to_dto(self) -> CompanyDTO:
@@ -94,17 +94,15 @@ class CompanyModel(Base):
             activity=self.activity,
             registrar=self.registrar,
             website=self.website,
-            
             company_type=self.company_type,
             status=self.status,
-            b3_code=self.b3_code,
             company_category=self.company_category,
             corporate_name=self.corporate_name,
-            registration_date=self.registration_date,
+            listing_date=self.listing_date,
             start_situation_date=self.start_situation_date,
             situation=self.situation,
             situation_date=self.situation_date,
             country=self.country,
             state=self.state,
-            city=self.city
+            city=self.city,
         )
