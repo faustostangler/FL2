@@ -1,0 +1,22 @@
+name: CI
+on: [push, pull_request]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Install dependencies
+        run: |
+          pip install .[dev] || true
+      - name: Ruff
+        run: ruff .
+      - name: Black
+        run: black --check .
+      - name: Isort
+        run: isort --check-only .
+      - name: Pytest
+        run: pytest --cov

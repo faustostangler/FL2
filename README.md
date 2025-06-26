@@ -1,4 +1,7 @@
 # Finance Ledger Yearly (FLY)
+[![CI](https://github.com/faustostangler/FLY/actions/workflows/ci.yml/badge.svg)](https://github.com/faustostangler/FLY/actions/workflows/ci.yml)
+[![Coverage Status](https://img.shields.io/badge/coverage-unknown-lightgrey)](https://github.com/faustostangler/FLY/actions/workflows/ci.yml)
+
 
 ### What is This?
 Finance Ledger Yearly (FLY) gathers financial documents from companies listed on B3. It scrapes company profiles, sequential document numbers (NSDs) and standardized statements, storing everything in a local database for analysis.
