@@ -229,7 +229,7 @@ class CompanyB3Scraper:
         def processor(item: Tuple[int, Dict]) -> Optional[CompanyDTO]:
             _, entry = item
             processed_entry = self._process_entry(entry, skip_codes)
-            self.logger.log("Processor processed_entry", level="info")
+            self.logger.log(f"Processor processed_entry {_}", level="info")
 
             return processed_entry
 

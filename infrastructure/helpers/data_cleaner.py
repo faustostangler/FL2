@@ -53,6 +53,9 @@ class DataCleaner:
 
     def clean_date(self, text: Optional[str]) -> Optional[datetime]:
         """Tenta converter string em datetime a partir de padrões comuns."""
+        if isinstance(text, datetime):
+            return text
+
         if not text:
             return None
 

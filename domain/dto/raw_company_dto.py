@@ -21,7 +21,7 @@ class BseCompanyDTO:
     cvm_code: Optional[str]
     market_indicator: Optional[str]
     type_bdr: Optional[str]
-    date_listing: Optional[str]
+    listing_date: Optional[str]
     status: Optional[str]
     segment_b3: Optional[str]
     segment_eng: Optional[str]
@@ -36,7 +36,7 @@ class BseCompanyDTO:
             cvm_code=raw.get("codeCVM"),
             market_indicator=raw.get("marketIndicator"),
             type_bdr=raw.get("typeBDR"),
-            date_listing=raw.get("dateListing"),
+            listing_date=raw.get("dateListing"),
             status=raw.get("status"),
             segment_b3=raw.get("segment"),
             segment_eng=raw.get("segmentEng"),

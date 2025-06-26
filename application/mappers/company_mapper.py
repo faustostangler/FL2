@@ -44,7 +44,7 @@ class CompanyMapper:
             base.market_indicator or detail.market_indicator
         )
         bdr_type = self.data_cleaner.clean_text(base.type_bdr or detail.type_bdr)
-        listing_date = self.data_cleaner.clean_date(base.date_listing)
+        listing_date = self.data_cleaner.clean_date(base.listing_date)
         status = self.data_cleaner.clean_text(base.status or detail.status)
         segment_b3 = self.data_cleaner.clean_text(base.segment_b3)
         segment_eng = self.data_cleaner.clean_text(base.segment_eng)

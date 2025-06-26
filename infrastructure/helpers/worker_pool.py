@@ -53,8 +53,8 @@ class WorkerPool(WorkerPoolPort):
                     downloaded += len(json.dumps(result, default=str).encode("utf-8"))
                     with lock:
                         results.append(result)
-                    if callable(on_result):
-                        on_result(result)
+                        if callable(on_result):
+                            on_result(result)
 
                     logger.log(
                         f"task processed {item}", level="info", worker_id=worker_id

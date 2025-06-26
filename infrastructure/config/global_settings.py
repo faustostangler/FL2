@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 APP_NAME = "FLY" # Application name
 
 WAIT = 2  # Default wait time in seconds
-THRESHOLD = 50  # Default threshold for saving data
+THRESHOLD = 3  # Default threshold for saving data
 MAX_LINEAR_HOLES = 2000  # Maximum number of linear holes allowed
 MAX_WORKERS = 1  # Default number of threads for sync operations
 BATCH_SIZE = 50  # Number of items per repository batch
