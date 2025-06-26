@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Optional
 import json
 
-from .raw_company_dto import CompanyDTO
+from .raw_company_dto import RawCompanyDTO
 
 
 @dataclass(frozen=True)
@@ -26,10 +26,9 @@ class CompanyDTO:
 
     company_type: Optional[str]
     status: Optional[str]
-    b3_code: Optional[str]
     company_category: Optional[str]
     corporate_name: Optional[str]
-    registration_date: Optional[str]
+    listing_date: Optional[str]
     start_situation_date: Optional[str]
     situation: Optional[str]
     situation_date: Optional[str]
@@ -59,10 +58,9 @@ class CompanyDTO:
             website=raw.get("website"),
             company_type=raw.get("company_type"),
             status=raw.get("status"),
-            b3_code=raw.get("b3_code"),
             company_category=raw.get("company_category"),
             corporate_name=raw.get("corporate_name"),
-            registration_date=raw.get("registration_date"),
+            listing_date=raw.get("listing_date"),
             start_situation_date=raw.get("start_situation_date"),
             situation=raw.get("situation"),
             situation_date=raw.get("situation_date"),
@@ -72,7 +70,7 @@ class CompanyDTO:
         )
 
     @staticmethod
-    def from_raw(raw: CompanyDTO) -> "CompanyDTO":
+    def from_raw(raw: RawCompanyDTO) -> "CompanyDTO":
         """Builds a CompanyDTO from a CompanyDTO instance."""
 
         return CompanyDTO(
@@ -84,7 +82,7 @@ class CompanyDTO:
             trading_name=raw.trading_name,
             sector=raw.sector,
             subsector=raw.subsector,
-            segment=raw.segment,
+            segment=raw.industry_segment,
             listing=raw.listing,
             activity=raw.activity,
             registrar=raw.registrar,
@@ -92,10 +90,9 @@ class CompanyDTO:
             website=raw.website,
             company_type=raw.company_type,
             status=raw.status,
-            b3_code=None,
             company_category=None,
             corporate_name=None,
-            registration_date=(
+            listing_date=(
                 raw.listing_date.strftime("%Y-%m-%d") if raw.listing_date else None
             ),
             start_situation_date=None,

@@ -4,13 +4,13 @@ from .raw_company_dto import (
     CodeDTO,
     BseCompanyDTO,
     DetailCompanyDTO,
-    CompanyDTO,
+    RawCompanyDTO,
 )
 
 __all__ = [
     "CompanyDTO",
     "NSDDTO",
-    "CompanyDTO",
+    "RawCompanyDTO",
     "BseCompanyDTO",
     "DetailCompanyDTO",
     "CodeDTO",

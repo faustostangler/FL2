@@ -23,7 +23,7 @@ class BseCompanyDTO:
     type_bdr: Optional[str]
     listing_date: Optional[str]
     status: Optional[str]
-    segment_b3: Optional[str]
+    segment: Optional[str]
     segment_eng: Optional[str]
     company_type: Optional[str]
     market: Optional[str]
@@ -38,7 +38,7 @@ class BseCompanyDTO:
             type_bdr=raw.get("typeBDR"),
             listing_date=raw.get("dateListing"),
             status=raw.get("status"),
-            segment_b3=raw.get("segment"),
+            segment=raw.get("segment"),
             segment_eng=raw.get("segmentEng"),
             company_type=raw.get("type"),
             market=raw.get("market"),
@@ -68,7 +68,7 @@ class DetailCompanyDTO:
     last_date: Optional[datetime]
     has_emissions: Optional[bool]
     has_bdr: Optional[bool]
-    describle_category_bvmf: Optional[str]
+    company_category: Optional[str]
     date_quotation: Optional[datetime]
 
     @staticmethod
@@ -97,13 +97,13 @@ class DetailCompanyDTO:
             last_date=raw.get("lastDate"),
             has_emissions=raw.get("hasEmissions"),
             has_bdr=raw.get("hasBDR"),
-            describle_category_bvmf=raw.get("describleCategoryBVMF"),
+            company_category=raw.get("describleCategoryBVMF"),
             date_quotation=raw.get("dateQuotation"),
         )
 
 
 @dataclass(frozen=True)
-class CompanyDTO:
+class RawCompanyDTO:
     """Raw parsed data returned by the scraper before mapping to the domain."""
 
     ticker: Optional[str]
@@ -119,12 +119,12 @@ class CompanyDTO:
     other_codes: List[CodeDTO]
     sector: Optional[str]
     subsector: Optional[str]
-    segment: Optional[str]
+    industry_segment: Optional[str]
     market_indicator: Optional[str]
     bdr_type: Optional[str]
     listing_date: Optional[datetime]
     status: Optional[str]
-    segment_b3: Optional[str]
+    segment: Optional[str]
     segment_eng: Optional[str]
     company_type: Optional[str]
     market: Optional[str]
@@ -137,5 +137,5 @@ class CompanyDTO:
     last_date: Optional[datetime]
     has_emissions: Optional[bool]
     has_bdr: Optional[bool]
-    describle_category_bvmf: Optional[str]
+    company_category: Optional[str]
     quotation_date: Optional[datetime]
