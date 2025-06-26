@@ -227,38 +227,38 @@ class CompanyB3Scraper:
         tasks = list(enumerate(companies_list))
 
         def processor(item: Tuple[int, Dict]) -> Optional[CompanyDTO]:
-            _, entry = item
+            index, entry = item
             processed_entry = self._process_entry(entry, skip_codes)
-            self.logger.log(f"Processor processed_entry {_}", level="info")
+            self.logger.log(f"Processor processed_entry {index}", level="info")
 
             return processed_entry
 
         buffer: List[CompanyDTO] = []
+        processed_results: List[CompanyDTO] = []
+        total_size = len(companies_list)
 
-        def handle_result(item: Optional[CompanyDTO]) -> None:
+        def handle_batch(item: Optional[CompanyDTO]) -> None:
             if item is None:
                 return
+            processed_results.append(item)
             buffer.append(item)
-            if len(buffer) >= threshold:
-                if callable(save_callback):
-                    save_callback(buffer.copy())
-                buffer.clear()
+            remaining = total_size - len(processed_results)
+            self._handle_save(buffer, processed_results, save_callback, threshold, remaining)
 
-        results, metrics = self.executor.run(
+        results_out, metrics = self.executor.run(
             tasks=tasks,
             processor=processor,
             logger=self.logger,
-            on_result=handle_result,
+            on_result=handle_batch,
         )
         self.logger.log("Processor processed_entry results", level="info")
 
-        if buffer and callable(save_callback):
-            self.logger.log("Save_callback", level="info")
-            save_callback(buffer)
+        if buffer:
+            self._handle_save(buffer, processed_results, save_callback, threshold, 0)
 
         self.download_bytes_total += metrics.download_bytes
 
-        return results, metrics.download_bytes
+        return results_out, metrics.download_bytes
 
     def _fetch_detail(self, cvm_code: str) -> DetailCompanyDTO:
         """
