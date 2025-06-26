@@ -15,7 +15,7 @@ class LoggerPort(Protocol):
         progress: Optional[dict] = None,
         extra: Optional[dict] = None,
         worker_id: Optional[str] = None,
-    ) -> None: 
+    ) -> None:
         raise NotImplemented
 
 
@@ -32,6 +32,7 @@ class WorkerPoolPort(Protocol):
         tasks: Iterable[T],
         processor: Callable[[T], R],
         logger: LoggerPort,
+        on_result: Optional[Callable[[R], None]] = None,
         post_callback: Optional[Callable[[List[R]], None]] = None,
-    ) -> Tuple[List[R], Metrics]: 
+    ) -> Tuple[List[R], Metrics]:
         raise NotImplemented
