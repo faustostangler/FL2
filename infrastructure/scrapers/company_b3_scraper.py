@@ -288,8 +288,8 @@ class CompanyB3Scraper:
         url = self.endpoint_detail + token
         response = self.fetch_utils.fetch_with_retry(self.session, url)
         self.download_bytes_total += len(response.content)
-
-        return DetailCompanyDTO.from_dict(response.json())
+        detail_company_dto = DetailCompanyDTO.from_dict(response.json())
+        return detail_company_dto
 
     def _merge_company(
         self, base: BseCompanyDTO, detail: DetailCompanyDTO

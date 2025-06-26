@@ -19,80 +19,56 @@ class CompanyMapper:
         base: BseCompanyDTO,
         detail: DetailCompanyDTO,
     ) -> RawCompanyDTO:
-        codes = detail.other_codes
-        ticker_codes = [c.code for c in codes if c.code]
-        isin_codes = [c.isin for c in codes if c.isin]
 
-        industry = detail.industry_classification or ""
-        parts = [p.strip() for p in industry.split("/")]
+        codes = detail.other_codes or []
+        
+        industry_classification = detail.industry_classification or ""
+        parts = [p.strip() for p in industry_classification.split("/")]
+        industry_sector = self.data_cleaner.clean_text(parts[0]) if len(parts) > 0 else None
+        industry_subsector = self.data_cleaner.clean_text(parts[1]) if len(parts) > 1 else None
+        industry_segment = self.data_cleaner.clean_text(parts[2]) if len(parts) > 2 else None
 
-        ticker = self.data_cleaner.clean_text(base.issuing_company)
-        company_name = self.data_cleaner.clean_text(base.company_name)
-        cvm_code = self.data_cleaner.clean_text(base.cvm_code)
-        cnpj = self.data_cleaner.clean_text(detail.cnpj)
-        trading_name = self.data_cleaner.clean_text(detail.trading_name)
-        listing = self.data_cleaner.clean_text(detail.listing_segment)
-        registrar = self.data_cleaner.clean_text(detail.registrar)
-        website = detail.website
-        sector = self.data_cleaner.clean_text(parts[0]) if len(parts) > 0 else None
-        subsector = self.data_cleaner.clean_text(parts[1]) if len(parts) > 1 else None
-        industry_segment = (
-            self.data_cleaner.clean_text(parts[2]) if len(parts) > 2 else None
-        )
-
-        market_indicator = self.data_cleaner.clean_text(
-            base.market_indicator or detail.market_indicator
-        )
-        bdr_type = self.data_cleaner.clean_text(base.type_bdr or detail.type_bdr)
-        listing_date = self.data_cleaner.clean_date(base.listing_date)
-        status = self.data_cleaner.clean_text(base.status or detail.status)
-        segment = self.data_cleaner.clean_text(base.segment)
-        segment_eng = self.data_cleaner.clean_text(base.segment_eng)
-        company_type = self.data_cleaner.clean_text(base.company_type)
-        market = self.data_cleaner.clean_text(base.market or detail.market)
-        industry_classification = detail.industry_classification
-        industry_classification_eng = detail.industry_classification_eng
-        activity = detail.activity
-        institution_common = self.data_cleaner.clean_text(detail.institution_common)
-        institution_preferred = self.data_cleaner.clean_text(
-            detail.institution_preferred
-        )
-        last_date = self.data_cleaner.clean_date(detail.last_date)
-        company_category = self.data_cleaner.clean_text(detail.company_category)
-        quotation_date = self.data_cleaner.clean_date(detail.date_quotation)
 
         return RawCompanyDTO(
-            ticker=ticker,
-            company_name=company_name,
-            cvm_code=cvm_code,
-            cnpj=cnpj,
-            trading_name=trading_name,
-            listing=listing,
-            registrar=registrar,
-            website=website,
-            ticker_codes=ticker_codes,
-            isin_codes=isin_codes,
-            other_codes=codes,
-            sector=sector,
-            subsector=subsector,
-            industry_segment=industry_segment,
-            market_indicator=market_indicator,
-            bdr_type=bdr_type,
-            listing_date=listing_date,
-            status=status,
-            segment=segment,
-            segment_eng=segment_eng,
-            company_type=company_type,
-            market=market,
-            industry_classification=industry_classification,
-            industry_classification_eng=industry_classification_eng,
-            activity=activity,
-            has_quotation=detail.has_quotation,
-            institution_common=institution_common,
-            institution_preferred=institution_preferred,
-            last_date=last_date,
-            has_emissions=detail.has_emissions,
-            has_bdr=detail.has_bdr,
-            company_category=company_category,
-            quotation_date=quotation_date,
+            cvm_code = detail.cvm_code or base.cvm_code,
+            issuing_company = detail.issuing_company or base.issuing_company,
+            trading_name = detail.trading_name or base.trading_name,
+            company_name = detail.company_name or base.company_name,
+            cnpj = detail.cnpj or base.cnpj,
+
+            ticker_codes = [c.code for c in codes if c.code],
+            isin_codes = [c.isin for c in codes if c.isin],
+            other_codes = codes,
+
+            industry_sector = industry_sector, 
+            industry_subsector = industry_subsector, 
+            industry_segment = industry_segment,
+            industry_classification = industry_classification,
+            industry_classification_eng = detail.industry_classification_eng or None,
+            activity = detail.activity or None,
+
+            company_segment = base.segment or None, 
+            company_segment_eng = base.segment_eng or None, 
+            company_category = detail.company_category or None, 
+            company_type = base.company_type or None, 
+
+            listing_segment = detail.listing_segment or None, 
+            registrar = detail.registrar or None, 
+            website = detail.website or None, 
+            institution_common = detail.institution_common or None, 
+            institution_preferred = detail.institution_preferred or None, 
+            
+            market = detail.market or base.market, 
+            status = detail.status or base.status, 
+            market_indicator = detail.market_indicator or base.market_indicator, 
+
+            code = detail.code or None, 
+            has_bdr = detail.has_bdr or None, 
+            type_bdr = detail.type_bdr or base.type_bdr, 
+            has_quotation = detail.has_quotation or None, 
+            has_emissions = detail.has_emissions or None, 
+
+            date_quotation = detail.date_quotation or None, 
+            last_date = detail.last_date, 
+            listing_date = base.listing_date or "", 
         )
