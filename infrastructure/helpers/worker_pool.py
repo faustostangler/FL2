@@ -27,9 +27,9 @@ class WorkerPool(WorkerPoolPort):
         tasks: Iterable[T],
         processor: Callable[[T], R],
         logger: LoggerPort,
+        on_result: Optional[Callable[[R], None]] = None,
         post_callback: Optional[Callable[[List[R]], None]] = None,
     ) -> Tuple[List[R], Metrics]:
-
         logger.log(f"worker pool start {processor.__qualname__}", level="info")
 
         results: List[R] = []
@@ -53,15 +53,18 @@ class WorkerPool(WorkerPoolPort):
                     downloaded += len(json.dumps(result, default=str).encode("utf-8"))
                     with lock:
                         results.append(result)
+                    if callable(on_result):
+                        on_result(result)
 
-                    logger.log(f"task processed {item}", level="info", worker_id=worker_id)
+                    logger.log(
+                        f"task processed {item}", level="info", worker_id=worker_id
+                    )
                 except Exception as exc:  # noqa: BLE001
                     logger.log(
                         f"worker error: {exc}", level="warning", worker_id=worker_id
                     )
                 finally:
                     queue.task_done()
-
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             logger.log("ThreadPoolExecutor started", level="info")

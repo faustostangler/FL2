@@ -233,17 +233,28 @@ class CompanyB3Scraper:
 
             return processed_entry
 
+        buffer: List[CompanyDTO] = []
+
+        def handle_result(item: Optional[CompanyDTO]) -> None:
+            if item is None:
+                return
+            buffer.append(item)
+            if len(buffer) >= threshold:
+                if callable(save_callback):
+                    save_callback(buffer.copy())
+                buffer.clear()
+
         results, metrics = self.executor.run(
             tasks=tasks,
             processor=processor,
             logger=self.logger,
+            on_result=handle_result,
         )
         self.logger.log("Processor processed_entry results", level="info")
 
-        if callable(save_callback):
+        if buffer and callable(save_callback):
             self.logger.log("Save_callback", level="info")
-
-            save_callback(results)
+            save_callback(buffer)
 
         self.download_bytes_total += metrics.download_bytes
 
