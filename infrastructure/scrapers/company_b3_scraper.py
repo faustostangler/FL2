@@ -10,9 +10,9 @@ from infrastructure.helpers import FetchUtils
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.byte_formatter import ByteFormatter
 from domain.dto import (
-    RawBaseCompanyDTO,
-    RawDetailCompanyDTO,
-    RawParsedCompanyDTO,
+    BseCompanyDTO,
+    DetailCompanyDTO,
+    CompanyDTO,
 )
 from application import CompanyMapper
 
@@ -86,9 +86,9 @@ class CompanyB3Scraper:
         self,
         threshold: Optional[int] = None,
         skip_codes: Optional[Set[str]] = None,
-        save_callback: Optional[Callable[[List[RawParsedCompanyDTO]], None]] = None,
+        save_callback: Optional[Callable[[List[CompanyDTO]], None]] = None,
         max_workers: int | None = None,
-    ) -> List[RawParsedCompanyDTO]:
+    ) -> List[CompanyDTO]:
         """Fetch all companies from B3.
 
         Args:
@@ -100,6 +100,8 @@ class CompanyB3Scraper:
         Returns:
             List of dictionaries representing raw company data.
         """
+        self.logger.log("Start fetch_all", level="info")
+
         # Ensure skip_codes is a set (to avoid None and allow fast lookup)
         skip_codes = skip_codes or set()
         # Determine the save threshold (number of companies before saving buffer)
@@ -132,7 +134,7 @@ class CompanyB3Scraper:
 
         :return: Lista de empresas com código CVM e nome base.
         """
-        self.logger.log("Get Existing Companies from B3", level="info")
+        self.logger.log("Fetch Existing Companies from B3", level="info")
 
         first_page, total_pages, bytes_first = self._fetch_page(1)
         results = list(first_page)
@@ -140,18 +142,23 @@ class CompanyB3Scraper:
 
         if total_pages > 1:
             pages = range(2, total_pages + 1)
+            self.logger.log("Fetch remaining company pages", level="info")
 
             def processor(page: int) -> Tuple[List[Dict], int, int]:
-                return self._fetch_page(page)
+                fetch = self._fetch_page(page)
+                self.logger.log(f"processor {page} in _fetch_page", level="info", )
+                return fetch
 
             page_results, metrics = self.executor.run(
                 tasks=pages,
                 processor=processor,
                 logger=self.logger,
             )
+            self.logger.log("page_results done", level="info", )
 
             for page_data in page_results:
                 page_items, _, bts = page_data
+                self.logger.log(f"page_data {bts}", level="info", )
                 results.extend(page_items)
                 download_bytes_execution_mode += bts
 
@@ -191,10 +198,10 @@ class CompanyB3Scraper:
         self,
         companies_list: List[Dict],
         skip_codes: Optional[Set[str]] = None,
-        save_callback: Optional[Callable[[List[RawParsedCompanyDTO]], None]] = None,
+        save_callback: Optional[Callable[[List[CompanyDTO]], None]] = None,
         threshold: Optional[int] = None,
         max_workers: int | None = None,
-    ) -> Tuple[List[RawParsedCompanyDTO], int]:
+    ) -> Tuple[List[CompanyDTO], int]:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
         Args:
@@ -215,34 +222,42 @@ class CompanyB3Scraper:
         threshold = threshold or self.config.global_settings.threshold or 50
         skip_codes = skip_codes or set()
 
-        self.logger.log("Start CompanyB3Scraper fetch_all", level="info")
+        self.logger.log("Start CompanyB3Scraper fetch_companies_details", level="info")
 
         tasks = list(enumerate(companies_list))
 
-        def processor(item: Tuple[int, Dict]) -> Optional[RawParsedCompanyDTO]:
+        def processor(item: Tuple[int, Dict]) -> Optional[CompanyDTO]:
             _, entry = item
-            return self._process_entry(entry, skip_codes)
+            processed_entry = self._process_entry(entry, skip_codes)
+            self.logger.log("Processor processed_entry", level="info")
+
+            return processed_entry
 
         results, metrics = self.executor.run(
             tasks=tasks,
             processor=processor,
             logger=self.logger,
         )
+        self.logger.log("Processor processed_entry results", level="info")
 
         if callable(save_callback):
+            self.logger.log("Save_callback", level="info")
+
             save_callback(results)
 
         self.download_bytes_total += metrics.download_bytes
 
         return results, metrics.download_bytes
 
-    def _fetch_detail(self, cvm_code: str) -> RawDetailCompanyDTO:
+    def _fetch_detail(self, cvm_code: str) -> DetailCompanyDTO:
         """
         Busca os detalhes de uma empresa a partir do código CVM.
 
         :param cvm_code: Código CVM da empresa
         :return: Dicionário com detalhes estendidos da empresa
         """
+        self.logger.log("fetch company_detail", level="info")
+
         # Prepare the payload with the CVM code and language for the request
         payload = {"codeCVM": cvm_code, "language": self.language}
         # Encode the payload as base64 to match B3 API requirements
@@ -252,15 +267,18 @@ class CompanyB3Scraper:
         response = self.fetch_utils.fetch_with_retry(self.session, url)
         self.download_bytes_total += len(response.content)
 
-        return RawDetailCompanyDTO.from_dict(response.json())
+        return DetailCompanyDTO.from_dict(response.json())
 
-    def _parse_company(
-        self, base: RawBaseCompanyDTO, detail: RawDetailCompanyDTO
-    ) -> Optional[RawParsedCompanyDTO]:
+    def _merge_company(
+        self, base: BseCompanyDTO, detail: DetailCompanyDTO
+    ) -> Optional[CompanyDTO]:
         """Merge base and detail DTOs into a parsed DTO."""
 
+        self.logger.log("fetch parse_company more details", level="info")
+
         try:
-            return self.mapper.merge(base, detail)
+            company_dto = self.mapper.merge_company_dtos(base, detail)
+            return company_dto
         except Exception as e:  # noqa: BLE001
             self.logger.log(f"erro {e}", level="debug")
             return None
@@ -269,34 +287,42 @@ class CompanyB3Scraper:
         self,
         entry: Dict,
         skip_codes: Set[str],
-    ) -> Optional[RawParsedCompanyDTO]:
+    ) -> Optional[CompanyDTO]:
         entry["companyName"] = self.data_cleaner.clean_text(entry["companyName"])
         entry["issuingCompany"] = self.data_cleaner.clean_text(entry["issuingCompany"])
         entry["tradingName"] = self.data_cleaner.clean_text(entry["tradingName"])
+        entry['dateListing'] = self.data_cleaner.clean_date(entry['dateListing'])
 
-        base_dto = RawBaseCompanyDTO.from_dict(entry)
+        self.logger.log("Processor processing entry", level="info")
 
-        parsed = self._process_company_detail(base_dto, skip_codes)
+        base_company_dto = BseCompanyDTO.from_dict(entry)
 
-        return parsed
+        company_dto = self._process_company_detail(base_company_dto, skip_codes)
+
+        self.logger.log("Processor processed parsed details", level="info")
+
+        return company_dto
 
     def _process_company_detail(
-        self, base: RawBaseCompanyDTO, skip_codes: Set[str]
-    ) -> Optional[RawParsedCompanyDTO]:
+        self, base_company_dto: BseCompanyDTO, skip_codes: Set[str]
+    ) -> Optional[CompanyDTO]:
         try:
-            cvm_code = base.cvm_code
-            detail = self._fetch_detail(str(cvm_code))
-            parsed = self._parse_company(base, detail)
-            return parsed
+            self.logger.log("Parsing company_detil _process_company_detail", level="info")
+
+            cvm_code = base_company_dto.cvm_code
+            detail_company_dto = self._fetch_detail(str(cvm_code))
+            company_dto = self._merge_company(base_company_dto, detail_company_dto)
+            return company_dto
         except Exception as exc:  # noqa: BLE001
             self.logger.log(f"erro {exc}", level="warning")
             return None
+        self.logger.log("Processor processed parsed", level="info")
 
     def _handle_save(
         self,
-        buffer: List[RawParsedCompanyDTO],
-        results: Optional[List[RawParsedCompanyDTO]],
-        save_callback: Optional[Callable[[List[RawParsedCompanyDTO]], None]],
+        buffer: List[CompanyDTO],
+        results: Optional[List[CompanyDTO]],
+        save_callback: Optional[Callable[[List[CompanyDTO]], None]],
         threshold: int,
         remaining_items: int,
     ) -> None:

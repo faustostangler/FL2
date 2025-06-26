@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Optional
 import json
 
-from .raw_company_dto import RawParsedCompanyDTO
+from .raw_company_dto import CompanyDTO
 
 
 @dataclass(frozen=True)
@@ -72,8 +72,8 @@ class CompanyDTO:
         )
 
     @staticmethod
-    def from_raw(raw: RawParsedCompanyDTO) -> "CompanyDTO":
-        """Builds a CompanyDTO from a RawParsedCompanyDTO instance."""
+    def from_raw(raw: CompanyDTO) -> "CompanyDTO":
+        """Builds a CompanyDTO from a CompanyDTO instance."""
 
         return CompanyDTO(
             cvm_code=raw.cvm_code,

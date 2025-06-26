@@ -29,6 +29,9 @@ class WorkerPool(WorkerPoolPort):
         logger: LoggerPort,
         post_callback: Optional[Callable[[List[R]], None]] = None,
     ) -> Tuple[List[R], Metrics]:
+
+        logger.log(f"worker pool start {processor.__qualname__}", level="info")
+
         results: List[R] = []
         queue: Queue = Queue(self.config.global_settings.queue_size)
         lock = threading.Lock()
@@ -37,6 +40,7 @@ class WorkerPool(WorkerPoolPort):
         start_time = time.time()
 
         def worker(worker_id: str) -> int:
+            logger.log("work started", level="info", worker_id=worker_id)
             downloaded = 0
             while True:
                 item = queue.get()
@@ -44,11 +48,13 @@ class WorkerPool(WorkerPoolPort):
                     queue.task_done()
                     return downloaded
                 try:
+                    logger.log(f"running {item} {processor.__qualname__}", level="info")
                     result = processor(item)
                     downloaded += len(json.dumps(result, default=str).encode("utf-8"))
                     with lock:
                         results.append(result)
-                    logger.log("task processed", level="debug", worker_id=worker_id)
+
+                    logger.log(f"task processed {item}", level="info", worker_id=worker_id)
                 except Exception as exc:  # noqa: BLE001
                     logger.log(
                         f"worker error: {exc}", level="warning", worker_id=worker_id
@@ -56,7 +62,9 @@ class WorkerPool(WorkerPoolPort):
                 finally:
                     queue.task_done()
 
+
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            logger.log("ThreadPoolExecutor started", level="info")
             futures = [
                 executor.submit(worker, uuid.uuid4().hex[:8])
                 for _ in range(self.max_workers)
@@ -66,15 +74,19 @@ class WorkerPool(WorkerPoolPort):
                 queue.put(task)
 
             for _ in range(self.max_workers):
+                logger.log("sentinel in queue", level="info")
                 queue.put(sentinel)
 
             queue.join()
+
+        logger.log("ThreadPoolExecutor finished", level="info")
 
         bytes_total = sum(f.result() for f in futures)
         elapsed = time.time() - start_time
         metrics = Metrics(elapsed_time=elapsed, download_bytes=bytes_total)
 
         if callable(post_callback):
+            logger.log("Callable found", level="info")
             post_callback(results)
 
         logger.log(

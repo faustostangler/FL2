@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from infrastructure.helpers.data_cleaner import DataCleaner
 from domain.dto import (
-    RawBaseCompanyDTO,
-    RawDetailCompanyDTO,
-    RawParsedCompanyDTO,
+    BseCompanyDTO,
+    DetailCompanyDTO,
+    CompanyDTO,
 )
 
 
@@ -14,11 +14,11 @@ class CompanyMapper:
     def __init__(self, data_cleaner: DataCleaner):
         self.data_cleaner = data_cleaner
 
-    def merge(
+    def merge_company_dtos(
         self,
-        base: RawBaseCompanyDTO,
-        detail: RawDetailCompanyDTO,
-    ) -> RawParsedCompanyDTO:
+        base: BseCompanyDTO,
+        detail: DetailCompanyDTO,
+    ) -> CompanyDTO:
         codes = detail.other_codes
         ticker_codes = [c.code for c in codes if c.code]
         isin_codes = [c.isin for c in codes if c.isin]
@@ -63,7 +63,7 @@ class CompanyMapper:
         )
         quotation_date = self.data_cleaner.clean_date(detail.date_quotation)
 
-        return RawParsedCompanyDTO(
+        return CompanyDTO(
             ticker=ticker,
             company_name=company_name,
             cvm_code=cvm_code,

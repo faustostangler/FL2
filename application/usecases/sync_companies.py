@@ -4,7 +4,7 @@ from infrastructure.config import Config
 
 from infrastructure.logging import Logger
 from domain.dto.company_dto import CompanyDTO
-from domain.dto.raw_company_dto import RawParsedCompanyDTO
+from domain.dto.raw_company_dto import CompanyDTO
 from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
 
@@ -35,6 +35,8 @@ class SyncCompaniesUseCase:
         - Converte para CompanyDTO
         - Persiste no repositório
         """
+        self.logger.log("SyncCompaniesUseCase Execute", level="info")
+
         existing_codes = self.repository.get_all_primary_keys()
 
         self.scraper.fetch_all(
@@ -47,6 +49,6 @@ class SyncCompaniesUseCase:
             level="info",
         )
 
-    def _save_batch(self, buffer: List[RawParsedCompanyDTO]) -> None:
+    def _save_batch(self, buffer: List[CompanyDTO]) -> None:
         dtos = [CompanyDTO.from_raw(item) for item in buffer if item]
         self.repository.save_all(dtos)
