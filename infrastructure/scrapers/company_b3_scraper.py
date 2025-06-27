@@ -1,13 +1,14 @@
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, Iterable, List, Optional, Set, Tuple
 
 import base64
 import json
-from domain.ports import WorkerPoolPort
+from domain.ports import Metrics, WorkerPoolPort
 
 from infrastructure.config import Config
 from infrastructure.logging import Logger
 from infrastructure.helpers import FetchUtils
 from infrastructure.helpers.byte_formatter import ByteFormatter
+
 
 class CompanyB3Scraper:
     """
@@ -115,7 +116,10 @@ class CompanyB3Scraper:
         return companies
 
     def _fetch_companies_list(
-        self, skip_codes: Optional[Set[str]] = None, threshold: Optional[int] = None
+        self,
+        skip_codes: Optional[Set[str]] = None,
+        threshold: Optional[int] = None,
+        on_result: Optional[Callable[[Tuple[List[Dict], int, int]], None]] = None,
     ) -> List[Dict]:
         """
         Busca o conjunto inicial de empresas disponíveis na B3.
@@ -128,22 +132,18 @@ class CompanyB3Scraper:
         results = list(first_page)
         download_bytes_execution_mode = bytes_first
 
+        if callable(on_result):
+            on_result((first_page, total_pages, bytes_first))
+
         if total_pages > 1:
-            pages = range(2, total_pages + 1)
+            pages = list(range(2, total_pages + 1))
+            tasks = list(enumerate(pages))
             self.logger.log("Fetch remaining company pages", level="info")
 
-            def processor(page: int) -> Tuple[List[Dict], int, int]:
-                fetch = self._fetch_page(page)
-                self.logger.log(
-                    f"processor {page} in _fetch_page",
-                    level="info",
-                )
-                return fetch
-
-            page_results, metrics = self.executor.run(
-                tasks=pages,
-                processor=processor,
-                logger=self.logger,
+            page_results, metrics = self._run_executor(
+                tasks,
+                self._list_page_processor,
+                on_result,
             )
             self.logger.log(
                 "page_results done",
@@ -198,6 +198,7 @@ class CompanyB3Scraper:
         save_callback: Optional[Callable[[List[dict]], None]] = None,
         threshold: Optional[int] = None,
         max_workers: int | None = None,
+        on_result: Optional[Callable[[dict], None]] = None,
     ) -> Tuple[List[dict], int]:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
@@ -223,32 +224,23 @@ class CompanyB3Scraper:
 
         tasks = list(enumerate(companies_list))
 
-        def processor(item: Tuple[int, Dict]) -> Optional[dict]:
-            index, entry = item
-            processed_entry = self._process_entry(entry, skip_codes)
-            self.logger.log(f"Processor processed_entry {index}", level="info")
-
-            return processed_entry
-
         buffer: List[dict] = []
         processed_results: List[dict] = []
         total_size = len(companies_list)
 
-        def handle_batch(item: Optional[dict]) -> None:
-            if item is None:
-                return
-            processed_results.append(item)
-            buffer.append(item)
-            remaining = total_size - len(processed_results)
-            self._handle_save(
-                buffer, processed_results, save_callback, threshold, remaining
-            )
+        handler = self._detail_result_handler(
+            buffer,
+            processed_results,
+            total_size,
+            save_callback,
+            threshold,
+            on_result,
+        )
 
-        results_out, metrics = self.executor.run(
-            tasks=tasks,
-            processor=processor,
-            logger=self.logger,
-            on_result=handle_batch,
+        results_out, metrics = self._run_executor(
+            tasks,
+            lambda item: self._detail_processor(item, skip_codes),
+            handler,
         )
         self.logger.log("Processor processed_entry results", level="info")
 
@@ -278,7 +270,6 @@ class CompanyB3Scraper:
         self.download_bytes_total += len(response.content)
         return response.json()
 
-
     def _process_entry(
         self,
         entry: Dict,
@@ -292,9 +283,7 @@ class CompanyB3Scraper:
         self, base: Dict, skip_codes: Set[str]
     ) -> Optional[dict]:
         try:
-            self.logger.log(
-                "Parsing company_detail", level="info"
-            )
+            self.logger.log("Parsing company_detail", level="info")
 
             cvm_code = base.get("codeCVM")
             detail_raw = self._fetch_detail(str(cvm_code))
@@ -319,3 +308,54 @@ class CompanyB3Scraper:
                     f"Saved {len(buffer)} companies (partial)", level="info"
                 )
                 buffer.clear()
+
+    def _run_executor(
+        self,
+        tasks: Iterable,
+        processor: Callable,
+        on_result: Optional[Callable] = None,
+    ) -> Tuple[List, Metrics]:
+        return self.executor.run(
+            tasks=tasks,
+            processor=processor,
+            logger=self.logger,
+            on_result=on_result,
+        )
+
+    def _list_page_processor(
+        self, item: Tuple[int, int]
+    ) -> Tuple[List[Dict], int, int]:
+        _, page = item
+        self.logger.log(f"processor page {page} in _fetch_page", level="info")
+        return self._fetch_page(page)
+
+    def _detail_processor(
+        self, item: Tuple[int, Dict], skip_codes: Set[str]
+    ) -> Optional[dict]:
+        index, entry = item
+        processed_entry = self._process_entry(entry, skip_codes)
+        self.logger.log(f"Processor processed_entry {index}", level="info")
+        return processed_entry
+
+    def _detail_result_handler(
+        self,
+        buffer: List[dict],
+        processed_results: List[dict],
+        total_size: int,
+        save_callback: Optional[Callable[[List[dict]], None]],
+        threshold: int,
+        external_on_result: Optional[Callable[[dict], None]] = None,
+    ) -> Callable[[Optional[dict]], None]:
+        def handle(item: Optional[dict]) -> None:
+            if item is None:
+                return
+            processed_results.append(item)
+            buffer.append(item)
+            remaining = total_size - len(processed_results)
+            self._handle_save(
+                buffer, processed_results, save_callback, threshold, remaining
+            )
+            if callable(external_on_result):
+                external_on_result(item)
+
+        return handle
