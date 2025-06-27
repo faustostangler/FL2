@@ -8,7 +8,7 @@ from typing import Callable, Dict, List, Optional
 from bs4 import BeautifulSoup
 
 from infrastructure.config import Config
-from infrastructure.helpers import FetchUtils
+from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.metrics_collector import MetricsCollector
 from infrastructure.logging import Logger
@@ -64,7 +64,7 @@ class NsdScraper:
         nsd = start
         index = 0
 
-        buffer: list[dict] = []
+        strategy: SaveStrategy[Dict] = SaveStrategy(save_callback, threshold)
         results: List[Dict] = []
         start_time = time.time()
 
@@ -97,7 +97,8 @@ class NsdScraper:
                 break
 
             if parsed:
-                buffer.append(parsed)
+                results.append(parsed)
+                strategy.handle(parsed)
 
             extra_info = [
                 f"{parsed.get('nsd', nsd)}",  # usa o valor original do loop como fallback
@@ -118,17 +119,12 @@ class NsdScraper:
                 progress={**progress, "extra_info": extra_info},
             )
 
-            # Condição de salvamento
-            remaining = max_nsd - nsd
-            if (remaining % threshold == 0) or (remaining == 0):
-                if callable(save_callback) and buffer:
-                    save_callback(buffer)
-                    results.extend(buffer)
-                    self.logger.log(f"Saved {len(buffer)} NSDs", level="info")
-                    buffer.clear()
+            # Flushing handled by strategy
 
             nsd += 1
             index += 1
+
+        strategy.finalize()
 
         self.logger.log(
             f"Downloaded {self.metrics_collector.network_bytes} bytes",

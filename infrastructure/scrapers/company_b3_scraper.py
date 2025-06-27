@@ -11,7 +11,7 @@ from domain.dto import (
 )
 from domain.ports import WorkerPoolPort
 from infrastructure.config import Config
-from infrastructure.helpers import FetchUtils
+from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.byte_formatter import ByteFormatter
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.logging import Logger
@@ -109,7 +109,12 @@ class CompanyB3Scraper:
         threshold = threshold or self.config.global_settings.threshold or 50
 
         # Fetch the initial list of companies from B3, possibly skipping some CVM codes
-        companies_list = self._fetch_companies_list(skip_codes, threshold)
+        def noop(_buffer: List[Dict]) -> None:
+            return None
+
+        companies_list = self._fetch_companies_list(
+            skip_codes, threshold, save_callback=noop
+        )
         # Fetch and parse detailed information for each company, with optional skipping and periodic saving
         companies = self._fetch_companies_details(
             companies_list,
@@ -128,7 +133,10 @@ class CompanyB3Scraper:
         return companies
 
     def _fetch_companies_list(
-        self, skip_codes: Optional[Set[str]] = None, threshold: Optional[int] = None
+        self,
+        skip_codes: Optional[Set[str]] = None,
+        threshold: Optional[int] = None,
+        save_callback: Optional[Callable[[List[Dict]], None]] = None,
     ) -> List[Dict]:
         """
         Busca o conjunto inicial de empresas disponíveis na B3.
@@ -137,8 +145,13 @@ class CompanyB3Scraper:
         """
         self.logger.log("Fetch Existing Companies from B3", level="info")
 
+        threshold = threshold or self.config.global_settings.threshold or 50
+        strategy: SaveStrategy[Dict] = SaveStrategy(save_callback, threshold)
+
         first_page = self._fetch_page(1)
         results = list(first_page.items)
+        for item in first_page.items:
+            strategy.handle(item)
         total_pages = first_page.total_pages
 
         if total_pages > 1:
@@ -165,6 +178,10 @@ class CompanyB3Scraper:
 
             for page_data in page_exec.items:
                 results.extend(page_data.items)
+                for item in page_data.items:
+                    strategy.handle(item)
+
+        strategy.finalize()
 
         self.logger.log(
             f"Global download: {self.byte_formatter.format_bytes(self.metrics_collector.network_bytes)}",
@@ -229,6 +246,7 @@ class CompanyB3Scraper:
 
         threshold = threshold or self.config.global_settings.threshold or 50
         skip_codes = skip_codes or set()
+        strategy: SaveStrategy[RawCompanyDTO] = SaveStrategy(save_callback, threshold)
 
         self.logger.log("Start CompanyB3Scraper fetch_companies_details", level="info")
 
@@ -241,19 +259,8 @@ class CompanyB3Scraper:
 
             return processed_entry
 
-        buffer: List[RawCompanyDTO] = []
-        processed_results: List[RawCompanyDTO] = []
-        total_size = len(companies_list)
-
         def handle_batch(item: Optional[RawCompanyDTO]) -> None:
-            if item is None:
-                return
-            processed_results.append(item)
-            buffer.append(item)
-            remaining = total_size - len(processed_results)
-            self._handle_save(
-                buffer, processed_results, save_callback, threshold, remaining
-            )
+            strategy.handle(item)
 
         detail_exec = self.executor.run(
             tasks=tasks,
@@ -263,10 +270,9 @@ class CompanyB3Scraper:
         )
         self.logger.log("Processor processed_entry results", level="info")
 
-        if buffer:
-            self._handle_save(buffer, processed_results, save_callback, threshold, 0)
+        strategy.finalize()
 
-        return detail_exec.items
+        return [item for item in detail_exec.items if item is not None]
 
     def _fetch_detail(self, cvm_code: str) -> DetailCompanyDTO:
         """
@@ -369,20 +375,3 @@ class CompanyB3Scraper:
             self.logger.log(f"erro {exc}", level="warning")
             return None
         self.logger.log("Processor processed parsed", level="info")
-
-    def _handle_save(
-        self,
-        buffer: List[RawCompanyDTO],
-        results: Optional[List[RawCompanyDTO]],
-        save_callback: Optional[Callable[[List[RawCompanyDTO]], None]],
-        threshold: int,
-        remaining_items: int,
-    ) -> None:
-        if (remaining_items % threshold == 0) or (remaining_items == 0):
-            if callable(save_callback) and buffer:
-                # self.logger.log(f"Remaining Items {remaining_items}", level="info")
-                save_callback(buffer)
-                self.logger.log(
-                    f"Saved {len(buffer)} companies (partial)", level="info"
-                )
-                buffer.clear()
