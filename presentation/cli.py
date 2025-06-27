@@ -47,8 +47,6 @@ class CLIController:
         company_scraper = CompanyB3Scraper(
             config=self.config,
             logger=self.logger,
-            data_cleaner=self.data_cleaner,
-            mapper=mapper,
             executor=executor,
         )
         company_service = CompanyService(
@@ -56,6 +54,7 @@ class CLIController:
             logger=self.logger,
             repository=company_repo,
             scraper=company_scraper,
+            mapper=mapper,
         )
 
         company_service.run()

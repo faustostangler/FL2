@@ -4,6 +4,7 @@ from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
 
 from application.usecases.sync_companies import SyncCompaniesUseCase
+from application import CompanyMapper
 
 
 class CompanyService:
@@ -17,6 +18,7 @@ class CompanyService:
         logger: Logger,
         repository: SQLiteCompanyRepository,
         scraper: CompanyB3Scraper,
+        mapper: CompanyMapper,
     ):
         """
         Initializes the CompanyService with the provided repository and scraper.
@@ -33,6 +35,7 @@ class CompanyService:
             logger=self.logger,
             repository=repository,
             scraper=scraper,
+            mapper=mapper,
         )
 
     def run(self) -> None:
