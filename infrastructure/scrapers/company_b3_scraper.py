@@ -129,19 +129,21 @@ class CompanyB3Scraper:
         download_bytes_execution_mode = bytes_first
 
         if total_pages > 1:
-            pages = range(2, total_pages + 1)
+            pages = list(range(2, total_pages + 1))
+            tasks = list(enumerate(pages))
             self.logger.log("Fetch remaining company pages", level="info")
 
-            def processor(page: int) -> Tuple[List[Dict], int, int]:
+            def processor(item: Tuple[int, int]) -> Tuple[List[Dict], int, int]:
+                _, page = item
                 fetch = self._fetch_page(page)
                 self.logger.log(
-                    f"processor {page} in _fetch_page",
+                    f"processor page {page} in _fetch_page",
                     level="info",
                 )
                 return fetch
 
             page_results, metrics = self.executor.run(
-                tasks=pages,
+                tasks=tasks,
                 processor=processor,
                 logger=self.logger,
             )
