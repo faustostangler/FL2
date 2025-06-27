@@ -11,12 +11,13 @@ from infrastructure.config import Config
 from infrastructure.logging import Logger
 from infrastructure.helpers import FetchUtils
 from infrastructure.helpers.data_cleaner import DataCleaner
+from infrastructure.helpers.metrics_collector import MetricsCollector
 
 
 class NsdScraper:
     """Scraper adapter responsible for fetching raw NSD documents."""
 
-    def __init__(self, config: Config, logger: Logger, data_cleaner: DataCleaner):
+    def __init__(self, config: Config, logger: Logger, data_cleaner: DataCleaner, metrics: MetricsCollector):
         self.config = config
         self.logger = logger
         self.data_cleaner = data_cleaner
@@ -25,7 +26,7 @@ class NsdScraper:
 
         self.nsd_endpoint = self.config.b3.nsd_endpoint
 
-        self.total_bytes_downloaded = 0
+        self.metrics = metrics
 
         self.logger.log("Start NsdScraper", level="info")
 
@@ -79,7 +80,7 @@ class NsdScraper:
 
             try:
                 response = self.fetch_utils.fetch_with_retry(self.session, url)
-                self.total_bytes_downloaded += len(response.content)
+                self.metrics.record_network_bytes(len(response.content))
                 parsed = self._parse_html(nsd, response.text)
             except Exception as e:
                 self.logger.log(
@@ -124,7 +125,7 @@ class NsdScraper:
             index += 1
 
         self.logger.log(
-            f"Downloaded {self.total_bytes_downloaded} bytes",
+            f"Downloaded {self.metrics.network_bytes} bytes",
             level="info",
         )
         return results

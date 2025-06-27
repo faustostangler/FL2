@@ -22,8 +22,19 @@ class LoggerPort(Protocol):
 @dataclass
 class Metrics:
     elapsed_time: float
-    download_bytes: int
+    network_bytes: int = 0
+    processing_bytes: int = 0
     failures: int = 0
+
+    @property
+    def total_bytes(self) -> int:
+        return self.network_bytes + self.processing_bytes
+
+    # Backwards compatibility
+    @property
+    def download_bytes(self) -> int:  # noqa: D401
+        """Alias for ``total_bytes`` for legacy callers."""
+        return self.total_bytes
 
 
 class WorkerPoolPort(Protocol):

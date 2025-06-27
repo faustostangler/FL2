@@ -3,7 +3,7 @@ from infrastructure.logging import Logger
 
 from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
-from infrastructure.helpers import WorkerPool
+from infrastructure.helpers import WorkerPool, MetricsCollector
 from infrastructure.scrapers.nsd_scraper import NsdScraper
 from application import CompanyMapper
 from application.services.company_services import CompanyService
@@ -43,13 +43,15 @@ class CLIController:
 
         company_repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
         mapper = CompanyMapper(self.data_cleaner)
-        executor = WorkerPool(self.config)
+        metrics = MetricsCollector()
+        executor = WorkerPool(self.config, metrics)
         company_scraper = CompanyB3Scraper(
             config=self.config,
             logger=self.logger,
             data_cleaner=self.data_cleaner,
             mapper=mapper,
             executor=executor,
+            metrics=metrics,
         )
         company_service = CompanyService(
             config=self.config,
@@ -67,8 +69,12 @@ class CLIController:
         self.logger.log("Start NSD Sync Use Case", level="info")
 
         nsd_repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
+        metrics = MetricsCollector()
         nsd_scraper = NsdScraper(
-            config=self.config, logger=self.logger, data_cleaner=self.data_cleaner
+            config=self.config,
+            logger=self.logger,
+            data_cleaner=self.data_cleaner,
+            metrics=metrics,
         )
         nsd_service = NsdService(
             logger=self.logger, repository=nsd_repo, scraper=nsd_scraper

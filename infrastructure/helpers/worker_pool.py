@@ -10,6 +10,7 @@ from typing import Callable, Iterable, List, Optional, Tuple, TypeVar
 
 from infrastructure.config import Config
 from infrastructure.helpers.byte_formatter import ByteFormatter
+from infrastructure.helpers.metrics_collector import MetricsCollector
 from domain.ports.worker_pool_port import LoggerPort, Metrics, WorkerPoolPort
 
 T = TypeVar("T")
@@ -17,8 +18,9 @@ R = TypeVar("R")
 
 
 class WorkerPool(WorkerPoolPort):
-    def __init__(self, config: Config, max_workers: Optional[int] = None):
+    def __init__(self, config: Config, metrics: MetricsCollector, max_workers: Optional[int] = None):
         self.config = config
+        self.metrics = metrics
         self.max_workers = max_workers or config.global_settings.max_workers or 1
         self.byte_formatter = ByteFormatter()
 
@@ -39,18 +41,18 @@ class WorkerPool(WorkerPoolPort):
 
         start_time = time.time()
 
-        def worker(worker_id: str) -> int:
+        def worker(worker_id: str) -> None:
             logger.log("work started", level="info", worker_id=worker_id)
-            downloaded = 0
             while True:
                 item = queue.get()
                 if item is sentinel:
                     queue.task_done()
-                    return downloaded
+                    return
                 try:
                     logger.log(f"running {item} {processor.__qualname__}", level="info")
                     result = processor(item)
-                    downloaded += len(json.dumps(result, default=str).encode("utf-8"))
+                    size = len(json.dumps(result, default=str).encode("utf-8"))
+                    self.metrics.record_processing_bytes(size)
                     with lock:
                         results.append(result)
                         if callable(on_result):
@@ -84,9 +86,9 @@ class WorkerPool(WorkerPoolPort):
 
         logger.log("ThreadPoolExecutor finished", level="info")
 
-        bytes_total = sum(f.result() for f in futures)
         elapsed = time.time() - start_time
-        metrics = Metrics(elapsed_time=elapsed, download_bytes=bytes_total)
+        metrics = self.metrics.snapshot(elapsed)
+        bytes_total = metrics.total_bytes
 
         if callable(post_callback):
             logger.log("Callable found", level="info")

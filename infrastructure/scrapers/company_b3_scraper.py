@@ -9,6 +9,7 @@ from infrastructure.logging import Logger
 from infrastructure.helpers import FetchUtils
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.byte_formatter import ByteFormatter
+from infrastructure.helpers.metrics_collector import MetricsCollector
 from domain.dto import (
     BseCompanyDTO,
     DetailCompanyDTO,
@@ -30,6 +31,7 @@ class CompanyB3Scraper:
         data_cleaner: DataCleaner,
         mapper: CompanyMapper,
         executor: WorkerPoolPort,
+        metrics: MetricsCollector,
     ):
         """Set up configuration, logger and helper utilities for the scraper.
 
@@ -60,6 +62,7 @@ class CompanyB3Scraper:
         self.data_cleaner = data_cleaner
         self.mapper = mapper
         self.executor = executor
+        self.metrics = metrics
 
         # Log the initialization of the CompanyB3Scraper
         self.logger.log("Start CompanyB3Scraper", level="info")
@@ -76,7 +79,6 @@ class CompanyB3Scraper:
         # Initialize a requests session for HTTP requests
         self.session = self.fetch_utils.create_scraper()
 
-        self.download_bytes_total = 0
         self.byte_formatter = ByteFormatter()
 
         # Initialize a counter for total processed items
@@ -109,17 +111,21 @@ class CompanyB3Scraper:
 
         # Fetch the initial list of companies from B3, possibly skipping some CVM codes
         companies_list = self._fetch_companies_list(skip_codes, threshold)
+        # Capture network bytes before fetching details
+        start_bytes = self.metrics.network_bytes
+
         # Fetch and parse detailed information for each company, with optional skipping and periodic saving
-        companies, download_bytes_execution_mode = self._fetch_companies_details(
+        companies, _ = self._fetch_companies_details(
             companies_list,
             skip_codes,
             save_callback,
             threshold,
             max_workers,
         )
+        download_bytes_execution_mode = self.metrics.network_bytes - start_bytes
 
         self.logger.log(
-            f"Global download: {self.byte_formatter.format_bytes(self.download_bytes_total)} | Total download: {self.byte_formatter.format_bytes(download_bytes_execution_mode)}",
+            f"Total network: {self.byte_formatter.format_bytes(self.metrics.network_bytes)} | Execution: {self.byte_formatter.format_bytes(download_bytes_execution_mode)}",
             level="info",
         )
 
@@ -136,6 +142,7 @@ class CompanyB3Scraper:
         """
         self.logger.log("Fetch Existing Companies from B3", level="info")
 
+        start_bytes = self.metrics.network_bytes
         first_page, total_pages, bytes_first = self._fetch_page(1)
         results = list(first_page)
         download_bytes_execution_mode = bytes_first
@@ -152,7 +159,7 @@ class CompanyB3Scraper:
                 )
                 return fetch
 
-            page_results, metrics = self.executor.run(
+            page_results, _ = self.executor.run(
                 tasks=pages,
                 processor=processor,
                 logger=self.logger,
@@ -171,8 +178,10 @@ class CompanyB3Scraper:
                 results.extend(page_items)
                 download_bytes_execution_mode += bts
 
+        download_bytes_execution_mode = self.metrics.network_bytes - start_bytes
+
         self.logger.log(
-            f"Global download: {self.byte_formatter.format_bytes(self.download_bytes_total)} | Total download: {self.byte_formatter.format_bytes(download_bytes_execution_mode)}",
+            f"Global download: {self.byte_formatter.format_bytes(self.metrics.network_bytes)} | Total download: {self.byte_formatter.format_bytes(download_bytes_execution_mode)}",
             level="info",
         )
 
@@ -197,7 +206,7 @@ class CompanyB3Scraper:
         url = self.endpoint_companies_list + token
         response = self.fetch_utils.fetch_with_retry(self.session, url)
         bytes_downloaded = len(response.content if response else b"")
-        self.download_bytes_total += bytes_downloaded
+        self.metrics.record_network_bytes(bytes_downloaded)
         data = response.json()
         results = data.get("results", [])
         total_pages = data.get("page", {}).get("totalPages", 1)
@@ -256,7 +265,7 @@ class CompanyB3Scraper:
                 buffer, processed_results, save_callback, threshold, remaining
             )
 
-        results_out, metrics = self.executor.run(
+        results_out, _ = self.executor.run(
             tasks=tasks,
             processor=processor,
             logger=self.logger,
@@ -267,9 +276,7 @@ class CompanyB3Scraper:
         if buffer:
             self._handle_save(buffer, processed_results, save_callback, threshold, 0)
 
-        self.download_bytes_total += metrics.download_bytes
-
-        return results_out, metrics.download_bytes
+        return results_out, 0
 
     def _fetch_detail(self, cvm_code: str) -> DetailCompanyDTO:
         """
@@ -287,7 +294,7 @@ class CompanyB3Scraper:
         # Build the full URL for the detail endpoint
         url = self.endpoint_detail + token
         response = self.fetch_utils.fetch_with_retry(self.session, url)
-        self.download_bytes_total += len(response.content)
+        self.metrics.record_network_bytes(len(response.content))
         raw = response.json()
         raw["issuingCompany"] = self.data_cleaner.clean_text(raw.get("issuingCompany", None))
         raw["companyName"] = self.data_cleaner.clean_text(raw.get("companyName", None))
