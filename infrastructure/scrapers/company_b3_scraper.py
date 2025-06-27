@@ -288,7 +288,32 @@ class CompanyB3Scraper:
         url = self.endpoint_detail + token
         response = self.fetch_utils.fetch_with_retry(self.session, url)
         self.download_bytes_total += len(response.content)
-        detail_company_dto = DetailCompanyDTO.from_dict(response.json())
+        raw = response.json()
+        raw["issuingCompany"] = self.data_cleaner.clean_text(raw.get("issuingCompany", None))
+        raw["companyName"] = self.data_cleaner.clean_text(raw.get("companyName", None))
+        raw["tradingName"] = self.data_cleaner.clean_text(raw.get("tradingName", None))
+        raw["cnpj"] = raw.get("cnpj", None)
+        raw["industryClassification"] = raw.get("industryClassification", None)
+        raw["industryClassificationEng"] = raw.get("industryClassificationEng", None)
+        raw["activity"] = raw.get("activity", None)
+        raw["website"] = raw.get("website", None)
+        raw["hasQuotation"] = raw.get("hasQuotation", None)
+        raw["status"] = raw.get("status", None)
+        raw["marketIndicator"] = raw.get("marketIndicator", None)
+        raw["market"] = self.data_cleaner.clean_text(raw.get("market", None))
+        raw["institutionCommon"] = self.data_cleaner.clean_text(raw.get("institutionCommon", None))
+        raw["institutionPreferred"] = self.data_cleaner.clean_text(raw.get("institutionPreferred", None))
+        raw["code"] = raw.get("code", None)
+        raw["codeCVM"] = raw.get("codeCVM", None)
+        raw["lastDate"] = self.data_cleaner.clean_date(raw.get("lastDate", None))
+        raw["otherCodes"] = raw.get("otherCodes", None)
+        raw["hasEmissions"] = raw.get("hasEmissions", None)
+        raw["hasBDR"] = raw.get("hasBDR", None)
+        raw["typeBDR"] = raw.get("typeBDR", None)
+        raw["describleCategoryBVMF"] = raw.get("describleCategoryBVMF", None)
+        raw["dateQuotation"] = raw.get("dateQuotation", None)
+
+        detail_company_dto = DetailCompanyDTO.from_dict(raw)
         return detail_company_dto
 
     def _merge_company(

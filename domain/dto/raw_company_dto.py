@@ -83,8 +83,6 @@ class DetailCompanyDTO:
     @staticmethod
     def from_dict(raw: dict) -> "DetailCompanyDTO":
         other_codes = raw.get("otherCodes") or []
-        if other_codes:
-            pass
         if isinstance(other_codes, str):
             other_codes = json.loads(other_codes)
         code_dtos = [CodeDTO(code=c.get("code"), isin=c.get("isin")) for c in other_codes]
