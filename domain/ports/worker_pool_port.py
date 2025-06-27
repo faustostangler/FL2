@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Callable, Iterable, List, Optional, Protocol, Tuple, TypeVar
+from typing import Callable, Generic, Iterable, List, Optional, Protocol, TypeVar
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -27,6 +27,14 @@ class Metrics:
     failures: int = 0
 
 
+@dataclass
+class ExecutionResult(Generic[R]):
+    """Results and metrics returned by :class:`WorkerPoolPort.run`."""
+
+    items: List[R]
+    metrics: Metrics
+
+
 class WorkerPoolPort(Protocol):
     def run(
         self,
@@ -35,5 +43,5 @@ class WorkerPoolPort(Protocol):
         logger: LoggerPort,
         on_result: Optional[Callable[[R], None]] = None,
         post_callback: Optional[Callable[[List[R]], None]] = None,
-    ) -> Tuple[List[R], Metrics]:
+    ) -> ExecutionResult[R]:
         raise NotImplementedError

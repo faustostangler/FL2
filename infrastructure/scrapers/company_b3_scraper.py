@@ -151,7 +151,7 @@ class CompanyB3Scraper:
                 )
                 return fetch
 
-            page_results, _ = self.executor.run(
+            page_exec = self.executor.run(
                 tasks=pages,
                 processor=processor,
                 logger=self.logger,
@@ -161,7 +161,7 @@ class CompanyB3Scraper:
                 level="info",
             )
 
-            for page_data in page_results:
+            for page_data in page_exec.items:
                 page_items, _, _ = page_data
                 results.extend(page_items)
 
@@ -250,7 +250,7 @@ class CompanyB3Scraper:
                 buffer, processed_results, save_callback, threshold, remaining
             )
 
-        results_out, _ = self.executor.run(
+        detail_exec = self.executor.run(
             tasks=tasks,
             processor=processor,
             logger=self.logger,
@@ -261,7 +261,7 @@ class CompanyB3Scraper:
         if buffer:
             self._handle_save(buffer, processed_results, save_callback, threshold, 0)
 
-        return results_out
+        return detail_exec.items
 
     def _fetch_detail(self, cvm_code: str) -> DetailCompanyDTO:
         """
