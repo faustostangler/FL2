@@ -6,12 +6,17 @@ import time
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
-from typing import Callable, Iterable, List, Optional, Tuple, TypeVar
+from typing import Callable, Iterable, List, Optional, TypeVar
 
 from infrastructure.config import Config
 from infrastructure.helpers.byte_formatter import ByteFormatter
 from infrastructure.helpers.metrics_collector import MetricsCollector
-from domain.ports.worker_pool_port import LoggerPort, Metrics, WorkerPoolPort
+from domain.ports.worker_pool_port import (
+    ExecutionResult,
+    LoggerPort,
+    Metrics,
+    WorkerPoolPort,
+)
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -31,7 +36,7 @@ class WorkerPool(WorkerPoolPort):
         logger: LoggerPort,
         on_result: Optional[Callable[[R], None]] = None,
         post_callback: Optional[Callable[[List[R]], None]] = None,
-    ) -> Tuple[List[R], Metrics]:
+    ) -> ExecutionResult[R]:
         logger.log(f"worker pool start {processor.__qualname__}", level="info")
 
         results: List[R] = []
@@ -99,4 +104,4 @@ class WorkerPool(WorkerPoolPort):
             level="info",
         )
 
-        return results, metrics
+        return ExecutionResult(items=results, metrics=metrics)
