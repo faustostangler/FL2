@@ -8,17 +8,24 @@ from concurrent.futures import ThreadPoolExecutor
 from queue import Queue
 from typing import Callable, Iterable, List, Optional, Tuple, TypeVar
 
+from domain.ports.worker_pool_port import LoggerPort, Metrics, WorkerPoolPort
 from infrastructure.config import Config
 from infrastructure.helpers.byte_formatter import ByteFormatter
-from domain.ports.worker_pool_port import LoggerPort, Metrics, WorkerPoolPort
+from infrastructure.helpers.metrics_collector import MetricsCollector
 
 T = TypeVar("T")
 R = TypeVar("R")
 
 
 class WorkerPool(WorkerPoolPort):
-    def __init__(self, config: Config, max_workers: Optional[int] = None):
+    def __init__(
+        self,
+        config: Config,
+        metrics_collector: MetricsCollector,
+        max_workers: Optional[int] = None,
+    ) -> None:
         self.config = config
+        self.metrics_collector = metrics_collector
         self.max_workers = max_workers or config.global_settings.max_workers or 1
         self.byte_formatter = ByteFormatter()
 
@@ -39,18 +46,19 @@ class WorkerPool(WorkerPoolPort):
 
         start_time = time.time()
 
-        def worker(worker_id: str) -> int:
+        def worker(worker_id: str) -> None:
             logger.log("work started", level="info", worker_id=worker_id)
-            downloaded = 0
             while True:
                 item = queue.get()
                 if item is sentinel:
                     queue.task_done()
-                    return downloaded
+                    return
                 try:
                     logger.log(f"running {item} {processor.__qualname__}", level="info")
                     result = processor(item)
-                    downloaded += len(json.dumps(result, default=str).encode("utf-8"))
+                    self.metrics_collector.record_processing_bytes(
+                        len(json.dumps(result, default=str).encode("utf-8"))
+                    )
                     with lock:
                         results.append(result)
                         if callable(on_result):
@@ -84,16 +92,19 @@ class WorkerPool(WorkerPoolPort):
 
         logger.log("ThreadPoolExecutor finished", level="info")
 
-        bytes_total = sum(f.result() for f in futures)
+        for f in futures:
+            f.result()
+
         elapsed = time.time() - start_time
-        metrics = Metrics(elapsed_time=elapsed, download_bytes=bytes_total)
+        metrics = self.metrics_collector.get_metrics(elapsed_time=elapsed)
 
         if callable(post_callback):
             logger.log("Callable found", level="info")
             post_callback(results)
 
         logger.log(
-            f"Executed {len(results)} tasks in {elapsed:.2f}s ({self.byte_formatter.format_bytes(bytes_total)})",
+            f"Executed {len(results)} tasks in {elapsed:.2f}s ("
+            f"{self.byte_formatter.format_bytes(self.metrics_collector.processing_bytes)})",
             level="info",
         )
 

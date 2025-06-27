@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from infrastructure.logging import Logger
 from domain.dto.nsd_dto import NSDDTO
+from infrastructure.logging import Logger
 from infrastructure.repositories.nsd_repository import SQLiteNSDRepository
 from infrastructure.scrapers.nsd_scraper import NsdScraper
 
@@ -26,7 +26,7 @@ class SyncNSDUseCase:
             save_callback=self._save_batch,
         )
         self.logger.log(
-            f"Downloaded {self.scraper.total_bytes_downloaded} bytes",
+            f"Downloaded {self.scraper.metrics_collector.network_bytes} bytes",
             level="info",
         )
 

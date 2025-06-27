@@ -16,13 +16,14 @@ class LoggerPort(Protocol):
         extra: Optional[dict] = None,
         worker_id: Optional[str] = None,
     ) -> None:
-        raise NotImplemented
+        raise NotImplementedError
 
 
 @dataclass
 class Metrics:
     elapsed_time: float
-    download_bytes: int
+    network_bytes: int = 0
+    processing_bytes: int = 0
     failures: int = 0
 
 
@@ -35,4 +36,4 @@ class WorkerPoolPort(Protocol):
         on_result: Optional[Callable[[R], None]] = None,
         post_callback: Optional[Callable[[List[R]], None]] = None,
     ) -> Tuple[List[R], Metrics]:
-        raise NotImplemented
+        raise NotImplementedError

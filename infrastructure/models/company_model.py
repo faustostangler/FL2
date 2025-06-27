@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from typing import List, Optional
-import json
 
 from sqlalchemy import Boolean, DateTime
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from domain.dto.company_dto import CompanyDTO
 from domain.dto.raw_company_dto import CodeDTO, RawCompanyDTO
 
 
@@ -62,50 +63,57 @@ class CompanyModel(Base):
     listing_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
     @staticmethod
-    def from_dto(dto: RawCompanyDTO) -> "CompanyModel":
-        """Convert a :class:`RawCompanyDTO` into ``CompanyModel``."""
+    def from_dto(dto: RawCompanyDTO | CompanyDTO) -> "CompanyModel":
+        """Convert a ``RawCompanyDTO`` or ``CompanyDTO`` into ``CompanyModel``."""
+
+        def attr(name: str):
+            return getattr(dto, name, None)
+
+        ticker_codes = attr("ticker_codes") or (
+            [] if attr("ticker") is None else [attr("ticker")]
+        )
+        isin_codes = attr("isin_codes") or []
+        other_codes = attr("other_codes") or []
 
         return CompanyModel(
-            cvm_code=dto.cvm_code or "",
-            issuing_company=dto.issuing_company,
-            trading_name=dto.trading_name,
-            company_name=dto.company_name,
-            cnpj=dto.cnpj,
-            ticker_codes=",".join(dto.ticker_codes) if dto.ticker_codes else None,
-            isin_codes=",".join(dto.isin_codes) if dto.isin_codes else None,
+            cvm_code=attr("cvm_code") or attr("ticker") or "",
+            issuing_company=attr("issuing_company"),
+            trading_name=attr("trading_name"),
+            company_name=attr("company_name"),
+            cnpj=attr("cnpj"),
+            ticker_codes=",".join(ticker_codes) if ticker_codes else None,
+            isin_codes=",".join(isin_codes) if isin_codes else None,
             other_codes=(
-                json.dumps(
-                    [{"code": code.code, "isin": code.isin} for code in dto.other_codes]
-                )
-                if dto.other_codes
+                json.dumps([{"code": c.code, "isin": c.isin} for c in other_codes])
+                if other_codes
                 else None
             ),
-            industry_sector=dto.industry_sector,
-            industry_subsector=dto.industry_subsector,
-            industry_segment=dto.industry_segment,
-            industry_classification=dto.industry_classification,
-            industry_classification_eng=dto.industry_classification_eng,
-            activity=dto.activity,
-            company_segment=dto.company_segment,
-            company_segment_eng=dto.company_segment_eng,
-            company_category=dto.company_category,
-            company_type=dto.company_type,
-            listing_segment=dto.listing_segment,
-            registrar=dto.registrar,
-            website=dto.website,
-            institution_common=dto.institution_common,
-            institution_preferred=dto.institution_preferred,
-            market=dto.market,
-            status=dto.status,
-            market_indicator=dto.market_indicator,
-            code=dto.code,
-            has_bdr=dto.has_bdr,
-            type_bdr=dto.type_bdr,
-            has_quotation=dto.has_quotation,
-            has_emissions=dto.has_emissions,
-            date_quotation=dto.date_quotation,
-            last_date=dto.last_date,
-            listing_date=dto.listing_date,
+            industry_sector=attr("industry_sector"),
+            industry_subsector=attr("industry_subsector"),
+            industry_segment=attr("industry_segment"),
+            industry_classification=attr("industry_classification"),
+            industry_classification_eng=attr("industry_classification_eng"),
+            activity=attr("activity"),
+            company_segment=attr("company_segment"),
+            company_segment_eng=attr("company_segment_eng"),
+            company_category=attr("company_category"),
+            company_type=attr("company_type"),
+            listing_segment=attr("listing_segment"),
+            registrar=attr("registrar"),
+            website=attr("website"),
+            institution_common=attr("institution_common"),
+            institution_preferred=attr("institution_preferred"),
+            market=attr("market"),
+            status=attr("status"),
+            market_indicator=attr("market_indicator"),
+            code=attr("code"),
+            has_bdr=attr("has_bdr"),
+            type_bdr=attr("type_bdr"),
+            has_quotation=attr("has_quotation"),
+            has_emissions=attr("has_emissions"),
+            date_quotation=attr("date_quotation"),
+            last_date=attr("last_date"),
+            listing_date=attr("listing_date"),
         )
 
     def to_dto(self) -> RawCompanyDTO:
