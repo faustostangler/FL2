@@ -3,9 +3,9 @@ from typing import List
 from infrastructure.config import Config
 
 from infrastructure.logging import Logger
-from domain.dto.company_dto import CompanyDTO
 from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
+from application import CompanyMapper
 
 
 class SyncCompaniesUseCase:
@@ -19,6 +19,7 @@ class SyncCompaniesUseCase:
         logger: Logger,
         repository: SQLiteCompanyRepository,
         scraper: CompanyB3Scraper,
+        mapper: CompanyMapper,
     ):
         self.config = config
         self.logger = logger
@@ -26,12 +27,13 @@ class SyncCompaniesUseCase:
 
         self.repository = repository
         self.scraper = scraper
+        self.mapper = mapper
 
     def execute(self) -> None:
         """
         Executa a sincronização:
         - Carrega dados do scraper (fonte externa)
-        - Converte para CompanyDTO
+        - Converte para RawCompanyDTO
         - Persiste no repositório
         """
         self.logger.log("SyncCompaniesUseCase Execute", level="info")
@@ -48,5 +50,6 @@ class SyncCompaniesUseCase:
             level="info",
         )
 
-    def _save_batch(self, buffer: List[CompanyDTO]) -> None:
-        self.repository.save_all(buffer)
+    def _save_batch(self, buffer: List[dict]) -> None:
+        dtos = [self.mapper.from_raw_dicts(item["base"], item["detail"]) for item in buffer]
+        self.repository.save_all(dtos)

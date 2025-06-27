@@ -1,11 +1,7 @@
 from __future__ import annotations
 
 from infrastructure.helpers.data_cleaner import DataCleaner
-from domain.dto import (
-    BseCompanyDTO,
-    DetailCompanyDTO,
-    RawCompanyDTO,
-)
+from domain.dto import BseCompanyDTO, DetailCompanyDTO, RawCompanyDTO
 
 
 class CompanyMapper:
@@ -13,6 +9,36 @@ class CompanyMapper:
 
     def __init__(self, data_cleaner: DataCleaner):
         self.data_cleaner = data_cleaner
+
+    def parse_base(self, raw: dict) -> BseCompanyDTO:
+        """Clean and convert base company data."""
+
+        raw["companyName"] = self.data_cleaner.clean_text(raw.get("companyName"))
+        raw["issuingCompany"] = self.data_cleaner.clean_text(raw.get("issuingCompany"))
+        raw["tradingName"] = self.data_cleaner.clean_text(raw.get("tradingName"))
+        raw["dateListing"] = self.data_cleaner.clean_date(raw.get("dateListing"))
+
+        return BseCompanyDTO.from_dict(raw)
+
+    def parse_detail(self, raw: dict) -> DetailCompanyDTO:
+        """Clean and convert detailed company data."""
+
+        raw["issuingCompany"] = self.data_cleaner.clean_text(raw.get("issuingCompany"))
+        raw["companyName"] = self.data_cleaner.clean_text(raw.get("companyName"))
+        raw["tradingName"] = self.data_cleaner.clean_text(raw.get("tradingName"))
+        raw["market"] = self.data_cleaner.clean_text(raw.get("market"))
+        raw["institutionCommon"] = self.data_cleaner.clean_text(raw.get("institutionCommon"))
+        raw["institutionPreferred"] = self.data_cleaner.clean_text(raw.get("institutionPreferred"))
+        raw["lastDate"] = self.data_cleaner.clean_date(raw.get("lastDate"))
+
+        return DetailCompanyDTO.from_dict(raw)
+
+    def from_raw_dicts(self, base_raw: dict, detail_raw: dict) -> RawCompanyDTO:
+        """Create a RawCompanyDTO from raw base and detail dictionaries."""
+
+        base = self.parse_base(base_raw)
+        detail = self.parse_detail(detail_raw)
+        return self.merge_company_dtos(base, detail)
 
     def merge_company_dtos(
         self,
