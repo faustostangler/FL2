@@ -3,18 +3,19 @@ import json
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from application import CompanyMapper
-from domain.dto import (
-    BseCompanyDTO,
-    DetailCompanyDTO,
-    PageResultDTO,
-    RawCompanyDTO,
-)
+from domain.dto import PageResultDTO, RawCompanyDTO
 from domain.ports import WorkerPoolPort
 from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.byte_formatter import ByteFormatter
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.logging import Logger
+from infrastructure.scrapers.company_processors import (
+    CompanyDetailProcessor,
+    CompanyMerger,
+    DetailFetcher,
+    EntryCleaner,
+)
 
 
 class CompanyB3Scraper:
@@ -82,6 +83,22 @@ class CompanyB3Scraper:
 
         # Initialize a counter for total processed items
         self.processed_count = 0
+
+        self.entry_cleaner = EntryCleaner(self.data_cleaner)
+        self.detail_fetcher = DetailFetcher(
+            fetch_utils=self.fetch_utils,
+            session=self.session,
+            endpoint_detail=self.endpoint_detail,
+            language=self.language,
+            metrics_collector=self.metrics_collector,
+            data_cleaner=self.data_cleaner,
+        )
+        self.company_merger = CompanyMerger(self.mapper, self.logger)
+        self.detail_processor = CompanyDetailProcessor(
+            cleaner=self.entry_cleaner,
+            fetcher=self.detail_fetcher,
+            merger=self.company_merger,
+        )
 
     def fetch_all(
         self,
@@ -254,7 +271,10 @@ class CompanyB3Scraper:
 
         def processor(item: Tuple[int, Dict]) -> Optional[RawCompanyDTO]:
             index, entry = item
-            processed_entry = self._process_entry(entry, skip_codes)
+            if entry.get("codeCVM") in skip_codes:
+                return None
+
+            processed_entry = self.detail_processor.run(entry)
             self.logger.log(f"Processor processed_entry {index}", level="info")
 
             return processed_entry
@@ -273,105 +293,3 @@ class CompanyB3Scraper:
         strategy.finalize()
 
         return [item for item in detail_exec.items if item is not None]
-
-    def _fetch_detail(self, cvm_code: str) -> DetailCompanyDTO:
-        """
-        Busca os detalhes de uma empresa a partir do código CVM.
-
-        :param cvm_code: Código CVM da empresa
-        :return: Dicionário com detalhes estendidos da empresa
-        """
-        self.logger.log("fetch company_detail", level="info")
-
-        # Prepare the payload with the CVM code and language for the request
-        payload = {"codeCVM": cvm_code, "language": self.language}
-        # Encode the payload as base64 to match B3 API requirements
-        token = self._encode_payload(payload)
-        # Build the full URL for the detail endpoint
-        url = self.endpoint_detail + token
-        response = self.fetch_utils.fetch_with_retry(self.session, url)
-        self.metrics_collector.record_network_bytes(len(response.content))
-        raw = response.json()
-        raw["issuingCompany"] = self.data_cleaner.clean_text(
-            raw.get("issuingCompany", None)
-        )
-        raw["companyName"] = self.data_cleaner.clean_text(raw.get("companyName", None))
-        raw["tradingName"] = self.data_cleaner.clean_text(raw.get("tradingName", None))
-        raw["cnpj"] = raw.get("cnpj", None)
-        raw["industryClassification"] = raw.get("industryClassification", None)
-        raw["industryClassificationEng"] = raw.get("industryClassificationEng", None)
-        raw["activity"] = raw.get("activity", None)
-        raw["website"] = raw.get("website", None)
-        raw["hasQuotation"] = raw.get("hasQuotation", None)
-        raw["status"] = raw.get("status", None)
-        raw["marketIndicator"] = raw.get("marketIndicator", None)
-        raw["market"] = self.data_cleaner.clean_text(raw.get("market", None))
-        raw["institutionCommon"] = self.data_cleaner.clean_text(
-            raw.get("institutionCommon", None)
-        )
-        raw["institutionPreferred"] = self.data_cleaner.clean_text(
-            raw.get("institutionPreferred", None)
-        )
-        raw["code"] = raw.get("code", None)
-        raw["codeCVM"] = raw.get("codeCVM", None)
-        raw["lastDate"] = self.data_cleaner.clean_date(raw.get("lastDate", None))
-        raw["otherCodes"] = raw.get("otherCodes", None)
-        raw["hasEmissions"] = raw.get("hasEmissions", None)
-        raw["hasBDR"] = raw.get("hasBDR", None)
-        raw["typeBDR"] = raw.get("typeBDR", None)
-        raw["describleCategoryBVMF"] = raw.get("describleCategoryBVMF", None)
-        raw["dateQuotation"] = raw.get("dateQuotation", None)
-
-        detail_company_dto = DetailCompanyDTO.from_dict(raw)
-        return detail_company_dto
-
-    def _merge_company(
-        self, base: BseCompanyDTO, detail: DetailCompanyDTO
-    ) -> Optional[RawCompanyDTO]:
-        """Merge base and detail DTOs into a parsed DTO."""
-
-        self.logger.log("fetch parse_company more details", level="info")
-
-        try:
-            company_dto = self.mapper.merge_company_dtos(base, detail)
-            return company_dto
-        except Exception as e:  # noqa: BLE001
-            self.logger.log(f"erro {e}", level="debug")
-            return None
-
-    def _process_entry(
-        self,
-        entry: Dict,
-        skip_codes: Set[str],
-    ) -> Optional[RawCompanyDTO]:
-        entry["companyName"] = self.data_cleaner.clean_text(entry["companyName"])
-        entry["issuingCompany"] = self.data_cleaner.clean_text(entry["issuingCompany"])
-        entry["tradingName"] = self.data_cleaner.clean_text(entry["tradingName"])
-        entry["dateListing"] = self.data_cleaner.clean_date(entry["dateListing"])
-
-        self.logger.log("Processor processing entry", level="info")
-
-        base_company_dto = BseCompanyDTO.from_dict(entry)
-
-        company_dto = self._process_company_detail(base_company_dto, skip_codes)
-
-        self.logger.log("Processor processed parsed details", level="info")
-
-        return company_dto
-
-    def _process_company_detail(
-        self, base_company_dto: BseCompanyDTO, skip_codes: Set[str]
-    ) -> Optional[RawCompanyDTO]:
-        try:
-            self.logger.log(
-                "Parsing company_detil _process_company_detail", level="info"
-            )
-
-            cvm_code = base_company_dto.cvm_code
-            detail_company_dto = self._fetch_detail(str(cvm_code))
-            company_dto = self._merge_company(base_company_dto, detail_company_dto)
-            return company_dto
-        except Exception as exc:  # noqa: BLE001
-            self.logger.log(f"erro {exc}", level="warning")
-            return None
-        self.logger.log("Processor processed parsed", level="info")
