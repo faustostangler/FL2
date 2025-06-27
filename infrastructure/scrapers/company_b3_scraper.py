@@ -6,6 +6,7 @@ from application import CompanyMapper
 from domain.dto import (
     BseCompanyDTO,
     DetailCompanyDTO,
+    PageResultDTO,
     RawCompanyDTO,
 )
 from domain.ports import WorkerPoolPort
@@ -136,14 +137,15 @@ class CompanyB3Scraper:
         """
         self.logger.log("Fetch Existing Companies from B3", level="info")
 
-        first_page, total_pages, _ = self._fetch_page(1)
-        results = list(first_page)
+        first_page = self._fetch_page(1)
+        results = list(first_page.items)
+        total_pages = first_page.total_pages
 
         if total_pages > 1:
             pages = range(2, total_pages + 1)
             self.logger.log("Fetch remaining company pages", level="info")
 
-            def processor(page: int) -> Tuple[List[Dict], int, int]:
+            def processor(page: int) -> PageResultDTO:
                 fetch = self._fetch_page(page)
                 self.logger.log(
                     f"processor {page} in _fetch_page",
@@ -162,8 +164,7 @@ class CompanyB3Scraper:
             )
 
             for page_data in page_exec.items:
-                page_items, _, _ = page_data
-                results.extend(page_items)
+                results.extend(page_data.items)
 
         self.logger.log(
             f"Global download: {self.byte_formatter.format_bytes(self.metrics_collector.network_bytes)}",
@@ -181,7 +182,7 @@ class CompanyB3Scraper:
         """
         return base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
 
-    def _fetch_page(self, page_number: int) -> Tuple[List[Dict], int, int]:
+    def _fetch_page(self, page_number: int) -> PageResultDTO:
         payload = {
             "language": self.language,
             "pageNumber": page_number,
@@ -195,7 +196,11 @@ class CompanyB3Scraper:
         data = response.json()
         results = data.get("results", [])
         total_pages = data.get("page", {}).get("totalPages", 1)
-        return results, total_pages, bytes_downloaded
+        return PageResultDTO(
+            items=results,
+            total_pages=total_pages,
+            bytes_downloaded=bytes_downloaded,
+        )
 
     def _fetch_companies_details(
         self,

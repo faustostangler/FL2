@@ -8,7 +8,7 @@ class ProgressFormatter:
 
     def format(self, progress: dict) -> str:
         """
-        Gera uma string como: "15/100 | 15.00% | 0h00m10s + 0h01m00s = 0h01m10s e extra_info" 
+        Gera uma string como: "15/100 | 15.00% | 0h00m10s + 0h01m00s = 0h01m10s e extra_info"
         """
         try:
             index = progress.get("index", 0)
