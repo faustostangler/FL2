@@ -1,15 +1,19 @@
+from __future__ import annotations
+
 from typing import List
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from infrastructure.repositories.base_repository import BaseRepository
-from infrastructure.models.company_model import Base, CompanyModel
 from domain.dto.company_dto import CompanyDTO
+from domain.ports import CompanyRepositoryPort
 from infrastructure.config import Config
 from infrastructure.logging import Logger
+from infrastructure.models.company_model import Base, CompanyModel
+from infrastructure.repositories.base_repository import BaseRepository
 
 
-class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
+class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort):
     """
     Concrete implementation of BaseRepository for CompanyDTO,
     using SQLite and SQLAlchemy for persistence.
@@ -40,10 +44,13 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO]):
         """
         session = self.Session()
         try:
-            for dto in items:
-                obj = CompanyModel.from_dto(dto)
-                session.merge(obj)  # Upsert operation: insert or update if exists
+            models = [CompanyModel.from_dto(dto) for dto in items]
+            session.bulk_save_objects(models)
             session.commit()
+            self.logger.log(
+                f"Saved {len(items)} companies",
+                level="info",
+            )
         except Exception as e:
             self.logger.log(f"erro {e}", level="debug")
         finally:
