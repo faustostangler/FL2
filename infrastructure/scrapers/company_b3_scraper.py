@@ -3,7 +3,7 @@ import json
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from application import CompanyMapper
-from domain.dto import PageResultDTO, RawCompanyDTO
+from domain.dto import PageResultDTO, CompanyRawDTO
 from domain.ports import WorkerPoolPort
 from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
@@ -104,9 +104,9 @@ class CompanyB3Scraper:
         self,
         threshold: Optional[int] = None,
         skip_codes: Optional[Set[str]] = None,
-        save_callback: Optional[Callable[[List[RawCompanyDTO]], None]] = None,
+        save_callback: Optional[Callable[[List[CompanyRawDTO]], None]] = None,
         max_workers: int | None = None,
-    ) -> List[RawCompanyDTO]:
+    ) -> List[CompanyRawDTO]:
         """Fetch all companies from B3.
 
         Args:
@@ -240,10 +240,10 @@ class CompanyB3Scraper:
         self,
         companies_list: List[Dict],
         skip_codes: Optional[Set[str]] = None,
-        save_callback: Optional[Callable[[List[RawCompanyDTO]], None]] = None,
+        save_callback: Optional[Callable[[List[CompanyRawDTO]], None]] = None,
         threshold: Optional[int] = None,
         max_workers: int | None = None,
-    ) -> List[RawCompanyDTO]:
+    ) -> List[CompanyRawDTO]:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
         Args:
@@ -263,13 +263,13 @@ class CompanyB3Scraper:
 
         threshold = threshold or self.config.global_settings.threshold or 50
         skip_codes = skip_codes or set()
-        strategy: SaveStrategy[RawCompanyDTO] = SaveStrategy(save_callback, threshold)
+        strategy: SaveStrategy[CompanyRawDTO] = SaveStrategy(save_callback, threshold)
 
         self.logger.log("Start CompanyB3Scraper fetch_companies_details", level="info")
 
         tasks = list(enumerate(companies_list))
 
-        def processor(item: Tuple[int, Dict]) -> Optional[RawCompanyDTO]:
+        def processor(item: Tuple[int, Dict]) -> Optional[CompanyRawDTO]:
             index, entry = item
             if entry.get("codeCVM") in skip_codes:
                 return None
@@ -279,7 +279,7 @@ class CompanyB3Scraper:
 
             return processed_entry
 
-        def handle_batch(item: Optional[RawCompanyDTO]) -> None:
+        def handle_batch(item: Optional[CompanyRawDTO]) -> None:
             strategy.handle(item)
 
         detail_exec = self.executor.run(
