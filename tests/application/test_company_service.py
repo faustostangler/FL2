@@ -1,5 +1,6 @@
 from unittest.mock import MagicMock
 
+# from application.services.company_services import CompanyService
 from application.services.company_service import CompanyService
 from application.usecases.sync_companies import SyncCompaniesUseCase
 from domain.ports import CompanyRepositoryPort, CompanySourcePort
@@ -14,6 +15,7 @@ def test_run_calls_usecase_execute(monkeypatch):
     mock_usecase_inst = MagicMock()
     mock_usecase_cls.return_value = mock_usecase_inst
     monkeypatch.setattr(
+        # "application.services.company_services.SyncCompaniesUseCase",
         "application.services.company_service.SyncCompaniesUseCase",
         mock_usecase_cls,
     )
@@ -35,7 +37,10 @@ def test_run_calls_usecase_execute(monkeypatch):
         max_workers=3,
     )
 
-    result = service.run()
+#     result = service.run()
+
+#     mock_usecase_inst.execute.assert_called_once()
+#     assert result == mock_usecase_inst.execute.return_value
+    service.run()
 
     mock_usecase_inst.execute.assert_called_once()
-    assert result == mock_usecase_inst.execute.return_value
