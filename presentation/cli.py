@@ -1,5 +1,5 @@
 from application import CompanyMapper
-from application.services.company_services import CompanyService
+from application.services.company_service import CompanyService
 from application.services.nsd_service import NsdService
 from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
