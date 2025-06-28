@@ -33,6 +33,10 @@ class SQLiteNSDRepository(BaseRepository[NSDDTO]):
                 obj = NSDModel.from_dto(dto)
                 session.merge(obj)
             session.commit()
+            self.logger.log(
+                f"Saved {len(items)} nsd records",
+                level="info",
+            )
         finally:
             session.close()
 
