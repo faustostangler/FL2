@@ -1,6 +1,6 @@
+import json
 from dataclasses import dataclass
 from typing import Optional
-import json
 
 from .raw_company_dto import CompanyRawDTO
 
@@ -10,95 +10,135 @@ class CompanyDTO:
     """Representa os dados estruturados de uma empresa listada na B3."""
 
     cvm_code: Optional[str]
+    issuing_company: Optional[str]
+    trading_name: Optional[str]
     company_name: Optional[str]
-    ticker: Optional[str]  # Ticker é o código de negociação da ação na B3
+    cnpj: Optional[str]
+
     ticker_codes: Optional[str]
     isin_codes: Optional[str]
-    trading_name: Optional[str]
-    sector: Optional[str]
-    subsector: Optional[str]
-    segment: Optional[str]
-    listing: Optional[str]
-    activity: Optional[str]
-    registrar: Optional[str]
-    cnpj: Optional[str]
-    website: Optional[str]
+    other_codes: Optional[str]
 
-    company_type: Optional[str]
-    status: Optional[str]
+    industry_sector: Optional[str]
+    industry_subsector: Optional[str]
+    industry_segment: Optional[str]
+    industry_classification: Optional[str]
+    industry_classification_eng: Optional[str]
+    activity: Optional[str]
+
+    company_segment: Optional[str]
+    company_segment_eng: Optional[str]
     company_category: Optional[str]
-    corporate_name: Optional[str]
+    company_type: Optional[str]
+
+    listing_segment: Optional[str]
+    registrar: Optional[str]
+    website: Optional[str]
+    institution_common: Optional[str]
+    institution_preferred: Optional[str]
+
+    market: Optional[str]
+    status: Optional[str]
+    market_indicator: Optional[str]
+
+    code: Optional[str]
+    has_bdr: Optional[bool]
+    type_bdr: Optional[str]
+    has_quotation: Optional[bool]
+    has_emissions: Optional[bool]
+
+    date_quotation: Optional[str]
+    last_date: Optional[str]
     listing_date: Optional[str]
-    start_situation_date: Optional[str]
-    situation: Optional[str]
-    situation_date: Optional[str]
-    country: Optional[str]
-    state: Optional[str]
-    city: Optional[str]
 
     @staticmethod
     def from_dict(raw: dict) -> "CompanyDTO":
-        """
-        Constrói um DTO imutável a partir de um dicionário bruto (normalmente vindo do scraper).
-        """
+        """Constrói um DTO imutável a partir de um dicionário bruto."""
+
         return CompanyDTO(
             cvm_code=raw.get("cvm_code") or raw.get("codeCVM"),
+            issuing_company=raw.get("issuing_company") or raw.get("issuingCompany"),
+            trading_name=raw.get("trading_name") or raw.get("tradingName"),
             company_name=raw.get("company_name") or raw.get("companyName"),
-            ticker=raw.get("ticker") or raw.get("issuingCompany"),
+            cnpj=raw.get("cnpj"),
             ticker_codes=raw.get("ticker_codes"),
             isin_codes=raw.get("isin_codes"),
-            trading_name=raw.get("trading_name") or raw.get("tradingName"),
-            sector=raw.get("sector"),
-            subsector=raw.get("subsector"),
-            segment=raw.get("segment"),
-            listing=raw.get("listing"),
+            other_codes=raw.get("other_codes"),
+            industry_sector=raw.get("industry_sector"),
+            industry_subsector=raw.get("industry_subsector"),
+            industry_segment=raw.get("industry_segment"),
+            industry_classification=raw.get("industry_classification"),
+            industry_classification_eng=raw.get("industry_classification_eng"),
             activity=raw.get("activity"),
-            registrar=raw.get("registrar"),
-            cnpj=raw.get("cnpj"),
-            website=raw.get("website"),
-            company_type=raw.get("company_type"),
-            status=raw.get("status"),
+            company_segment=raw.get("company_segment"),
+            company_segment_eng=raw.get("company_segment_eng"),
             company_category=raw.get("company_category"),
-            corporate_name=raw.get("corporate_name"),
+            company_type=raw.get("company_type"),
+            listing_segment=raw.get("listing_segment"),
+            registrar=raw.get("registrar"),
+            website=raw.get("website"),
+            institution_common=raw.get("institution_common"),
+            institution_preferred=raw.get("institution_preferred"),
+            market=raw.get("market"),
+            status=raw.get("status"),
+            market_indicator=raw.get("market_indicator"),
+            code=raw.get("code"),
+            has_bdr=raw.get("has_bdr"),
+            type_bdr=raw.get("type_bdr"),
+            has_quotation=raw.get("has_quotation"),
+            has_emissions=raw.get("has_emissions"),
+            date_quotation=raw.get("date_quotation"),
+            last_date=raw.get("last_date"),
             listing_date=raw.get("listing_date"),
-            start_situation_date=raw.get("start_situation_date"),
-            situation=raw.get("situation"),
-            situation_date=raw.get("situation_date"),
-            country=raw.get("country"),
-            state=raw.get("state"),
-            city=raw.get("city"),
         )
 
     @staticmethod
     def from_raw(raw: CompanyRawDTO) -> "CompanyDTO":
-        """Builds a CompanyDTO from a CompanyDTO instance."""
+        """Build a ``CompanyDTO`` from a ``CompanyRawDTO`` instance."""
+
+        other_codes = (
+            json.dumps([{"code": c.code, "isin": c.isin} for c in raw.other_codes])
+            if raw.other_codes
+            else None
+        )
 
         return CompanyDTO(
             cvm_code=raw.cvm_code,
+            issuing_company=raw.issuing_company,
+            trading_name=raw.trading_name,
             company_name=raw.company_name,
-            ticker=raw.ticker,
+            cnpj=raw.cnpj,
             ticker_codes=json.dumps(raw.ticker_codes) if raw.ticker_codes else None,
             isin_codes=json.dumps(raw.isin_codes) if raw.isin_codes else None,
-            trading_name=raw.trading_name,
-            sector=raw.sector,
-            subsector=raw.subsector,
-            segment=raw.industry_segment,
-            listing=raw.listing,
+            other_codes=other_codes,
+            industry_sector=raw.industry_sector,
+            industry_subsector=raw.industry_subsector,
+            industry_segment=raw.industry_segment,
+            industry_classification=raw.industry_classification,
+            industry_classification_eng=raw.industry_classification_eng,
             activity=raw.activity,
-            registrar=raw.registrar,
-            cnpj=raw.cnpj,
-            website=raw.website,
+            company_segment=raw.company_segment,
+            company_segment_eng=raw.company_segment_eng,
+            company_category=raw.company_category,
             company_type=raw.company_type,
+            listing_segment=raw.listing_segment,
+            registrar=raw.registrar,
+            website=raw.website,
+            institution_common=raw.institution_common,
+            institution_preferred=raw.institution_preferred,
+            market=raw.market,
             status=raw.status,
-            company_category=None,
-            corporate_name=None,
+            market_indicator=raw.market_indicator,
+            code=raw.code,
+            has_bdr=raw.has_bdr,
+            type_bdr=raw.type_bdr,
+            has_quotation=raw.has_quotation,
+            has_emissions=raw.has_emissions,
+            date_quotation=(
+                raw.date_quotation.strftime("%Y-%m-%d") if raw.date_quotation else None
+            ),
+            last_date=(raw.last_date.strftime("%Y-%m-%d") if raw.last_date else None),
             listing_date=(
                 raw.listing_date.strftime("%Y-%m-%d") if raw.listing_date else None
             ),
-            start_situation_date=None,
-            situation=None,
-            situation_date=None,
-            country=None,
-            state=None,
-            city=None,
         )

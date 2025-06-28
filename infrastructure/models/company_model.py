@@ -70,13 +70,13 @@ class CompanyModel(Base):
             return getattr(dto, name, None)
 
         ticker_codes = attr("ticker_codes") or (
-            [] if attr("ticker") is None else [attr("ticker")]
+            [] if attr("issuing_company") is None else [attr("issuing_company")]
         )
         isin_codes = attr("isin_codes") or []
         other_codes = attr("other_codes") or []
 
         return CompanyModel(
-            cvm_code=attr("cvm_code") or attr("ticker") or "",
+            cvm_code=attr("cvm_code") or attr("issuing_company") or "",
             issuing_company=attr("issuing_company"),
             trading_name=attr("trading_name"),
             company_name=attr("company_name"),
