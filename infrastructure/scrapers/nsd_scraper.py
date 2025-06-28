@@ -1,22 +1,29 @@
 from __future__ import annotations
 
-from datetime import datetime
+import re
 import time
-from typing import List, Dict, Optional, Callable
+from datetime import datetime
+from typing import Callable, Dict, List, Optional
 
 from bs4 import BeautifulSoup
-import re
 
 from infrastructure.config import Config
-from infrastructure.logging import Logger
-from infrastructure.helpers import FetchUtils
+from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.data_cleaner import DataCleaner
+from infrastructure.helpers.metrics_collector import MetricsCollector
+from infrastructure.logging import Logger
 
 
 class NsdScraper:
     """Scraper adapter responsible for fetching raw NSD documents."""
 
-    def __init__(self, config: Config, logger: Logger, data_cleaner: DataCleaner):
+    def __init__(
+        self,
+        config: Config,
+        logger: Logger,
+        data_cleaner: DataCleaner,
+        metrics_collector: MetricsCollector,
+    ):
         self.config = config
         self.logger = logger
         self.data_cleaner = data_cleaner
@@ -25,7 +32,7 @@ class NsdScraper:
 
         self.nsd_endpoint = self.config.b3.nsd_endpoint
 
-        self.total_bytes_downloaded = 0
+        self.metrics_collector = metrics_collector
 
         self.logger.log("Start NsdScraper", level="info")
 
@@ -57,7 +64,7 @@ class NsdScraper:
         nsd = start
         index = 0
 
-        buffer: list[dict] = []
+        strategy: SaveStrategy[Dict] = SaveStrategy(save_callback, threshold)
         results: List[Dict] = []
         start_time = time.time()
 
@@ -79,7 +86,7 @@ class NsdScraper:
 
             try:
                 response = self.fetch_utils.fetch_with_retry(self.session, url)
-                self.total_bytes_downloaded += len(response.content)
+                self.metrics_collector.record_network_bytes(len(response.content))
                 parsed = self._parse_html(nsd, response.text)
             except Exception as e:
                 self.logger.log(
@@ -90,7 +97,8 @@ class NsdScraper:
                 break
 
             if parsed:
-                buffer.append(parsed)
+                results.append(parsed)
+                strategy.handle(parsed)
 
             extra_info = [
                 f"{parsed.get('nsd', nsd)}",  # usa o valor original do loop como fallback
@@ -111,20 +119,15 @@ class NsdScraper:
                 progress={**progress, "extra_info": extra_info},
             )
 
-            # Condição de salvamento
-            remaining = max_nsd - nsd
-            if (remaining % threshold == 0) or (remaining == 0):
-                if callable(save_callback) and buffer:
-                    save_callback(buffer)
-                    results.extend(buffer)
-                    self.logger.log(f"Saved {len(buffer)} NSDs", level="info")
-                    buffer.clear()
+            # Flushing handled by strategy
 
             nsd += 1
             index += 1
 
+        strategy.finalize()
+
         self.logger.log(
-            f"Downloaded {self.total_bytes_downloaded} bytes",
+            f"Downloaded {self.metrics_collector.network_bytes} bytes",
             level="info",
         )
         return results
