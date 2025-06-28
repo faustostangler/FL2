@@ -5,7 +5,7 @@ import json
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from application import CompanyMapper
-from domain.dto import PageResultDTO, CompanyRawDTO
+from domain.dto import CompanyRawDTO, PageResultDTO
 from domain.ports import CompanySourcePort, WorkerPoolPort
 from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
