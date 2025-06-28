@@ -13,7 +13,7 @@ class CodeDTO:
 
 
 @dataclass(frozen=True)
-class BseCompanyDTO:
+class CompanyListingDTO:
     """DTO for base company data from the list endpoint."""
 
     cvm_code: Optional[str]
@@ -31,8 +31,8 @@ class BseCompanyDTO:
     market: Optional[str]
 
     @staticmethod
-    def from_dict(raw: dict) -> "BseCompanyDTO":
-        return BseCompanyDTO(
+    def from_dict(raw: dict) -> "CompanyListingDTO":
+        return CompanyListingDTO(
             cvm_code=raw.get("codeCVM"),
             issuing_company=raw.get("issuingCompany"),
             company_name=raw.get("companyName"),
@@ -50,7 +50,7 @@ class BseCompanyDTO:
 
 
 @dataclass(frozen=True)
-class DetailCompanyDTO:
+class CompanyDetailDTO:
     """DTO for detailed company data from the detail endpoint."""
 
     issuing_company: Optional[str]
@@ -81,12 +81,12 @@ class DetailCompanyDTO:
     registrar: Optional[str]
 
     @staticmethod
-    def from_dict(raw: dict) -> "DetailCompanyDTO":
+    def from_dict(raw: dict) -> "CompanyDetailDTO":
         other_codes = raw.get("otherCodes") or []
         if isinstance(other_codes, str):
             other_codes = json.loads(other_codes)
         code_dtos = [CodeDTO(code=c.get("code"), isin=c.get("isin")) for c in other_codes]
-        company_detail_dto = DetailCompanyDTO(
+        company_detail_dto = CompanyDetailDTO(
             issuing_company=raw.get("issuingCompany"),
             company_name=raw.get("companyName"),
             trading_name=raw.get("tradingName"),
@@ -118,7 +118,7 @@ class DetailCompanyDTO:
 
 
 @dataclass(frozen=True)
-class RawCompanyDTO:
+class CompanyRawDTO:
     """Raw parsed data returned by the scraper before mapping to the domain."""
 
     cvm_code: Optional[str]
