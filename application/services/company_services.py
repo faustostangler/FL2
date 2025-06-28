@@ -1,8 +1,7 @@
+from application.usecases.sync_companies import SyncCompaniesUseCase
+from domain.ports import CompanyRepositoryPort, CompanySourcePort
 from infrastructure.config import Config
 from infrastructure.logging import Logger
-from domain.ports import CompanyRepositoryPort, CompanySourcePort
-
-from application.usecases.sync_companies import SyncCompaniesUseCase
 
 
 class CompanyService:
@@ -23,10 +22,10 @@ class CompanyService:
         logger.log("Start CompanyService", level="info")
 
         self.sync_usecase = SyncCompaniesUseCase(
-            config=self.config,
             logger=self.logger,
             repository=repository,
             scraper=scraper,
+            max_workers=self.config.global_settings.max_workers,
         )
 
     def run(self) -> None:

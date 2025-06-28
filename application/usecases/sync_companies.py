@@ -3,7 +3,6 @@ from typing import List
 from domain.dto.company_dto import CompanyDTO
 from domain.dto.raw_company_dto import CompanyRawDTO
 from domain.ports import CompanyRepositoryPort, CompanySourcePort
-from infrastructure.config import Config
 from infrastructure.logging import Logger
 
 
@@ -14,17 +13,17 @@ class SyncCompaniesUseCase:
 
     def __init__(
         self,
-        config: Config,
         logger: Logger,
         repository: CompanyRepositoryPort,
         scraper: CompanySourcePort,
+        max_workers: int,
     ):
-        self.config = config
         self.logger = logger
         self.logger.log("Start SyncCompaniesUseCase", level="info")
 
         self.repository = repository
         self.scraper = scraper
+        self.max_workers = max_workers
 
     def execute(self) -> None:
         """
@@ -40,7 +39,7 @@ class SyncCompaniesUseCase:
         self.scraper.fetch_all(
             skip_codes=existing_codes,
             save_callback=self._save_batch,
-            max_workers=self.config.global_settings.max_workers,
+            max_workers=self.max_workers,
         )
         self.logger.log(
             f"Downloaded {self.scraper.metrics_collector.network_bytes} bytes",
