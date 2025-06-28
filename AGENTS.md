@@ -94,12 +94,16 @@ They are orchestrated by the CLI controller (`CLIController`), which boots the s
 All data passed between layers are **immutable dataclasses** in `domain/dto/`:
 
 - `CompanyDTO`  
-- `NSDDTO`  
+- `NSDDTO`
 
 They provide:
-- Strict field typing  
-- `@staticmethod from_dict(raw: dict) → DTO`  
+- Strict field typing
+- `@staticmethod from_dict(raw: dict) → DTO`
 - No business logic (pure data carriers)
+
+See [DTO Naming Conventions](DTO_NAMING_CONVENTIONS.md) for the standard
+terminology used in all services (`ListingDTO`, `DetailDTO`, `RawDTO`, and
+the final `<Entity>DTO`).
 
 ---
 

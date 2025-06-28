@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from infrastructure.helpers.data_cleaner import DataCleaner
 from domain.dto import (
-    BseCompanyDTO,
-    DetailCompanyDTO,
-    RawCompanyDTO,
+    CompanyListingDTO,
+    CompanyDetailDTO,
+    CompanyRawDTO,
 )
 
 
@@ -16,9 +16,9 @@ class CompanyMapper:
 
     def merge_company_dtos(
         self,
-        base: BseCompanyDTO,
-        detail: DetailCompanyDTO,
-    ) -> RawCompanyDTO:
+        base: CompanyListingDTO,
+        detail: CompanyDetailDTO,
+    ) -> CompanyRawDTO:
 
         codes = detail.other_codes or []
         
@@ -28,7 +28,7 @@ class CompanyMapper:
         industry_subsector = self.data_cleaner.clean_text(parts[1]) if len(parts) > 1 else None
         industry_segment = self.data_cleaner.clean_text(parts[2]) if len(parts) > 2 else None
 
-        return RawCompanyDTO(
+        return CompanyRawDTO(
             cvm_code = detail.cvm_code or base.cvm_code,
             issuing_company = detail.issuing_company or base.issuing_company,
             trading_name = detail.trading_name or base.trading_name,

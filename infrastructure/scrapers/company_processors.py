@@ -5,7 +5,7 @@ import json
 from typing import Dict, Optional
 
 from application import CompanyMapper
-from domain.dto import BseCompanyDTO, DetailCompanyDTO, RawCompanyDTO
+from domain.dto import CompanyListingDTO, CompanyDetailDTO, CompanyRawDTO
 from infrastructure.helpers import FetchUtils, MetricsCollector
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.logging import Logger
@@ -17,16 +17,16 @@ class EntryCleaner:
     def __init__(self, data_cleaner: DataCleaner) -> None:
         self.data_cleaner = data_cleaner
 
-    def run(self, entry: Dict) -> BseCompanyDTO:
+    def run(self, entry: Dict) -> CompanyListingDTO:
         cleaned = self.data_cleaner.clean_company_entry(entry)
-        return BseCompanyDTO.from_dict(cleaned)
+        return CompanyListingDTO.from_dict(cleaned)
 #         entry["companyName"] = self.data_cleaner.clean_text(entry.get("companyName"))
 #         entry["issuingCompany"] = self.data_cleaner.clean_text(
 #             entry.get("issuingCompany")
 #         )
 #         entry["tradingName"] = self.data_cleaner.clean_text(entry.get("tradingName"))
 #         entry["dateListing"] = self.data_cleaner.clean_date(entry.get("dateListing"))
-#         return BseCompanyDTO.from_dict(entry)
+#         return CompanyListingDTO.from_dict(entry)
 
 
 class DetailFetcher:
@@ -48,7 +48,7 @@ class DetailFetcher:
         self.metrics_collector = metrics_collector
         self.data_cleaner = data_cleaner
 
-    def run(self, cvm_code: str) -> DetailCompanyDTO:
+    def run(self, cvm_code: str) -> CompanyDetailDTO:
         payload = {"codeCVM": cvm_code, "language": self.language}
         token = base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
         url = self.endpoint_detail + token
@@ -82,7 +82,7 @@ class DetailFetcher:
         raw["typeBDR"] = raw.get("typeBDR")
         raw["describleCategoryBVMF"] = raw.get("describleCategoryBVMF")
         raw["dateQuotation"] = raw.get("dateQuotation")
-        return DetailCompanyDTO.from_dict(raw)
+        return CompanyDetailDTO.from_dict(raw)
 
 
 class CompanyMerger:
@@ -93,8 +93,8 @@ class CompanyMerger:
         self.logger = logger
 
     def run(
-        self, base: BseCompanyDTO, detail: DetailCompanyDTO
-    ) -> Optional[RawCompanyDTO]:
+        self, base: CompanyListingDTO, detail: CompanyDetailDTO
+    ) -> Optional[CompanyRawDTO]:
         try:
             return self.mapper.merge_company_dtos(base, detail)
         except Exception as exc:  # noqa: BLE001
@@ -112,7 +112,7 @@ class CompanyDetailProcessor:
         self.fetcher = fetcher
         self.merger = merger
 
-    def run(self, entry: Dict) -> Optional[RawCompanyDTO]:
+    def run(self, entry: Dict) -> Optional[CompanyRawDTO]:
         base = self.cleaner.run(entry)
         detail = self.fetcher.run(str(base.cvm_code))
         return self.merger.run(base, detail)
