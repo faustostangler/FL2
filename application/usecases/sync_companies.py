@@ -1,9 +1,10 @@
 from typing import List
 
 from domain.dto.company_dto import CompanyDTO
+from domain.dto.raw_company_dto import CompanyRawDTO
+from domain.ports import CompanyRepositoryPort, CompanySourcePort
 from infrastructure.config import Config
 from infrastructure.logging import Logger
-from domain.ports import CompanyRepositoryPort, CompanySourcePort
 
 
 class SyncCompaniesUseCase:
@@ -46,5 +47,8 @@ class SyncCompaniesUseCase:
             level="info",
         )
 
-    def _save_batch(self, buffer: List[CompanyDTO]) -> None:
-        self.repository.save_all(buffer)
+    def _save_batch(self, buffer: List[CompanyRawDTO]) -> None:
+        """Convert raw companies to domain DTOs before saving."""
+
+        dtos = [CompanyDTO.from_raw(item) for item in buffer]
+        self.repository.save_all(dtos)
