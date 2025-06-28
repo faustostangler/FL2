@@ -1,11 +1,13 @@
 import re
 import string
-import unidecode
 from datetime import datetime
-from typing import Optional, List
+from typing import List, Optional
+
+import unidecode
 
 from infrastructure.config import Config
 from infrastructure.logging import Logger
+
 
 class DataCleaner:
     """
@@ -17,7 +19,9 @@ class DataCleaner:
         self.config = config
         self.logger = logger
 
-    def clean_text(self, text: Optional[str], words_to_remove: Optional[List[str]] = None) -> Optional[str]:
+    def clean_text(
+        self, text: Optional[str], words_to_remove: Optional[List[str]] = None
+    ) -> Optional[str]:
         """Normaliza texto: remove pontuação, acentos, palavras específicas."""
         try:
             if not text:
@@ -73,5 +77,30 @@ class DataCleaner:
             except Exception:
                 continue
 
-        self.logger.log(f"Erro ao limpar data: formato não reconhecido: '{text}'", level="debug")
+        self.logger.log(
+            f"Erro ao limpar data: formato não reconhecido: '{text}'", level="debug"
+        )
         return None
+
+    def clean_company_entry(self, entry: dict) -> dict:
+        """Normalize relevant fields in a raw company listing entry."""
+
+        text_keys = [
+            "companyName",
+            "issuingCompany",
+            "tradingName",
+            "segment",
+            "segmentEng",
+            "market",
+        ]
+        date_keys = ["dateListing"]
+
+        for key in text_keys:
+            if key in entry:
+                entry[key] = self.clean_text(entry.get(key))
+
+        for key in date_keys:
+            if key in entry:
+                entry[key] = self.clean_date(entry.get(key))
+
+        return entry
