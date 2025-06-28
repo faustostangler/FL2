@@ -1,12 +1,13 @@
 from typing import List
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
-from infrastructure.repositories.base_repository import BaseRepository
-from infrastructure.models.nsd_model import Base, NSDModel
 from domain.dto.nsd_dto import NSDDTO
 from infrastructure.config import Config
 from infrastructure.logging import Logger
+from infrastructure.models.nsd_model import Base, NSDModel
+from infrastructure.repositories.base_repository import BaseRepository
 
 
 class SQLiteNSDRepository(BaseRepository[NSDDTO]):
@@ -29,9 +30,8 @@ class SQLiteNSDRepository(BaseRepository[NSDDTO]):
     def save_all(self, items: List[NSDDTO]) -> None:
         session = self.Session()
         try:
-            for dto in items:
-                obj = NSDModel.from_dto(dto)
-                session.merge(obj)
+            models = [NSDModel.from_dto(dto) for dto in items]
+            session.bulk_save_objects(models)
             session.commit()
             self.logger.log(
                 f"Saved {len(items)} nsd records",
