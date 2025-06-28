@@ -2,6 +2,7 @@ import types
 from unittest.mock import MagicMock
 
 from application.usecases.sync_companies import SyncCompaniesUseCase
+# from domain.dto import CompanyDTO, SyncCompaniesResultDTO
 from domain.dto.company_dto import CompanyDTO
 from domain.ports import CompanyRepositoryPort, CompanySourcePort
 from tests.conftest import DummyLogger
@@ -50,6 +51,7 @@ def test_execute_converts_and_saves():
         max_workers=2,
     )
 
+#     result = usecase.execute()
     usecase.execute()
 
     repo.get_all_primary_keys.assert_called_once()
@@ -58,3 +60,8 @@ def test_execute_converts_and_saves():
     saved = repo.save_all.call_args.args[0]
     assert isinstance(saved[0], CompanyDTO)
     assert saved[0].cvm_code == "001"
+
+#     assert isinstance(result, SyncCompaniesResultDTO)
+#     assert result.processed_count == 1
+#     assert result.skipped_count == 1
+#     assert result.bytes_downloaded == 100

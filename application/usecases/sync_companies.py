@@ -1,5 +1,7 @@
+import time
 from typing import List
 
+from domain.dto import SyncCompaniesResultDTO
 from domain.dto.company_dto import CompanyDTO
 from domain.dto.raw_company_dto import CompanyRawDTO
 from domain.ports import CompanyRepositoryPort, CompanySourcePort
@@ -25,7 +27,7 @@ class SyncCompaniesUseCase:
         self.scraper = scraper
         self.max_workers = max_workers
 
-    def execute(self) -> None:
+    def execute(self) -> SyncCompaniesResultDTO:
         """
         Executa a sincronização:
         - Carrega dados do scraper (fonte externa)
@@ -34,17 +36,27 @@ class SyncCompaniesUseCase:
         """
         self.logger.log("SyncCompaniesUseCase Execute", level="info")
 
+        start = time.perf_counter()
         existing_codes = self.repository.get_all_primary_keys()
 
-        self.scraper.fetch_all(
+        results = self.scraper.fetch_all(
             skip_codes=existing_codes,
             save_callback=self._save_batch,
             max_workers=self.max_workers,
         )
+        elapsed = time.perf_counter() - start
+        bytes_downloaded = self.scraper.metrics_collector.network_bytes
         self.logger.log(
-            f"Downloaded {self.scraper.metrics_collector.network_bytes} bytes",
+            f"Downloaded {bytes_downloaded} bytes",
             level="info",
         )
+
+#         return SyncCompaniesResultDTO(
+#             processed_count=len(results),
+#             skipped_count=len(existing_codes),
+#             bytes_downloaded=bytes_downloaded,
+#             elapsed_time=elapsed,
+#         )
 
     def _save_batch(self, buffer: List[CompanyRawDTO]) -> None:
         """Convert raw companies to domain DTOs before saving."""

@@ -37,6 +37,10 @@ def test_run_calls_usecase_execute(monkeypatch):
         max_workers=3,
     )
 
+#     result = service.run()
+
+#     mock_usecase_inst.execute.assert_called_once()
+#     assert result == mock_usecase_inst.execute.return_value
     service.run()
 
     mock_usecase_inst.execute.assert_called_once()

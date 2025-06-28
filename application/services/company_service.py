@@ -1,4 +1,5 @@
 from application.usecases.sync_companies import SyncCompaniesUseCase
+# from domain.dto import SyncCompaniesResultDTO
 from domain.ports import CompanyRepositoryPort, CompanySourcePort
 from infrastructure.config import Config
 from infrastructure.logging import Logger
@@ -28,6 +29,11 @@ class CompanyService:
             max_workers=self.config.global_settings.max_workers,
         )
 
+#     def run(self) -> SyncCompaniesResultDTO:
+#         """
+#         Executa a sincronização de empresas usando o caso de uso apropriado.
+#         """
+#         return self.sync_usecase.execute()
     def run(self) -> None:
         """
         Executa a sincronização de empresas usando o caso de uso apropriado.
