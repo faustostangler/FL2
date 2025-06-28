@@ -3,8 +3,7 @@ from typing import List
 from domain.dto.company_dto import CompanyDTO
 from infrastructure.config import Config
 from infrastructure.logging import Logger
-from infrastructure.repositories import SQLiteCompanyRepository
-from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
+from domain.ports import CompanyRepositoryPort, CompanySourcePort
 
 
 class SyncCompaniesUseCase:
@@ -16,8 +15,8 @@ class SyncCompaniesUseCase:
         self,
         config: Config,
         logger: Logger,
-        repository: SQLiteCompanyRepository,
-        scraper: CompanyB3Scraper,
+        repository: CompanyRepositoryPort,
+        scraper: CompanySourcePort,
     ):
         self.config = config
         self.logger = logger

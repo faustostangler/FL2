@@ -1,7 +1,6 @@
 from infrastructure.config import Config
 from infrastructure.logging import Logger
-from infrastructure.repositories import SQLiteCompanyRepository
-from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
+from domain.ports import CompanyRepositoryPort, CompanySourcePort
 
 from application.usecases.sync_companies import SyncCompaniesUseCase
 
@@ -15,15 +14,10 @@ class CompanyService:
         self,
         config: Config,
         logger: Logger,
-        repository: SQLiteCompanyRepository,
-        scraper: CompanyB3Scraper,
+        repository: CompanyRepositoryPort,
+        scraper: CompanySourcePort,
     ):
-        """
-        Initializes the CompanyService with the provided repository and scraper.
-        Args:
-            repository (SQLiteCompanyRepository): The repository instance for company data persistence.
-            scraper (CompanyB3Scraper): The scraper instance for fetching company data from B3.
-        """
+        """Initialize the service with injected repository and scraper."""
         self.logger = logger
         self.config = config
         logger.log("Start CompanyService", level="info")
