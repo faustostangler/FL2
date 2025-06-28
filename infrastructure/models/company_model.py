@@ -63,8 +63,8 @@ class CompanyModel(Base):
     listing_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
     @staticmethod
-    def from_dto(dto: CompanyRawDTO | CompanyDTO) -> "CompanyModel":
-        """Convert a ``CompanyRawDTO`` or ``CompanyDTO`` into ``CompanyModel``."""
+    def from_dto(dto: CompanyDTO) -> "CompanyModel":
+        """Convert a ``CompanyDTO`` into ``CompanyModel``."""
 
         def attr(name: str):
             return getattr(dto, name, None)
@@ -116,8 +116,8 @@ class CompanyModel(Base):
             listing_date=attr("listing_date"),
         )
 
-    def to_dto(self) -> CompanyRawDTO:
-        """Reconstruct a :class:`CompanyRawDTO` from this model."""
+    def to_dto(self) -> CompanyDTO:
+        """Reconstruct a :class:`CompanyDTO` from this model."""
 
         ticker_codes: List[str] = (
             self.ticker_codes.split(",") if self.ticker_codes else []
@@ -128,7 +128,7 @@ class CompanyModel(Base):
             CodeDTO(code=item.get("code"), isin=item.get("isin")) for item in raw_other
         ]
 
-        return CompanyRawDTO(
+        raw = CompanyRawDTO(
             cvm_code=self.cvm_code,
             issuing_company=self.issuing_company,
             trading_name=self.trading_name,
@@ -164,3 +164,4 @@ class CompanyModel(Base):
             last_date=self.last_date,
             listing_date=self.listing_date,
         )
+        return CompanyDTO.from_raw(raw)

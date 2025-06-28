@@ -1,6 +1,7 @@
 from typing import List
 
 from domain.dto.company_dto import CompanyDTO
+from domain.dto.raw_company_dto import CompanyRawDTO
 from infrastructure.config import Config
 from infrastructure.logging import Logger
 from infrastructure.repositories import SQLiteCompanyRepository
@@ -47,5 +48,8 @@ class SyncCompaniesUseCase:
             level="info",
         )
 
-    def _save_batch(self, buffer: List[CompanyDTO]) -> None:
-        self.repository.save_all(buffer)
+    def _save_batch(self, buffer: List[CompanyRawDTO]) -> None:
+        """Converte dados brutos em ``CompanyDTO`` e salva no repositório."""
+
+        dtos = [CompanyDTO.from_raw(item) for item in buffer]
+        self.repository.save_all(dtos)
