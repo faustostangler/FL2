@@ -20,6 +20,13 @@ class EntryCleaner:
     def run(self, entry: Dict) -> BseCompanyDTO:
         cleaned = self.data_cleaner.clean_company_entry(entry)
         return BseCompanyDTO.from_dict(cleaned)
+#         entry["companyName"] = self.data_cleaner.clean_text(entry.get("companyName"))
+#         entry["issuingCompany"] = self.data_cleaner.clean_text(
+#             entry.get("issuingCompany")
+#         )
+#         entry["tradingName"] = self.data_cleaner.clean_text(entry.get("tradingName"))
+#         entry["dateListing"] = self.data_cleaner.clean_date(entry.get("dateListing"))
+#         return BseCompanyDTO.from_dict(entry)
 
 
 class DetailFetcher:
