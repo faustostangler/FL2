@@ -47,6 +47,10 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
                 obj = CompanyModel.from_dto(dto)
                 session.merge(obj)  # Upsert operation: insert or update if exists
             session.commit()
+            self.logger.log(
+                f"Saved {len(items)} companies",
+                level="info",
+            )
         except Exception as e:
             self.logger.log(f"erro {e}", level="debug")
         finally:
