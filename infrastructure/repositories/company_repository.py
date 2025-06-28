@@ -52,7 +52,12 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
                 level="info",
             )
         except Exception as e:
-            self.logger.log(f"erro {e}", level="debug")
+            session.rollback()
+            self.logger.log(
+                f"Failed to save companies: {e}",
+                level="error",
+            )
+            raise
         finally:
             session.close()
 

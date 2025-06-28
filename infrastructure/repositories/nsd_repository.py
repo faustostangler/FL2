@@ -37,6 +37,13 @@ class SQLiteNSDRepository(BaseRepository[NSDDTO]):
                 f"Saved {len(items)} nsd records",
                 level="info",
             )
+        except Exception as e:
+            session.rollback()
+            self.logger.log(
+                f"Failed to save nsd records: {e}",
+                level="error",
+            )
+            raise
         finally:
             session.close()
 
