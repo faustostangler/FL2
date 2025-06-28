@@ -39,5 +39,6 @@ class DummyConfig:
 
     class Global:
         app_name = "TEST"
+        max_workers = 1
 
     global_settings = Global()

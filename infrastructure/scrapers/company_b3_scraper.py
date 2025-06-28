@@ -1,10 +1,12 @@
+from __future__ import annotations
+
 import base64
 import json
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from application import CompanyMapper
-from domain.dto import PageResultDTO, CompanyRawDTO
-from domain.ports import WorkerPoolPort
+from domain.dto import CompanyRawDTO, PageResultDTO
+from domain.ports import CompanySourcePort, WorkerPoolPort
 from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.byte_formatter import ByteFormatter
@@ -18,7 +20,7 @@ from infrastructure.scrapers.company_processors import (
 )
 
 
-class CompanyB3Scraper:
+class CompanyB3Scraper(CompanySourcePort):
     """
     Scraper adapter responsible for fetching raw company data.
     In a real implementation, this could use requests, BeautifulSoup, or Selenium.
