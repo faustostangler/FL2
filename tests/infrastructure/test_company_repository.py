@@ -14,8 +14,8 @@ def test_save_all(SessionLocal, engine):
     Base.metadata.create_all(engine)
 
     companies = [
-        CompanyDTO.from_dict({"ticker": "AAA", "company_name": "Alpha"}),
-        CompanyDTO.from_dict({"ticker": "BBB", "company_name": "Beta"}),
+        CompanyDTO.from_dict({"issuing_company": "AAA", "company_name": "Alpha"}),
+        CompanyDTO.from_dict({"issuing_company": "BBB", "company_name": "Beta"}),
     ]
     repo.save_all(companies)
 

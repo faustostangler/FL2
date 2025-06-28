@@ -5,9 +5,9 @@ from domain.dto.nsd_dto import NSDDTO
 
 
 def test_company_dto_from_dict():
-    raw = {"ticker": "XYZ", "company_name": "Xyz Corp"}
+    raw = {"issuing_company": "XYZ", "company_name": "Xyz Corp"}
     dto = CompanyDTO.from_dict(raw)
-    assert dto.ticker == "XYZ"
+    assert dto.issuing_company == "XYZ"
     assert dto.company_name == "Xyz Corp"
 
 

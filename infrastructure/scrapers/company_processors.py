@@ -5,7 +5,7 @@ import json
 from typing import Dict, Optional
 
 from application import CompanyMapper
-from domain.dto import CompanyListingDTO, CompanyDetailDTO, CompanyRawDTO
+from domain.dto import CompanyDetailDTO, CompanyListingDTO, CompanyRawDTO
 from infrastructure.helpers import FetchUtils, MetricsCollector
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.logging import Logger
@@ -20,6 +20,8 @@ class EntryCleaner:
     def run(self, entry: Dict) -> CompanyListingDTO:
         cleaned = self.data_cleaner.clean_company_entry(entry)
         return CompanyListingDTO.from_dict(cleaned)
+
+
 #         entry["companyName"] = self.data_cleaner.clean_text(entry.get("companyName"))
 #         entry["issuingCompany"] = self.data_cleaner.clean_text(
 #             entry.get("issuingCompany")
@@ -81,7 +83,7 @@ class DetailFetcher:
         raw["hasBDR"] = raw.get("hasBDR")
         raw["typeBDR"] = raw.get("typeBDR")
         raw["describleCategoryBVMF"] = raw.get("describleCategoryBVMF")
-        raw["dateQuotation"] = raw.get("dateQuotation")
+        raw["dateQuotation"] = self.data_cleaner.clean_date(raw.get("dateQuotation"))
         return CompanyDetailDTO.from_dict(raw)
 
 
