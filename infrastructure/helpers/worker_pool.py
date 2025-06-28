@@ -1,11 +1,8 @@
 from __future__ import annotations
 
 import json
-import threading
 import time
-import uuid
-from concurrent.futures import ThreadPoolExecutor
-from queue import Queue
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable, Iterable, List, Optional, TypeVar
 
 from domain.ports.worker_pool_port import (
@@ -44,60 +41,28 @@ class WorkerPool(WorkerPoolPort):
         logger.log(f"worker pool start {processor.__qualname__}", level="info")
 
         results: List[R] = []
-        queue: Queue = Queue(self.config.global_settings.queue_size)
-        lock = threading.Lock()
-        sentinel = object()
-
         start_time = time.time()
-
-        def worker(worker_id: str) -> None:
-            logger.log("work started", level="info", worker_id=worker_id)
-            while True:
-                item = queue.get()
-                if item is sentinel:
-                    queue.task_done()
-                    return
-                try:
-                    logger.log(f"running {item} {processor.__qualname__}", level="info")
-                    result = processor(item)
-                    self.metrics_collector.record_processing_bytes(
-                        len(json.dumps(result, default=str).encode("utf-8"))
-                    )
-                    with lock:
-                        results.append(result)
-                        if callable(on_result):
-                            on_result(result)
-
-                    logger.log(
-                        f"task processed {item}", level="info", worker_id=worker_id
-                    )
-                except Exception as exc:  # noqa: BLE001
-                    logger.log(
-                        f"worker error: {exc}", level="warning", worker_id=worker_id
-                    )
-                finally:
-                    queue.task_done()
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             logger.log("ThreadPoolExecutor started", level="info")
-            futures = [
-                executor.submit(worker, uuid.uuid4().hex[:8])
-                for _ in range(self.max_workers)
-            ]
+            future_to_task = {executor.submit(processor, task): task for task in tasks}
 
-            for task in tasks:
-                queue.put(task)
+            for future in as_completed(future_to_task):
+                task = future_to_task[future]
+                try:
+                    result = future.result()
+                except Exception as exc:  # noqa: BLE001
+                    logger.log(f"worker error: {exc}", level="warning")
+                    continue
 
-            for _ in range(self.max_workers):
-                logger.log("sentinel in queue", level="info")
-                queue.put(sentinel)
-
-            queue.join()
-
-        logger.log("ThreadPoolExecutor finished", level="info")
-
-        for f in futures:
-            f.result()
+                logger.log(f"task processed {task}", level="info")
+                self.metrics_collector.record_processing_bytes(
+                    len(json.dumps(result, default=str).encode("utf-8"))
+                )
+                results.append(result)
+                if callable(on_result):
+                    on_result(result)
+            logger.log("ThreadPoolExecutor finished", level="info")
 
         elapsed = time.time() - start_time
         metrics = self.metrics_collector.get_metrics(elapsed_time=elapsed)
