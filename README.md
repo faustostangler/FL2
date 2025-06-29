@@ -39,6 +39,20 @@ To run FLY, you need:
 - **Google Chrome** (used for web scraping).
 - Required Python libraries (install them using the command below).
 
+### Required Python Packages
+The following packages are needed to run FLY:
+- **SQLAlchemy**
+- **requests**
+- **psutil**
+- **beautifulsoup4**
+- **certifi**
+- **charset-normalizer**
+- **urllib3**
+- **idna**
+- **greenlet**
+- **typing_extensions**
+- **Unidecode**
+
 ### **Installation Steps**
 1. **Download the software**  
 If you haven't already, get the project files by running:
@@ -58,6 +72,13 @@ pip install -r requirements.txt
 To run everything at once and process all available data:
 ```sh
 python run.py
+```
+
+## Development & Testing
+Install the development dependencies before running tests:
+```sh
+pip install -r requirements-dev.txt
+pytest
 ```
 
 ## Contributing
