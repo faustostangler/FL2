@@ -1,3 +1,4 @@
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > factories")
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.config import Config
 from infrastructure.logging import Logger
