@@ -18,7 +18,7 @@ class DataCleaner:
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("data_cleaner.DataCleaner")
 
     def __init__(self, config: Config, logger: Logger):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DataCleaner __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DataCleaner.__init__")
         self.config = config
         self.logger = logger
 

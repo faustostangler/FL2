@@ -21,7 +21,7 @@ class FetchUtils:
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("fetch_utils.FetchUtils")
 
     def __init__(self, config: Config, logger: Logger):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("FetchUtils __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("FetchUtils.__init__")
         self.config = config
         self.logger = logger
 

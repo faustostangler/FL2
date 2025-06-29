@@ -19,7 +19,7 @@ class Base(DeclarativeBase):
 
 class CompanyModel(Base):
     """ORM adapter for the ``tbl_company`` table."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_model.CompanyModel")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_model.CompanyModel(Base)")
 
     __tablename__ = "tbl_company"
 

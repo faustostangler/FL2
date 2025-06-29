@@ -56,7 +56,7 @@ class CompanyB3Scraper(CompanySourcePort):
         Returns:
             None
         """
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyB3Scraper(CompnaySourcePort) __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyB3Scraper(CompnaySourcePort).__init__")
 
         # hardcoded parameters
         self.PAGE_NUMBER = 1

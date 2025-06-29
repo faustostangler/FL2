@@ -4,7 +4,7 @@ class MetricsCollector:
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("metrics_collector.MetricsCollector")
 
     def __init__(self) -> None:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("MetricsCollector __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("MetricsCollector.__init__")
         self._network_bytes = 0
         self._processing_bytes = 0
 

@@ -13,7 +13,7 @@ class SyncCompaniesUseCase:
     """
     UseCase responsável por sincronizar os dados das empresas da fonte externa com o repositório local.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("sync_companies SyncCompaniesUseCase")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("sync_companies.SyncCompaniesUseCase")
     def __init__(
         self,
         logger: Logger,
@@ -21,6 +21,7 @@ class SyncCompaniesUseCase:
         scraper: CompanySourcePort,
         max_workers: int,
     ):
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("sync_companies.SyncCompaniesUseCase.__init__")
         self.logger = logger
         self.logger.log("Start SyncCompaniesUseCase", level="info")
 
@@ -35,6 +36,7 @@ class SyncCompaniesUseCase:
         - Converte para CompanyDTO
         - Persiste no repositório
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("sync_companies.SyncCompaniesUseCase.execute()")
         self.logger.log("SyncCompaniesUseCase Execute", level="info")
 
         start = time.perf_counter()
@@ -61,6 +63,7 @@ class SyncCompaniesUseCase:
 
     def _save_batch(self, buffer: List[CompanyRawDTO]) -> None:
         """Convert raw companies to domain DTOs before saving."""
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("sync_companies.SyncCompaniesUseCase._sabe_batch()")
         self.logger.log("SyncCompaniesUseCase _save_batch", level="info")
 
         dtos = [CompanyDTO.from_raw(item) for item in buffer]

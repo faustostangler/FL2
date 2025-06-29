@@ -17,7 +17,7 @@ class EntryCleaner:
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors.EntryCleaner")
 
     def __init__(self, data_cleaner: DataCleaner) -> None:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("EntryCleaner __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("EntryCleaner.__init__")
         self.data_cleaner = data_cleaner
 
     def run(self, entry: Dict) -> CompanyListingDTO:
@@ -48,7 +48,7 @@ class DetailFetcher:
         metrics_collector: MetricsCollector,
         data_cleaner: DataCleaner,
     ) -> None:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DetailFetcher __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DetailFetcher.__init__")
         self.fetch_utils = fetch_utils
         self.session = session
         self.endpoint_detail = endpoint_detail
@@ -99,7 +99,7 @@ class CompanyMerger:
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors.CompanyMerger")
 
     def __init__(self, mapper: CompanyMapper, logger: Logger) -> None:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyMerger __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyMerger.__init__")
         self.mapper = mapper
         self.logger = logger
 
@@ -121,7 +121,7 @@ class CompanyDetailProcessor:
     def __init__(
         self, cleaner: EntryCleaner, fetcher: DetailFetcher, merger: CompanyMerger
     ) -> None:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyDetailProcessor __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyDetailProcessor.__init__")
         self.cleaner = cleaner
         self.fetcher = fetcher
         self.merger = merger

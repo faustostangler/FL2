@@ -23,7 +23,7 @@ class CLIController:
             config (Config): Application configuration object.
             logger (Logger): Logger used for CLI messages.
         """
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CLIController __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CLIController.__init__")
         self.config = config
         self.logger = logger
         self.data_cleaner = data_cleaner

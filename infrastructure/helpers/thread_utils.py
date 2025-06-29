@@ -18,7 +18,7 @@ class WorkerThreadIdentifier:
         Args:
             config (Config): Configuração global da aplicação.
         """
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("WorkerThreadIdentifier __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("WorkerThreadIdentifier.__init__")
         self._max_workers = config.global_settings.max_workers or 1
         self._thread_local = threading.local()
         self._counter = iter(range(1, self._max_workers + 1))

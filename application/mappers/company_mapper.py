@@ -11,10 +11,10 @@ from domain.dto import (
 
 class CompanyMapper:
     """Merge base and detail company data into a parsed DTO."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("class CompantMapper")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_mapper.CompantMapper")
 
     def __init__(self, data_cleaner: DataCleaner):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("class CompantMapper __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_mapper.CompantMapper.__init__")
         self.data_cleaner = data_cleaner
 
     def merge_company_dtos(
@@ -22,7 +22,7 @@ class CompanyMapper:
         base: CompanyListingDTO,
         detail: CompanyDetailDTO,
     ) -> CompanyRawDTO:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("class CompantMapper merge_company_dtos()")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_mapper.CompantMapper.merge_company_dtos()")
 
         codes = detail.other_codes or []
         

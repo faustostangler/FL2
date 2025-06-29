@@ -27,7 +27,7 @@ class WorkerPool(WorkerPoolPort):
         metrics_collector: MetricsCollector,
         max_workers: Optional[int] = None,
     ) -> None:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("WorkerPoll(WorkerPoolPort) __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("WorkerPoll(WorkerPoolPort).__init__")
         self.config = config
         self.metrics_collector = metrics_collector
         self.max_workers = max_workers or config.global_settings.max_workers or 1

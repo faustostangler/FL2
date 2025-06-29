@@ -1,4 +1,4 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("aplication > usecases __init__")
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("aplication > usecases.__init__")
 from .sync_companies import SyncCompaniesUseCase
 from .sync_nsd import SyncNSDUseCase
 

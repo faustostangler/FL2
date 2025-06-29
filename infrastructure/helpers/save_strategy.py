@@ -15,7 +15,7 @@ class SaveStrategy(Generic[T]):
         save_callback: Optional[Callable[[List[T]], None]] = None,
         threshold: int = 50,
     ) -> None:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("SaveStrategy(Generic[T]) __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("SaveStrategy(Generic[T]).__init__")
         self.save_callback = save_callback or (lambda buffer: None)
         self.threshold = threshold
         self.buffer: List[T] = []

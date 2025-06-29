@@ -10,7 +10,7 @@ class ContextTracker:
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("context_tracker.ContextTracker")
 
     def __init__(self, project_root: Path):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("ContextTracker __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("ContextTracker.__init__")
 
         self.project_root = project_root
 

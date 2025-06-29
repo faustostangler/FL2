@@ -17,7 +17,7 @@ class Logger:
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger.Logger")
 
     def __init__(self, config: Config, level: str = "DEBUG", logger_name: Optional[str] = None):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Logger __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Logger.__init__")
         self._run_id = uuid.uuid4().hex[:8]
         self.worker_id = uuid.uuid4().hex[:8]
 

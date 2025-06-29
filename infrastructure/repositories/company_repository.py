@@ -25,7 +25,7 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
         """
         Initializes the SQLite database connection and ensures table creation.
         """
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort) __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort).__init__")
         self.config = config
         self.logger = logger
         self.logger.log("Start SQLiteCompanyRepository", level="info")

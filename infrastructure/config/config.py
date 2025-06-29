@@ -27,7 +27,7 @@ class Config:
         Note:
             The scraping configuration is currently commented out and not loaded.
         """
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Config __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Config.__init__")
 
         # Load all configurations
         self.paths : PathConfig = load_paths()

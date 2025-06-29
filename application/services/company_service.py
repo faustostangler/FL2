@@ -10,7 +10,7 @@ class CompanyService:
     """
     Application Service que coordena os casos de uso relacionados a Company.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("class company_service")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_service.CompanyService")
 
     def __init__(
         self,
@@ -20,7 +20,7 @@ class CompanyService:
         scraper: CompanySourcePort,
     ):
         """Initialize the service with injected repository and scraper."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("class company_service __init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_service.CompanyService.__init__")
         self.logger = logger
         self.config = config
         logger.log("Start CompanyService", level="info")
@@ -41,5 +41,5 @@ class CompanyService:
         """
         Executa a sincronização de empresas usando o caso de uso apropriado.
         """
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("class company_service run")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_service.CompanyService.run()")
         self.sync_usecase.execute()

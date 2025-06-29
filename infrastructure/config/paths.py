@@ -17,14 +17,14 @@ class PathConfig:
         log_dir: Subpasta para arquivos de log.
         data_dir: Subpasta para bancos de dados.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("paths.PathConfig")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("config.paths.PathConfig")
     temp_dir: Path = field(init=False)
     log_dir: Path = field(init=False)
     data_dir: Path = field(init=False)
     root_dir: Path = field(init=False)
 
     def __post_init__(self):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("PathConfig __post_init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("config.paths.PathConfig.__post_init__")
         # Define o root_dir como o diretório do projeto
         root = Path(__file__).resolve().parent.parent.parent
         object.__setattr__(self, "root_dir", root)
@@ -42,6 +42,6 @@ def load_paths() -> PathConfig:
     """
     Cria e retorna uma instância de PathConfig com os diretórios garantidos.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("path load_paths")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("config.paths.load_paths")
 
     return PathConfig()
