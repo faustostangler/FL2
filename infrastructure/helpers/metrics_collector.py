@@ -1,4 +1,7 @@
-class MetricsCollector:
+from domain.ports import MetricsCollectorPort
+
+
+class MetricsCollector(MetricsCollectorPort):
     """Collects network and processing byte counts."""
 
     def __init__(self) -> None:

@@ -3,6 +3,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Callable, Dict, List, Optional, Set
 
+from .metrics_collector_port import MetricsCollectorPort
+
 
 class NSDSourcePort(ABC):
     """Port for external NSD data providers."""
@@ -17,4 +19,10 @@ class NSDSourcePort(ABC):
         threshold: Optional[int] = None,
     ) -> List[Dict]:
         """Fetch all available NSD records."""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def metrics_collector(self) -> MetricsCollectorPort:
+        """Metrics collector used by the scraper."""
         raise NotImplementedError
