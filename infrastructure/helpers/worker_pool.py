@@ -44,10 +44,10 @@ class WorkerPool(WorkerPoolPort):
     ) -> ExecutionResultDTO[R]:
         """Process ``tasks`` concurrently using ``processor``."""
 
-        logger.log(f"worker pool start {processor.__qualname__}", level="info")
+        logger.log("Worker pool start", level="info")
 
         results: List[R] = []
-        start_time = time.time()
+        start_time = time.perf_counter()
 
         # Spawn a pool of threads to execute the processor function
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
@@ -56,14 +56,15 @@ class WorkerPool(WorkerPoolPort):
             future_to_task = {executor.submit(processor, task): task for task in tasks}
 
             for future in as_completed(future_to_task):
-                task = future_to_task[future]
+                task: T = future_to_task[future]
                 try:
                     result = future.result()
                 except Exception as exc:  # noqa: BLE001
                     logger.log(f"worker error: {exc}", level="warning")
                     continue
 
-                logger.log(f"task processed {task}", level="info")
+                index, entry = task
+                logger.log(f"task processed {index}", level="info")
                 self.metrics_collector.record_processing_bytes(
                     len(json.dumps(result, default=str).encode("utf-8"))
                 )
@@ -72,7 +73,7 @@ class WorkerPool(WorkerPoolPort):
                     on_result(result)
             logger.log("ThreadPoolExecutor finished", level="info")
 
-        elapsed = time.time() - start_time
+        elapsed = time.perf_counter() - start_time
         # Package execution metrics (network and processing bytes)
         metrics = self.metrics_collector.get_metrics(elapsed_time=elapsed)
 

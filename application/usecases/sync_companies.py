@@ -34,7 +34,7 @@ class SyncCompaniesUseCase:
             2. Convert results into ``CompanyDTO`` objects.
             3. Persist them using the repository.
         """
-        self.logger.log("SyncCompaniesUseCase Execute", level="info")
+        self.logger.log("Start SyncCompaniesUseCase (B3 Scraper) Execute", level="info")
 
         start = time.perf_counter()
         existing_codes = self.repository.get_all_primary_keys()

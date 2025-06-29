@@ -9,8 +9,8 @@ class ProgressFormatter:
         try:
             index = progress.get("index", 0)
             size = progress.get("size", 1)
-            start = progress.get("start_time", time.time())
-            now = time.time()
+            start = progress.get("start_time", time.perf_counter())
+            now = time.perf_counter()
 
             completed = index + 1
             percent = completed / size

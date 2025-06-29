@@ -128,7 +128,7 @@ class CompanyB3Scraper(CompanySourcePort):
         Returns:
             List of dictionaries representing raw company data.
         """
-        self.logger.log("Start fetch_all", level="info")
+        self.logger.log("Start (B3 Scraper) fetch_all", level="info")
 
         # Ensure skip_codes is a set (to avoid None and allow fast lookup)
         skip_codes = skip_codes or set()
@@ -181,19 +181,18 @@ class CompanyB3Scraper(CompanySourcePort):
         total_pages = first_page.total_pages
 
         if total_pages > 1:
-            pages = range(2, total_pages + 1)
-            self.logger.log("Fetch remaining company pages", level="info")
-
-            def processor(page: int) -> PageResultDTO:
+            tasks = list(enumerate(range(2, total_pages + 1)))
+            def processor(task: Tuple[int, int]) -> PageResultDTO:
+                index, page = task
                 fetch = self._fetch_page(page)
                 self.logger.log(
-                    f"processor {page} in _fetch_page",
+                    f"processor task {index} in _fetch_page",
                     level="info",
                 )
                 return fetch
 
             page_exec = self.executor.run(
-                tasks=pages,
+                tasks=tasks,
                 processor=processor,
                 logger=self.logger,
             )

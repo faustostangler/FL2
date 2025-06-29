@@ -113,7 +113,7 @@ class FetchUtils:
                 response = scraper.get(url, timeout=timeout)
                 if response.status_code == 200:
                     if block_start:
-                        _ = time.time() - block_start
+                        _ = time.perf_counter() - block_start
                         # self.logger.log(
                         #     f"Dodging server block: {_:.2f}s",
                         #     level="warning",
@@ -124,7 +124,7 @@ class FetchUtils:
                 # self.logger.log(f"Attempt {attempt + 1} failed: {exc}", level="warning")
 
             if block_start is None:
-                block_start = time.time()
+                block_start = time.perf_counter()
 
             attempt += 1
             TimeUtils(self.config).sleep_dynamic()

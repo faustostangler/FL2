@@ -6,7 +6,8 @@ from typing import Dict, Optional
 
 from application import CompanyMapper
 from domain.dto import CompanyDetailDTO, CompanyListingDTO, CompanyRawDTO
-from infrastructure.helpers import FetchUtils, MetricsCollector
+from domain.ports import MetricsCollectorPort
+from infrastructure.helpers import FetchUtils
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.logging import Logger
 
@@ -40,7 +41,7 @@ class DetailFetcher:
         session,
         endpoint_detail: str,
         language: str,
-        metrics_collector: MetricsCollector,
+        metrics_collector: MetricsCollectorPort,
         data_cleaner: DataCleaner,
     ) -> None:
         self.fetch_utils = fetch_utils

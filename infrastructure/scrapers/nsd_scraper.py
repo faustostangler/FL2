@@ -66,7 +66,7 @@ class NsdScraper:
 
         strategy: SaveStrategy[Dict] = SaveStrategy(save_callback, threshold)
         results: List[Dict] = []
-        start_time = time.time()
+        start_time = time.perf_counter()
 
         while nsd <= max_nsd:
             if nsd in skip_codes:
