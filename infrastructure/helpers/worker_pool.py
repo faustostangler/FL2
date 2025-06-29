@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable, Iterable, List, Optional, TypeVar
 
 from domain.ports.worker_pool_port import (
-    ExecutionResult,
+    ExecutionResultDTO,
     LoggerPort,
     WorkerPoolPort,
 )
@@ -41,7 +41,7 @@ class WorkerPool(WorkerPoolPort):
         logger: LoggerPort,
         on_result: Optional[Callable[[R], None]] = None,
         post_callback: Optional[Callable[[List[R]], None]] = None,
-    ) -> ExecutionResult[R]:
+    ) -> ExecutionResultDTO[R]:
         """Process ``tasks`` concurrently using ``processor``."""
 
         logger.log(f"worker pool start {processor.__qualname__}", level="info")
@@ -86,4 +86,4 @@ class WorkerPool(WorkerPoolPort):
             level="info",
         )
 
-        return ExecutionResult(items=results, metrics=metrics)
+        return ExecutionResultDTO(items=results, metrics=metrics)

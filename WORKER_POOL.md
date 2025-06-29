@@ -3,7 +3,7 @@
 The worker pool in `infrastructure.helpers.worker_pool.WorkerPool` wraps `ThreadPoolExecutor`.
 
 ```
-ExecutionResult = WorkerPool.run(tasks, processor, logger,
+ExecutionResultDTO = WorkerPool.run(tasks, processor, logger,
                                  on_result=None,
                                  post_callback=None)
 ```

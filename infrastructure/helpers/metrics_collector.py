@@ -30,11 +30,11 @@ class MetricsCollector:
         return self._processing_bytes
 
     def get_metrics(self, elapsed_time: float):
-        from domain.ports.worker_pool_port import Metrics
+        from domain.ports.worker_pool_port import MetricsDTO
 
-        """Create a :class:`Metrics` instance from the collected values."""
+        """Create a :class:`MetricsDTO` instance from the collected values."""
 
-        return Metrics(
+        return MetricsDTO(
             elapsed_time=elapsed_time,
             network_bytes=self._network_bytes,
             processing_bytes=self._processing_bytes,
