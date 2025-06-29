@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Optional
 
 from .raw_company_dto import CompanyRawDTO
@@ -49,9 +50,9 @@ class CompanyDTO:
     has_quotation: Optional[bool]
     has_emissions: Optional[bool]
 
-    date_quotation: Optional[str]
-    last_date: Optional[str]
-    listing_date: Optional[str]
+    date_quotation: Optional[datetime]
+    last_date: Optional[datetime]
+    listing_date: Optional[datetime]
 
     @staticmethod
     def from_dict(raw: dict) -> "CompanyDTO":
@@ -136,11 +137,7 @@ class CompanyDTO:
             type_bdr=raw.type_bdr,
             has_quotation=raw.has_quotation,
             has_emissions=raw.has_emissions,
-            date_quotation=(
-                raw.date_quotation.strftime("%Y-%m-%d") if raw.date_quotation else None
-            ),
-            last_date=(raw.last_date.strftime("%Y-%m-%d") if raw.last_date else None),
-            listing_date=(
-                raw.listing_date.strftime("%Y-%m-%d") if raw.listing_date else None
-            ),
+            date_quotation=raw.date_quotation,
+            last_date=raw.last_date,
+            listing_date=raw.listing_date,
         )
