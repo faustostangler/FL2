@@ -1,4 +1,3 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > time_utils")
 import time
 import psutil
 import random
@@ -8,9 +7,7 @@ from infrastructure.config import Config
 
 class TimeUtils:
     """Helper for dynamic sleep intervals based on CPU usage."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("time_utils.TimeUtils")
     def __init__(self, config: Config):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("TimeUtils.__init__")
         self.config = config
 
     def sleep_dynamic(self, wait: Optional[float] = None, cpu_interval: Optional[float] = None) -> None:
@@ -25,7 +22,6 @@ class TimeUtils:
             wait: Base wait time in seconds.
             cpu_interval: Sampling interval for ``psutil.cpu_percent``.
         """
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("TimeUtils.sleep_dynamic()")
         wait = wait or self.config.global_settings.wait or 2
         cpu_usage = psutil.cpu_percent(interval=cpu_interval or 0.25)
 

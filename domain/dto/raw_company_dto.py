@@ -1,4 +1,3 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("domain > dto > raw_company_dto")
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
@@ -8,7 +7,6 @@ import json
 @dataclass(frozen=True)
 class CodeDTO:
     """Represents a pair of ticker/ISIN codes."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("raw_company_dto.CodeDTO")
 
     code: Optional[str]
     isin: Optional[str]
@@ -17,7 +15,6 @@ class CodeDTO:
 @dataclass(frozen=True)
 class CompanyListingDTO:
     """DTO for base company data from the list endpoint."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("raw_company_dto.CompanyListingDTO")
 
     cvm_code: Optional[str]
     issuing_company: Optional[str]
@@ -35,7 +32,6 @@ class CompanyListingDTO:
 
     @staticmethod
     def from_dict(raw: dict) -> "CompanyListingDTO":
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CodeDTO.from_dict()")
 
         return CompanyListingDTO(
             cvm_code=raw.get("codeCVM"),
@@ -57,7 +53,6 @@ class CompanyListingDTO:
 @dataclass(frozen=True)
 class CompanyDetailDTO:
     """DTO for detailed company data from the detail endpoint."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("raw_company_dto.CompanyDetailDTO")
 
     issuing_company: Optional[str]
     company_name: Optional[str]
@@ -88,7 +83,6 @@ class CompanyDetailDTO:
 
     @staticmethod
     def from_dict(raw: dict) -> "CompanyDetailDTO":
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DetailDTO.from_dict()")
         other_codes = raw.get("otherCodes") or []
         if isinstance(other_codes, str):
             other_codes = json.loads(other_codes)
@@ -127,7 +121,6 @@ class CompanyDetailDTO:
 @dataclass(frozen=True)
 class CompanyRawDTO:
     """Raw parsed data returned by the scraper before mapping to the domain."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("raw_company_dto.CompanyRawDTO")
 
     cvm_code: Optional[str]
     issuing_company: Optional[str]

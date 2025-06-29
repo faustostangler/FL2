@@ -1,5 +1,4 @@
 from __future__ import annotations
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > fetch_utils")
 
 import random
 import ssl
@@ -18,10 +17,8 @@ class FetchUtils:
     """
     Utility class for HTTP operations with retry and randomized headers.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("fetch_utils.FetchUtils")
 
     def __init__(self, config: Config, logger: Logger):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("FetchUtils.__init__")
         self.config = config
         self.logger = logger
 
@@ -29,7 +26,6 @@ class FetchUtils:
         """
         Generate random HTTP headers based on scraping config.
         """
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("FetchUtils.header_random()")
         try:
             return {
                 "User-Agent": random.choice(self.config.scraping.user_agents),
@@ -54,7 +50,6 @@ class FetchUtils:
         Returns:
             Configured ``requests.Session`` instance.
         """
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("FetchUtils.create_scraper()")
 
         headers = self.header_random()
 
@@ -88,7 +83,6 @@ class FetchUtils:
         """
         Checks if internet connection is active via HTTP GET request.
         """
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("FetchUtils.test_internet()")
         url = url or self.config.scraping.test_internet or "https://www.google.com"
         timeout = timeout or self.config.scraping.timeout or 5
 
@@ -107,7 +101,6 @@ class FetchUtils:
         insecure: bool = False,
     ) -> requests.Response:
         """Fetch a URL, recreating the scraper when blocked."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("FetchUtils.fetch_with_retry()")
 
         timeout = timeout or self.config.scraping.timeout or 5
         scraper = scraper or self.create_scraper(insecure=insecure)

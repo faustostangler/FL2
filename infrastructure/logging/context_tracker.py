@@ -1,20 +1,16 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > context_tracker")
 import inspect
 from pathlib import Path
 
 
 class ContextTracker:
     """Extracts the call origin within the project for debugging logs."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("context_tracker.ContextTracker")
 
     def __init__(self, project_root: Path):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("ContextTracker.__init__")
 
         self.project_root = project_root
 
     def get_context(self) -> str:
         """Return a string like ``"line X of func() in 'path/file.py' <- ..."``."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("ContextTracker.get_context()")
         try:
             stack = inspect.stack()
             relevant = []

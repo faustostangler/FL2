@@ -1,4 +1,3 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > config > paths")
 from pathlib import Path
 from dataclasses import dataclass, field, fields
 
@@ -17,14 +16,12 @@ class PathConfig:
         log_dir: Subfolder for log files.
         data_dir: Subfolder for databases.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("config.paths.PathConfig")
     temp_dir: Path = field(init=False)
     log_dir: Path = field(init=False)
     data_dir: Path = field(init=False)
     root_dir: Path = field(init=False)
 
     def __post_init__(self):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("config.paths.PathConfig.__post_init__")
         # Set root_dir to the project directory
         root = Path(__file__).resolve().parent.parent.parent
         object.__setattr__(self, "root_dir", root)
@@ -41,6 +38,5 @@ class PathConfig:
 
 def load_paths() -> PathConfig:
     """Create and return a ``PathConfig`` instance with ensured directories."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("config.paths.load_paths")
 
     return PathConfig()

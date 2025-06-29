@@ -1,4 +1,3 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("START run.py")
 from infrastructure.config import Config
 from infrastructure.logging import Logger
 from infrastructure.factories import create_data_cleaner

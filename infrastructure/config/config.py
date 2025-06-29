@@ -1,4 +1,3 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > config")
 from .paths import load_paths, PathConfig
 from .database import load_database_config, DatabaseConfig
 from .b3_api import load_b3_api_config, B3ApiConfig
@@ -12,7 +11,6 @@ class Config:
     Aggregates all specialized configurations into a single object.
     Each attribute is an immutable and validated instance of its respective domain.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("config.Config")
 
     def __init__(self):
         """
@@ -27,7 +25,6 @@ class Config:
         Note:
             The scraping configuration is currently commented out and not loaded.
         """
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Config.__init__")
 
         # Load all configurations
         self.paths : PathConfig = load_paths()

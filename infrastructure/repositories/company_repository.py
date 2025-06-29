@@ -153,7 +153,6 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
 
     def get_all_primary_keys(self) -> set[str]:
         """Return a set of all CVM codes already persisted."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort).get_all_primary_keys()")
         session = self.Session()
         try:
             results = session.query(CompanyModel.cvm_code).distinct().all()

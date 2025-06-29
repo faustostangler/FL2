@@ -1,4 +1,3 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("application > services > company_service")
 from application.usecases.sync_companies import SyncCompaniesUseCase
 # from domain.dto import SyncCompaniesResultDTO
 from domain.ports import CompanyRepositoryPort, CompanySourcePort
@@ -8,7 +7,6 @@ from infrastructure.logging import Logger
 
 class CompanyService:
     """Coordinate company-related use cases within the application."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_service.CompanyService")
 
     def __init__(
         self,
@@ -18,7 +16,6 @@ class CompanyService:
         scraper: CompanySourcePort,
     ):
         """Initialize dependencies for company synchronization."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_service.CompanyService.__init__")
         self.logger = logger
         self.config = config
         logger.log("Start CompanyService", level="info")
@@ -35,5 +32,4 @@ class CompanyService:
 #         return self.sync_usecase.execute()
     def run(self) -> None:
         """Execute company synchronization using the injected use case."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_service.CompanyService.run()")
         self.sync_usecase.execute()

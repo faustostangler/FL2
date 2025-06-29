@@ -1,4 +1,3 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > logger")
 import logging
 import uuid
 from typing import Optional
@@ -10,10 +9,8 @@ from infrastructure.logging.context_tracker import ContextTracker
 
 class Logger:
     """Application logger wrapping Python's ``logging`` module."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger.Logger")
 
     def __init__(self, config: Config, level: str = "DEBUG", logger_name: Optional[str] = None):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Logger.__init__")
         self._run_id = uuid.uuid4().hex[:8]
         self.worker_id = uuid.uuid4().hex[:8]
 
@@ -25,7 +22,6 @@ class Logger:
 
     def _setup_logger(self, level: str) -> logging.LoggerAdapter:
         """Configure the underlying ``logging`` logger with console and file handlers."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Logger.setup_logger()")
         log_path = self.config.logging.full_path
         logger = logging.getLogger(self.logger_name)
         logger.setLevel(logging.DEBUG)
@@ -52,7 +48,6 @@ class Logger:
 
     def log(self, message: str, level: str = "info", progress: Optional[dict] = None, extra: Optional[dict] = None, worker_id: Optional[str] = None):
         """Log a message with optional progress and context information."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Logger.log()")
         context_msg = self.context_tracker.get_context() if level.lower() == "debug" else ""
         progress_msg = self.progress_formatter.format(progress) if progress else ""
 
@@ -84,9 +79,7 @@ class Logger:
 
 class SafeFormatter(logging.Formatter):
     """Formatter that injects default values for missing log attributes."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger.SafeFormatter")
     def format(self, record):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("SafeFormatter.format()")
 
         # Define valores padrão
         defaults = {
@@ -103,9 +96,7 @@ class SafeFormatter(logging.Formatter):
 
 class MergedLoggerAdapter(logging.LoggerAdapter):
     """Logger adapter that merges ``extra`` dictionaries from calls and defaults."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger.MergedLoggerAdapter")
     def process(self, msg, kwargs):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("MergedLoggerAdapter.process()")
         base = self.extra if isinstance(self.extra, dict) else {}
         extra = kwargs.get("extra") or {}
         if not isinstance(extra, dict):

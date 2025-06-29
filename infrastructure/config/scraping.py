@@ -1,4 +1,3 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > config > scraping")
 import json
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -24,7 +23,6 @@ class ScrapingConfig:
         referers: List of referer strings loaded from ``referers.json``.
         languages: List of Accept-Language headers from ``languages.json``.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("scraping.ScrapingConfig")
 
     user_agents: List[str]
     referers: List[str]
@@ -36,7 +34,6 @@ class ScrapingConfig:
 
 def load_scraping_config() -> ScrapingConfig:
     """Create a :class:`ScrapingConfig` from bundled JSON files."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("scraping load_scraping_config")
 
     base = Path(__file__).parent
 

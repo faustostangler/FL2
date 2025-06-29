@@ -1,5 +1,4 @@
 from __future__ import annotations
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > worker_pool")
 
 import json
 import time
@@ -20,14 +19,12 @@ R = TypeVar("R")
 
 
 class WorkerPool(WorkerPoolPort):
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("worker_pool.WorkerPoll(WorkerPoolPort)")
     def __init__(
         self,
         config: Config,
         metrics_collector: MetricsCollector,
         max_workers: Optional[int] = None,
     ) -> None:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("WorkerPoll(WorkerPoolPort).__init__")
         self.config = config
         self.metrics_collector = metrics_collector
         self.max_workers = max_workers or config.global_settings.max_workers or 1
@@ -41,7 +38,6 @@ class WorkerPool(WorkerPoolPort):
         on_result: Optional[Callable[[R], None]] = None,
         post_callback: Optional[Callable[[List[R]], None]] = None,
     ) -> ExecutionResult[R]:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("WorkerPoll(WorkerPoolPort).run()")
         logger.log(f"worker pool start {processor.__qualname__}", level="info")
 
         results: List[R] = []

@@ -1,5 +1,4 @@
 from __future__ import annotations
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("application > mappers > company_mapper.py")
 
 from infrastructure.helpers.data_cleaner import DataCleaner
 from domain.dto import (
@@ -11,10 +10,8 @@ from domain.dto import (
 
 class CompanyMapper:
     """Merge base and detail company data into a parsed DTO."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_mapper.CompanyMapper")
 
     def __init__(self, data_cleaner: DataCleaner):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_mapper.CompanyMapper.__init__")
         self.data_cleaner = data_cleaner
 
     def merge_company_dtos(
@@ -22,7 +19,6 @@ class CompanyMapper:
         base: CompanyListingDTO,
         detail: CompanyDetailDTO,
     ) -> CompanyRawDTO:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_mapper.CompanyMapper.merge_company_dtos()")
 
         codes = detail.other_codes or []
         

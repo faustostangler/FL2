@@ -1,4 +1,3 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > config > domain")
 from dataclasses import dataclass, field
 
 WORDS_TO_REMOVE = [
@@ -18,7 +17,6 @@ class DomainConfig:
     Attributes:
         words_to_remove (list): A list of words to be removed, initialized with the default value from WORDS_TO_REMOVE.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("domain.DomainConfig")
     # Configuration attributes with defaults from WORDS_TO_REMOVE
     words_to_remove: list = field(default_factory=lambda: WORDS_TO_REMOVE.copy())
 
@@ -29,7 +27,6 @@ def load_domain_config() -> DomainConfig:
     Returns:
         GlobalSettingsConfig: An instance of GlobalSettingsConfig initialized with default constants for wait and threshold.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("domain load_domain_config")
 
     # Load domain settings using default constants
     return DomainConfig(
