@@ -19,12 +19,16 @@ R = TypeVar("R")
 
 
 class WorkerPool(WorkerPoolPort):
+    """Simple thread pool implementation tied to the domain ``WorkerPoolPort``."""
+
     def __init__(
         self,
         config: Config,
         metrics_collector: MetricsCollector,
         max_workers: Optional[int] = None,
     ) -> None:
+        """Initialize the worker pool with configuration and metrics."""
+
         self.config = config
         self.metrics_collector = metrics_collector
         self.max_workers = max_workers or config.global_settings.max_workers or 1
@@ -38,13 +42,17 @@ class WorkerPool(WorkerPoolPort):
         on_result: Optional[Callable[[R], None]] = None,
         post_callback: Optional[Callable[[List[R]], None]] = None,
     ) -> ExecutionResult[R]:
+        """Process ``tasks`` concurrently using ``processor``."""
+
         logger.log(f"worker pool start {processor.__qualname__}", level="info")
 
         results: List[R] = []
         start_time = time.time()
 
+        # Spawn a pool of threads to execute the processor function
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             logger.log("ThreadPoolExecutor started", level="info")
+            # Map each submitted future back to its originating task
             future_to_task = {executor.submit(processor, task): task for task in tasks}
 
             for future in as_completed(future_to_task):
@@ -65,6 +73,7 @@ class WorkerPool(WorkerPoolPort):
             logger.log("ThreadPoolExecutor finished", level="info")
 
         elapsed = time.time() - start_time
+        # Package execution metrics (network and processing bytes)
         metrics = self.metrics_collector.get_metrics(elapsed_time=elapsed)
 
         if callable(post_callback):

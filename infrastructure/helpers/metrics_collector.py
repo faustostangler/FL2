@@ -2,25 +2,37 @@ class MetricsCollector:
     """Collects network and processing byte counts."""
 
     def __init__(self) -> None:
+        """Initialize counters to zero."""
+
         self._network_bytes = 0
         self._processing_bytes = 0
 
     def record_network_bytes(self, n: int) -> None:
+        """Accumulate ``n`` bytes transferred over the network."""
+
         self._network_bytes += n
 
     def record_processing_bytes(self, n: int) -> None:
+        """Accumulate ``n`` bytes processed locally."""
+
         self._processing_bytes += n
 
     @property
     def network_bytes(self) -> int:
+        """Return the total network bytes."""
+
         return self._network_bytes
 
     @property
     def processing_bytes(self) -> int:
+        """Return the total processing bytes."""
+
         return self._processing_bytes
 
     def get_metrics(self, elapsed_time: float):
         from domain.ports.worker_pool_port import Metrics
+
+        """Create a :class:`Metrics` instance from the collected values."""
 
         return Metrics(
             elapsed_time=elapsed_time,

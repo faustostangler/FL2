@@ -3,14 +3,16 @@ import uuid
 from typing import Optional
 
 from infrastructure.config.config import Config
-from infrastructure.logging.progress_formatter import ProgressFormatter
 from infrastructure.logging.context_tracker import ContextTracker
+from infrastructure.logging.progress_formatter import ProgressFormatter
 
 
 class Logger:
     """Application logger wrapping Python's ``logging`` module."""
 
-    def __init__(self, config: Config, level: str = "DEBUG", logger_name: Optional[str] = None):
+    def __init__(
+        self, config: Config, level: str = "DEBUG", logger_name: Optional[str] = None
+    ):
         self._run_id = uuid.uuid4().hex[:8]
         self.worker_id = uuid.uuid4().hex[:8]
 
@@ -29,7 +31,7 @@ class Logger:
         if not logger.hasHandlers():
             formatter = SafeFormatter(
                 "%(run_id)s %(worker_id)s %(asctime)s %(levelname)s: %(message)s",
-                datefmt="%Y-%m-%d %H:%M:%S"
+                datefmt="%Y-%m-%d %H:%M:%S",
             )
 
             sh = logging.StreamHandler()
@@ -46,9 +48,18 @@ class Logger:
 
         return adapter
 
-    def log(self, message: str, level: str = "info", progress: Optional[dict] = None, extra: Optional[dict] = None, worker_id: Optional[str] = None):
+    def log(
+        self,
+        message: str,
+        level: str = "info",
+        progress: Optional[dict] = None,
+        extra: Optional[dict] = None,
+        worker_id: Optional[str] = None,
+    ):
         """Log a message with optional progress and context information."""
-        context_msg = self.context_tracker.get_context() if level.lower() == "debug" else ""
+        context_msg = (
+            self.context_tracker.get_context() if level.lower() == "debug" else ""
+        )
         progress_msg = self.progress_formatter.format(progress) if progress else ""
 
         full_message = message
@@ -58,33 +69,30 @@ class Logger:
             full_message += f" | {context_msg}"
 
         if extra:
-            extra_str = " ".join(
-                    str(v)
-                    for v in extra.values()
-                    if v not in (None, "")
-                )
+            extra_str = " ".join(str(v) for v in extra.values() if v not in (None, ""))
             full_message += f" | {extra_str}"
 
         try:
             log_fn = getattr(self._logger, level.lower(), self._logger.info)
             merged_extra = {
-                "run_id":    self._run_id,
+                "run_id": self._run_id,
                 "worker_id": worker_id or self.worker_id,
             }
 
             log_fn(full_message, extra=merged_extra)
         except Exception as e:
-            print(f"Logging failed: {e} - {full_message}")
+            # Fallback to stderr if the underlying logger fails
+            self._logger.error(f"Logging failed: {e} - {full_message}")
 
 
 class SafeFormatter(logging.Formatter):
     """Formatter that injects default values for missing log attributes."""
-    def format(self, record):
 
+    def format(self, record):
         # Define valores padrão
         defaults = {
             "run_id": "0",
-            "worker_id": "0", 
+            "worker_id": "0",
         }
 
         for key, default in defaults.items():
@@ -96,6 +104,7 @@ class SafeFormatter(logging.Formatter):
 
 class MergedLoggerAdapter(logging.LoggerAdapter):
     """Logger adapter that merges ``extra`` dictionaries from calls and defaults."""
+
     def process(self, msg, kwargs):
         base = self.extra if isinstance(self.extra, dict) else {}
         extra = kwargs.get("extra") or {}
