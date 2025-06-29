@@ -1,10 +1,12 @@
-# Company Detail Processing Pipeline
+# Company Detail Pipeline
 
-The company detail workflow uses a small pipeline of processors to keep each step focused on a single responsibility:
+The detail pipeline is triggered by `sync_companies.py` via `CompanyService`.
 
-1. **EntryCleaner** – normalizes raw listing data and converts it to `CompanyListingDTO`.
-2. **DetailFetcher** – retrieves the detail page for a company and converts it to `CompanyDetailDTO` while recording network metrics.
-3. **CompanyMerger** – merges the listing and detail DTOs into a single `CompanyRawDTO`.
-4. **CompanyDetailProcessor** – orchestrates the three steps above and returns the final DTO.
+1. `CompanyB3Scraper.fetch_all()` retrieves a list of companies and for each one:
+   - `EntryCleaner` normalizes the listing entry.
+   - `DetailFetcher` downloads the detail page and converts it to `CompanyDetailDTO`.
+   - `CompanyMerger` merges listing and detail data into `CompanyRawDTO`.
+2. The use case converts each `CompanyRawDTO` to `CompanyDTO` and calls the repository.
+3. `SQLiteCompanyRepository` persists the data with `insert_or_update` semantics.
 
-This pipeline is instantiated in `CompanyB3Scraper` and used inside `_fetch_companies_details`. Each processor is a class with its dependencies injected via the constructor, following the project’s hexagonal architecture guidelines.
+All steps emit logs and accumulate metrics. Results are stored in the SQLite tables declared in `infrastructure/models`.

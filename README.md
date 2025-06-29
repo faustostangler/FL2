@@ -1,111 +1,45 @@
-# Finance Ledger Yearly (FLY)
-[![CI](https://github.com/faustostangler/FLY/actions/workflows/ci.yml/badge.svg)](https://github.com/faustostangler/FLY/actions/workflows/ci.yml)
-[![Coverage Status](https://img.shields.io/badge/coverage-unknown-lightgrey)](https://github.com/faustostangler/FLY/actions/workflows/ci.yml)
+# FLY
 
+FLY is a small data pipeline for gathering financial information about companies traded on B3. It scrapes company metadata and sequential document numbers (NSD) and stores them in a local SQLite database.
 
-### What is This?
-Finance Ledger Yearly (FLY) gathers financial documents from companies listed on B3. It scrapes company profiles, sequential document numbers (NSDs) and standardized statements, storing everything in a local database for analysis.
+## Technologies
 
-## How It Works, Behind the Wheels
-FLY follows the Hexagonal Architecture (Ports and Adapters) to keep business logic separate from infrastructure. The list below outlines the core steps in fetching company data and financial documents. For a complete explanation, see our [Architecture Document](ARCHITECTURE.md).
+- **Python 3.11**
+- **SQLite** with **SQLAlchemy**
+- Hexagonal Architecture (Ports and Adapters)
 
-1. **Company Information Scraping**  
-   - Finds company names, tickers, sectors, and registration data.
-   - Saves the latest updates to avoid redundant data.
+## Installation
 
-2. **Financial Reports Processing**  
-   - Extracts and standardizes company financial statements.
-   - Ensures that data follows a structured, readable format.
-   - Only updates reports if new information is available.
-
-3. **NSD (Document Number) Tracking**  
-   - Keeps track of financial disclosure documents.
-   - Fills in missing document sequences intelligently.
-
-4. **Stock Market & Corporate Events Analysis**  
-   - Fetches stock prices, stock splits, and dividend information.
-   - Matches stock performance with financial statements.
-
-5. **Performance & Optimization**
-   - Supports concurrent processing with a configurable number of workers for improved performance.
-   - Tracks memory and execution time to keep things running smoothly.
-
-
-## How to Install
-
-### **Requirements**
-To run FLY, you need:
-- **Python 3.7 or newer** installed on your system.
-- **Google Chrome** (used for web scraping).
-- Required Python libraries (install them using the command below).
-
-### Required Python Packages
-The following packages are needed to run FLY:
-- **SQLAlchemy**
-- **requests**
-- **psutil**
-- **beautifulsoup4**
-- **certifi**
-- **charset-normalizer**
-- **urllib3**
-- **idna**
-- **greenlet**
-- **typing_extensions**
-- **Unidecode**
-
-### **Installation Steps**
-1. **Download the software**  
-If you haven't already, get the project files by running:
-```sh
-git clone https://github.com/faustostangler/FLY.git
-cd FLY
-```
-
-2. **Install required libraries**  
-Install the necessary Python packages by running:
-```sh
-pip install -r requirements.txt
-```
-
-## How to Use
-### **Run the Full System**
-To run everything at once and process all available data:
-```sh
-python run.py
-```
-
-## Development & Testing
-Install the development dependencies before running tests:
-```sh
-pip install -r requirements-dev.txt
-pytest
-```
-
-## Contributing
-
-1. **Fork the repository**
-2. **Create a new branch:**
-   ```sh
-   git checkout -b feature-branch
+1. Create a virtual environment and install the dependencies:
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   pip install -r requirements.txt
    ```
-3. **Commit your changes:**
-   ```sh
-   git commit -am 'Add new feature'
+
+2. Run the CLI application:
+   ```bash
+   python run.py
    ```
-4. **Push to the branch:**
-   ```sh
-   git push origin feature-branch
-   ```
-5. **Create a new Pull Request**
 
-## License
-This project is licensed under the MIT License - see the LICENSE file for details.
+The CLI invokes the application services to synchronize companies and NSD records. Logs are written to `fly_logger.log` in the project root.
 
-## Acknowledgements
-- **Selenium** for web automation
-- **BeautifulSoup** for parsing HTML
-- **SQLite** for the database
+## Services
 
----
+Two main services can be triggered individually:
 
-"Inspired by the Pampas and crafted with yerba mate in South America: an authentic gaucho product."
+- `sync_companies` – Fetch company listings and details from B3.
+- `sync_nsd` – Download sequential document information.
+
+Both services are started from `presentation/cli.py` when you execute `run.py`.
+
+## Project Layout
+
+```
+domain/         # DTOs and ports
+application/    # services and use cases
+infrastructure/ # scrapers, repositories, helpers
+presentation/   # CLI entry point
+```
+
+Development and production runs use the same entry point. Adjust configuration files in `infrastructure/config` if you need to change paths or logging levels.

@@ -1,8 +1,16 @@
-# WorkerPool Callbacks
+# Worker Pool
 
-`WorkerPool.run` provides two optional callbacks to handle results:
+The worker pool in `infrastructure.helpers.worker_pool.WorkerPool` wraps `ThreadPoolExecutor`.
 
-- `on_result(item: R)`: Invoked for every item returned by the worker. Use it for incremental persistence, real-time progress updates, or in-place validation and enrichment.
-- `post_callback(items: List[R])`: Executed once after all workers finish. Use it for final batch persistence, consolidated reporting, or cleanup logic.
+```
+ExecutionResult = WorkerPool.run(tasks, processor, logger,
+                                 on_result=None,
+                                 post_callback=None)
+```
 
-A common pattern is to pass a save callback via `on_result` for periodic flushes and rely on `post_callback` for the final flush and summary metrics. This keeps the worker pool generic while allowing callers to handle persistence and reporting according to their own needs.
+- **tasks** – iterable of inputs.
+- **processor** – function applied to each item.
+- **on_result** – called for every processed item.
+- **post_callback** – called once with the list of results after completion.
+
+`WorkerPool` collects metrics for network and processing bytes and logs start and finish messages. The pool size defaults to `config.global_settings.max_workers`.
