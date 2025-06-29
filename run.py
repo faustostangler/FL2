@@ -19,5 +19,5 @@ if __name__ == "__main__":
     controller = CLIController(config=config, logger=logger, data_cleaner=data_cleaner)
     controller.run()
 
-# Finaliza a execução com uma mensagem de confirmação
-print("done")
+    # Finaliza a execução com uma mensagem de confirmação
+    logger.log("Finish FLY", level="info", )
