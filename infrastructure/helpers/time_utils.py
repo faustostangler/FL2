@@ -1,3 +1,4 @@
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > time_utils")
 import time
 import psutil
 import random
@@ -9,7 +10,9 @@ class TimeUtils:
     """
     Utilitários para controle de tempo adaptado à carga da CPU.
     """
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("time_utils class TimeUtils")
     def __init__(self, config: Config):
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("TimeUtils __init__")
         self.config = config
 
     def sleep_dynamic(self, wait: Optional[float] = None, cpu_interval: Optional[float] = None) -> None:
@@ -25,6 +28,7 @@ class TimeUtils:
             wait (float): Tempo base de espera.
             cpu_interval (float): Intervalo de amostragem da CPU.
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("TimeUtils.sleep_dynamic()")
         wait = wait or self.config.global_settings.wait or 2
         cpu_usage = psutil.cpu_percent(interval=cpu_interval or 0.25)
 

@@ -1,3 +1,4 @@
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > threading")
 import threading
 from infrastructure.config import Config
 
@@ -8,6 +9,7 @@ class WorkerThreadIdentifier:
 
     Exemplo de identificador: "W1", "W2", ..., até o limite de max_workers definido no Config.
     """
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("threading class WorkerThreadIdentifier")
 
     def __init__(self, config: Config):
         """
@@ -16,6 +18,7 @@ class WorkerThreadIdentifier:
         Args:
             config (Config): Configuração global da aplicação.
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("WorkerThreadIdentifier __init__")
         self._max_workers = config.global_settings.max_workers or 1
         self._thread_local = threading.local()
         self._counter = iter(range(1, self._max_workers + 1))
@@ -27,6 +30,7 @@ class WorkerThreadIdentifier:
         Returns:
             str: Nome como "W1", "W2", etc.
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("WorkerThreadIdentifier.get_worker_name")
         if not hasattr(self._thread_local, "worker_name"):
             self._thread_local.worker_name = f"W{next(self._counter)}"
         # return self._thread_local.worker_name

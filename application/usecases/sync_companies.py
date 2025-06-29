@@ -1,3 +1,4 @@
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("application > usecases > sync_companies")
 import time
 from typing import List
 
@@ -12,7 +13,7 @@ class SyncCompaniesUseCase:
     """
     UseCase responsável por sincronizar os dados das empresas da fonte externa com o repositório local.
     """
-
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("sync_companies SyncCompaniesUseCase")
     def __init__(
         self,
         logger: Logger,
@@ -60,6 +61,7 @@ class SyncCompaniesUseCase:
 
     def _save_batch(self, buffer: List[CompanyRawDTO]) -> None:
         """Convert raw companies to domain DTOs before saving."""
+        self.logger.log("SyncCompaniesUseCase _save_batch", level="info")
 
         dtos = [CompanyDTO.from_raw(item) for item in buffer]
         self.repository.save_all(dtos)

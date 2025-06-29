@@ -1,3 +1,4 @@
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > context_tracker")
 import inspect
 from pathlib import Path
 
@@ -6,8 +7,11 @@ class ContextTracker:
     """
     Extrai a origem da chamada no projeto para logs de depuração.
     """
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("context_tracker class ContextTracker")
 
     def __init__(self, project_root: Path):
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("ContextTracker __init__")
+
         self.project_root = project_root
 
     def get_context(self) -> str:
@@ -15,6 +19,7 @@ class ContextTracker:
         Retorna string no formato:
         "line X of func() in 'relative/path/file.py' <- ..."
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("ContextTracker.get_context()")
         try:
             stack = inspect.stack()
             relevant = []

@@ -1,3 +1,4 @@
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > company_b3_scraper")
 from __future__ import annotations
 
 import base64
@@ -25,6 +26,7 @@ class CompanyB3Scraper(CompanySourcePort):
     Scraper adapter responsible for fetching raw company data.
     In a real implementation, this could use requests, BeautifulSoup, or Selenium.
     """
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_b3_scraper class CompanyB3Scraper(CompnaySourcePort)")
 
     def __init__(
         self,
@@ -54,6 +56,8 @@ class CompanyB3Scraper(CompanySourcePort):
         Returns:
             None
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyB3Scraper(CompnaySourcePort) __init__")
+
         # hardcoded parameters
         self.PAGE_NUMBER = 1
         self.PAGE_SIZE = 120
@@ -120,6 +124,7 @@ class CompanyB3Scraper(CompanySourcePort):
         Returns:
             List of dictionaries representing raw company data.
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyB3Scraper(CompnaySourcePort).fetch_all()")
         self.logger.log("Start fetch_all", level="info")
 
         # Ensure skip_codes is a set (to avoid None and allow fast lookup)
@@ -129,6 +134,7 @@ class CompanyB3Scraper(CompanySourcePort):
 
         # Fetch the initial list of companies from B3, possibly skipping some CVM codes
         def noop(_buffer: List[Dict]) -> None:
+            import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyB3Scraper(CompnaySourcePort).fetch_all().noop()")
             return None
 
         companies_list = self._fetch_companies_list(
@@ -162,6 +168,7 @@ class CompanyB3Scraper(CompanySourcePort):
 
         :return: Lista de empresas com código CVM e nome base.
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyB3Scraper(CompnaySourcePort)._fetch_companies_list()")
         self.logger.log("Fetch Existing Companies from B3", level="info")
 
         threshold = threshold or self.config.global_settings.threshold or 50
@@ -178,6 +185,7 @@ class CompanyB3Scraper(CompanySourcePort):
             self.logger.log("Fetch remaining company pages", level="info")
 
             def processor(page: int) -> PageResultDTO:
+                import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyB3Scraper(CompnaySourcePort)._fetch_company_details).processor()")
                 fetch = self._fetch_page(page)
                 self.logger.log(
                     f"processor {page} in _fetch_page",
@@ -216,9 +224,13 @@ class CompanyB3Scraper(CompanySourcePort):
         :param payload: Dicionário de entrada
         :return: String base64
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyB3Scraper(CompnaySourcePort)._encode_paload)")
+
         return base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
 
     def _fetch_page(self, page_number: int) -> PageResultDTO:
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyB3Scraper(CompnaySourcePort)._fetch_page)")
+
         payload = {
             "language": self.language,
             "pageNumber": page_number,
@@ -262,6 +274,7 @@ class CompanyB3Scraper(CompanySourcePort):
         Raises:
             - Does not raise exceptions; logs warnings instead.
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyB3Scraper(CompnaySourcePort)._fetch_company_details)")
 
         threshold = threshold or self.config.global_settings.threshold or 50
         skip_codes = skip_codes or set()
@@ -272,6 +285,7 @@ class CompanyB3Scraper(CompanySourcePort):
         tasks = list(enumerate(companies_list))
 
         def processor(item: Tuple[int, Dict]) -> Optional[CompanyRawDTO]:
+            import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyB3Scraper(CompnaySourcePort)._fetch_company_details).processor()")
             index, entry = item
             if entry.get("codeCVM") in skip_codes:
                 return None
@@ -282,6 +296,7 @@ class CompanyB3Scraper(CompanySourcePort):
             return processed_entry
 
         def handle_batch(item: Optional[CompanyRawDTO]) -> None:
+            import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyB3Scraper(CompnaySourcePort)._fetch_company_details).handle_batch()")
             strategy.handle(item)
 
         detail_exec = self.executor.run(

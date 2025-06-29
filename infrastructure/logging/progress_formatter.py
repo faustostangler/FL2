@@ -1,3 +1,4 @@
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > progress_formatter")
 import time
 
 
@@ -5,11 +6,13 @@ class ProgressFormatter:
     """
     Responsável por formatar informações de progresso para logs.
     """
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("progress_formatter class ProgressFormatter")
 
     def format(self, progress: dict) -> str:
         """
         Gera uma string como: "15/100 | 15.00% | 0h00m10s + 0h01m00s = 0h01m10s e extra_info"
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("ProgressFormatter.format()")
         try:
             index = progress.get("index", 0)
             size = progress.get("size", 1)

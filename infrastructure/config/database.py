@@ -1,4 +1,5 @@
 # settings/database.py
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > config > database")
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Mapping
@@ -23,12 +24,16 @@ class DatabaseConfig:
         db_path: Caminho completo para o arquivo de banco.
         connection_string: URI de conexão SQLAlchemy.
     """
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("database class DatabaseConfig")
+
     data_dir: Path
     db_filename: str = field(default=DB_FILENAME)
     tables: Mapping[str, str] = field(default_factory=lambda: TABLES)
     connection_string: str = field(init=False)
     
     def __post_init__(self):
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DatabaseConfig __post_init__")
+
         # Calcula dinamicamente a URI de conexão
         object.__setattr__(
             self,
@@ -37,6 +42,8 @@ class DatabaseConfig:
         )
 
 def load_database_config() -> DatabaseConfig:
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("database.load_database_config()")
+
     paths = load_paths()
 
     return DatabaseConfig(

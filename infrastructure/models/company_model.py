@@ -1,3 +1,4 @@
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > models > company_model")
 from __future__ import annotations
 
 import json
@@ -12,11 +13,13 @@ from domain.dto.raw_company_dto import CodeDTO, CompanyRawDTO
 
 
 class Base(DeclarativeBase):
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_model class Base")
     pass
 
 
 class CompanyModel(Base):
     """ORM adapter for the ``tbl_company`` table."""
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_model class CompanyModel")
 
     __tablename__ = "tbl_company"
 
@@ -64,6 +67,7 @@ class CompanyModel(Base):
 
     @staticmethod
     def from_dto(dto: CompanyRawDTO | CompanyDTO) -> "CompanyModel":
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyModel.from_dto()")
         """Convert a ``CompanyRawDTO`` or ``CompanyDTO`` into ``CompanyModel``."""
 
         def attr(name: str):
@@ -117,6 +121,7 @@ class CompanyModel(Base):
         )
 
     def to_dto(self) -> CompanyRawDTO:
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyModel.to_dto()")
         """Reconstruct a :class:`CompanyRawDTO` from this model."""
 
         ticker_codes: List[str] = (

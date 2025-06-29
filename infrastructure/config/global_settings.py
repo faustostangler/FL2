@@ -1,3 +1,4 @@
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > config > global_settings")
 from dataclasses import dataclass, field
 
 APP_NAME = "FLY" # Application name
@@ -23,6 +24,7 @@ class GlobalSettingsConfig:
     2. Use 'field' to set default values from external constants (WAIT, THRESHOLD). # Set defaults using WAIT and THRESHOLD
     3. These settings can be used throughout the application for consistent configuration. # Use these settings app-wide
     """
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("global_settings class GlobalSettingsConfig")
 
     # Configuration attributes with defaults
     app_name: str = field(default=APP_NAME)
@@ -46,6 +48,8 @@ def load_global_settings_config() -> GlobalSettingsConfig:
     1. Use the WAIT and THRESHOLD constants as configuration values.
     2. Create and return a GlobalSettingsConfig instance with these values.
     """
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("global_settings load_global_settings_config")
+
     # Load global settings using default constants
     return GlobalSettingsConfig(
         app_name=APP_NAME,

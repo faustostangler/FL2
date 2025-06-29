@@ -1,3 +1,4 @@
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > base_repository")
 from abc import ABC, abstractmethod
 from typing import Generic, TypeVar, List
 
@@ -8,12 +9,14 @@ class BaseRepository(ABC, Generic[T]):
     Contract - Interface genérica para repositórios de leitura/escrita.
     Pode ser especializada para qualquer tipo de DTO.
     """
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("base_repository class BaseRepository(ABC, Generic[t])")
 
     @abstractmethod
     def save_all(self, items: List[T]) -> None:
         """
         Saves in repository.
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("BaseRepository(ABC, Generic[t]).save_all()")
         pass
 
     @abstractmethod
@@ -21,6 +24,7 @@ class BaseRepository(ABC, Generic[T]):
         """
         Get all items from repository.
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("BaseRepository(ABC, Generic[t]).get_all()")
         pass
 
     @abstractmethod
@@ -28,10 +32,12 @@ class BaseRepository(ABC, Generic[T]):
         """
         Check if it is in repository.
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("BaseRepository(ABC, Generic[t]).has_item()")
         pass
 
     @abstractmethod
     def get_by_id(self, id: str) -> T:
         """Recupera uma empresa a partir do ticker."""
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("BaseRepository(ABC, Generic[t]).get_by_id()")
         pass
 

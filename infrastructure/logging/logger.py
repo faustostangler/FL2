@@ -1,3 +1,4 @@
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > logger")
 import logging
 import uuid
 from typing import Optional
@@ -13,8 +14,10 @@ class Logger:
     Encapsula configuração, contexto e formatação de progresso.
     Usa o sistema de logging nativo do Python.
     """
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger class Logger")
 
     def __init__(self, config: Config, level: str = "DEBUG", logger_name: Optional[str] = None):
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Logger __init__")
         self._run_id = uuid.uuid4().hex[:8]
         self.worker_id = uuid.uuid4().hex[:8]
 
@@ -28,6 +31,7 @@ class Logger:
         """
         Configura o logger nativo do Python com handlers para terminal e arquivo.
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Logger.setup_logger()")
         log_path = self.config.logging.full_path
         logger = logging.getLogger(self.logger_name)
         logger.setLevel(logging.DEBUG)
@@ -56,6 +60,7 @@ class Logger:
         """
         Registra uma mensagem com contexto e progresso, se aplicável.
         """
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Logger.log()")
         context_msg = self.context_tracker.get_context() if level.lower() == "debug" else ""
         progress_msg = self.progress_formatter.format(progress) if progress else ""
 
@@ -86,7 +91,10 @@ class Logger:
 
 
 class SafeFormatter(logging.Formatter):
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger class SafeFormatter")
     def format(self, record):
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("SafeFormatter.format()")
+
         # Define valores padrão
         defaults = {
             "run_id": "0",
@@ -100,7 +108,9 @@ class SafeFormatter(logging.Formatter):
         return super().format(record)
 
 class MergedLoggerAdapter(logging.LoggerAdapter):
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger class MergedLoggerAdapter")
     def process(self, msg, kwargs):
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("MergedLoggerAdapter.process()")
         base = self.extra if isinstance(self.extra, dict) else {}
         extra = kwargs.get("extra") or {}
         if not isinstance(extra, dict):

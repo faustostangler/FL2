@@ -1,5 +1,4 @@
-# config/scraping.py
-
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > config > scraping")
 import json
 from pathlib import Path
 from dataclasses import dataclass, field
@@ -25,6 +24,8 @@ class ScrapingConfig:
         referers: Lista de Referer, carregada de referers.json.
         languages: Lista de Accept-Language, carregada de languages.json.
     """
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("scraping class ScrapingConfig")
+
     user_agents: List[str]
     referers: List[str]
     languages: List[str]
@@ -38,6 +39,7 @@ def load_scraping_config() -> ScrapingConfig:
     Os valores de test_internet, timeout e max_attempts ficam aqui,
     enquanto user_agents, referers e languages vêm de arquivos JSON separados.
     """
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("scraping load_scraping_config")
 
     base = Path(__file__).parent
 
