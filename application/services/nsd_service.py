@@ -1,19 +1,20 @@
 from __future__ import annotations
 
-from infrastructure.logging import Logger
-from infrastructure.repositories.nsd_repository import SQLiteNSDRepository
-from infrastructure.scrapers.nsd_scraper import NsdScraper
 from application.usecases.sync_nsd import SyncNSDUseCase
+from domain.ports import LoggerPort, NSDRepositoryPort, NSDSourcePort
 
 
 class NsdService:
-    """Application service that orchestrates NSD scraping and persistence."""
+    """Application service that orchestrates NSD synchronization."""
 
     def __init__(
-        self, logger: Logger, repository: SQLiteNSDRepository, scraper: NsdScraper
+        self,
+        logger: LoggerPort,
+        repository: NSDRepositoryPort,
+        scraper: NSDSourcePort,
     ) -> None:
         self.logger = logger
-        logger.log("Start NsdService", level="info")
+        self.logger.log("Start NsdService", level="info")
 
         self.sync_usecase = SyncNSDUseCase(
             logger=self.logger, repository=repository, scraper=scraper

@@ -1,8 +1,10 @@
 # domain/models/nsd_dto.py
 
+from __future__ import annotations
+
 from dataclasses import dataclass
-from typing import Optional
 from datetime import datetime
+from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -19,7 +21,6 @@ class NSDDTO:
     sent_date: Optional[datetime]
     reason: Optional[str]
 
-
     @staticmethod
     def from_dict(raw: dict) -> "NSDDTO":
         """Build an ``NSDDTO`` from scraped raw data.
@@ -28,6 +29,7 @@ class NSDDTO:
         if already ``datetime`` objects. Parsing is not performed; the HTML is expected
         to be preprocessed into proper Python types.
         """
+
         def format_date(val: Optional[datetime]) -> Optional[str]:
             if isinstance(val, datetime):
                 return val.strftime("%Y-%m-%d %H:%M:%S")
@@ -46,5 +48,5 @@ class NSDDTO:
             responsible_auditor=raw.get("responsible_auditor"),
             protocol=raw.get("protocol"),
             sent_date=raw.get("sent_date"),
-            reason=raw.get("reason")
+            reason=raw.get("reason"),
         )

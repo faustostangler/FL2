@@ -1,17 +1,18 @@
 from __future__ import annotations
 
 from domain.dto.nsd_dto import NSDDTO
-from infrastructure.logging import Logger
-from infrastructure.repositories.nsd_repository import SQLiteNSDRepository
-from infrastructure.scrapers.nsd_scraper import NsdScraper
+from domain.ports import LoggerPort, NSDRepositoryPort, NSDSourcePort
 
 
 class SyncNSDUseCase:
     """Use case responsible for synchronizing NSD documents."""
 
     def __init__(
-        self, logger: Logger, repository: SQLiteNSDRepository, scraper: NsdScraper
-    ):
+        self,
+        logger: LoggerPort,
+        repository: NSDRepositoryPort,
+        scraper: NSDSourcePort,
+    ) -> None:
         self.logger = logger
         self.logger.log("Start SyncNSDUseCase", level="info")
 
