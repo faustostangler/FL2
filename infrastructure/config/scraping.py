@@ -14,15 +14,15 @@ LANGUAGES_JSON = "languages.json"  # Arquivo JSON com Accept-Language
 
 @dataclass(frozen=True)
 class ScrapingConfig:
-    """
-    Configurações gerais para web-scraping.
+    """General settings for web scraping.
+
     Attributes:
-        test_internet: URL usada para verificar conectividade.
-        timeout: Tempo máximo de espera em cada requisição.
-        max_attempts: Número máximo de tentativas em caso de falha.
-        user_agents: Lista de User-Agent, carregada de user_agents.json.
-        referers: Lista de Referer, carregada de referers.json.
-        languages: Lista de Accept-Language, carregada de languages.json.
+        test_internet: URL used to check connectivity.
+        timeout: Maximum wait time for each request.
+        max_attempts: Maximum retry attempts if a request fails.
+        user_agents: List of user-agent strings loaded from ``user_agents.json``.
+        referers: List of referer strings loaded from ``referers.json``.
+        languages: List of Accept-Language headers from ``languages.json``.
     """
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("scraping.ScrapingConfig")
 
@@ -33,12 +33,9 @@ class ScrapingConfig:
     timeout: int = field(default=TIMEOUT)
     max_attempts: int = field(default=MAX_ATTEMPTS)
 
+
 def load_scraping_config() -> ScrapingConfig:
-    """
-    Cria e retorna uma instância de ScrapingConfig.
-    Os valores de test_internet, timeout e max_attempts ficam aqui,
-    enquanto user_agents, referers e languages vêm de arquivos JSON separados.
-    """
+    """Create a :class:`ScrapingConfig` from bundled JSON files."""
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("scraping load_scraping_config")
 
     base = Path(__file__).parent

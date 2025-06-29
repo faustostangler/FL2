@@ -11,9 +11,9 @@ from infrastructure.logging import Logger
 
 
 class DataCleaner:
-    """
-    Classe utilitária para normalização de dados brutos (textos, datas, números).
-    Depende de configuração externa (ex: palavras a remover) e logger.
+    """Utility class for normalizing raw text, dates and numbers.
+
+    Requires external configuration (e.g. words to remove) and a logger.
     """
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("data_cleaner.DataCleaner")
 
@@ -25,7 +25,7 @@ class DataCleaner:
     def clean_text(
         self, text: Optional[str], words_to_remove: Optional[List[str]] = None
     ) -> Optional[str]:
-        """Normaliza texto: remove pontuação, acentos, palavras específicas."""
+        """Normalize a text string by removing punctuation, accents and stop words."""
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DataCleaner.clean_text()")
         try:
             if not text:
@@ -45,11 +45,11 @@ class DataCleaner:
 
             return text
         except Exception as e:
-            self.logger.log(f"Erro ao limpar texto: {e}", level="warning")
+            self.logger.log(f"Failed to clean text: {e}", level="warning")
             return None
 
     def clean_number(self, text: str) -> Optional[float]:
-        """Converte número textual (BR/US) para float."""
+        """Convert a stringified number (BR/US formats) to ``float``."""
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DataCleaner.clean_number()")
         if not text:
             return None
@@ -57,11 +57,11 @@ class DataCleaner:
             text = text.replace(".", "").replace(",", ".")
             return float(text)
         except Exception as e:
-            self.logger.log(f"Erro ao limpar número: {e}", level="warning")
+            self.logger.log(f"Failed to clean number: {e}", level="warning")
             return None
 
     def clean_date(self, text: Optional[str]) -> Optional[datetime]:
-        """Tenta converter string em datetime a partir de padrões comuns."""
+        """Attempt to parse a date string using several common formats."""
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DataCleaner.clean_date()")
         if isinstance(text, datetime):
             return text
@@ -84,7 +84,8 @@ class DataCleaner:
                 continue
 
         self.logger.log(
-            f"Erro ao limpar data: formato não reconhecido: '{text}'", level="debug"
+            f"Failed to parse date: unsupported format '{text}'",
+            level="debug",
         )
         return None
 

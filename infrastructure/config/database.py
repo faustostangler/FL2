@@ -16,13 +16,13 @@ TABLES = {
 
 @dataclass(frozen=True)
 class DatabaseConfig:
-    """
-    Configuração do banco de dados SQLite.
+    """SQLite database configuration.
+
     Attributes:
-        data_dir: Diretório onde o arquivo de banco será armazenado.
-        db_file_name: Nome do arquivo SQLite.
-        db_path: Caminho completo para o arquivo de banco.
-        connection_string: URI de conexão SQLAlchemy.
+        data_dir: Directory where the database file is stored.
+        db_file_name: SQLite file name.
+        db_path: Full path to the database file.
+        connection_string: SQLAlchemy connection URI.
     """
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("database.DatabaseConfig")
 
@@ -34,14 +34,16 @@ class DatabaseConfig:
     def __post_init__(self):
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DatabaseConfig.__post_init__")
 
-        # Calcula dinamicamente a URI de conexão
+        # Dynamically compute the connection URI
         object.__setattr__(
             self,
             "connection_string",
             f"sqlite:///{self.data_dir / self.db_filename}"
         )
 
+
 def load_database_config() -> DatabaseConfig:
+    """Load the database configuration using project paths."""
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("database.load_database_config()")
 
     paths = load_paths()

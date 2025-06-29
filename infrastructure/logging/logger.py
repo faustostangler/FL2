@@ -9,11 +9,7 @@ from infrastructure.logging.context_tracker import ContextTracker
 
 
 class Logger:
-    """
-    Logger da aplicação.
-    Encapsula configuração, contexto e formatação de progresso.
-    Usa o sistema de logging nativo do Python.
-    """
+    """Application logger wrapping Python's ``logging`` module."""
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger.Logger")
 
     def __init__(self, config: Config, level: str = "DEBUG", logger_name: Optional[str] = None):
@@ -28,9 +24,7 @@ class Logger:
         self._logger = self._setup_logger(level)
 
     def _setup_logger(self, level: str) -> logging.LoggerAdapter:
-        """
-        Configura o logger nativo do Python com handlers para terminal e arquivo.
-        """
+        """Configure the underlying ``logging`` logger with console and file handlers."""
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Logger.setup_logger()")
         log_path = self.config.logging.full_path
         logger = logging.getLogger(self.logger_name)
@@ -57,9 +51,7 @@ class Logger:
         return adapter
 
     def log(self, message: str, level: str = "info", progress: Optional[dict] = None, extra: Optional[dict] = None, worker_id: Optional[str] = None):
-        """
-        Registra uma mensagem com contexto e progresso, se aplicável.
-        """
+        """Log a message with optional progress and context information."""
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Logger.log()")
         context_msg = self.context_tracker.get_context() if level.lower() == "debug" else ""
         progress_msg = self.progress_formatter.format(progress) if progress else ""
@@ -91,6 +83,7 @@ class Logger:
 
 
 class SafeFormatter(logging.Formatter):
+    """Formatter that injects default values for missing log attributes."""
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger.SafeFormatter")
     def format(self, record):
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("SafeFormatter.format()")
@@ -107,7 +100,9 @@ class SafeFormatter(logging.Formatter):
 
         return super().format(record)
 
+
 class MergedLoggerAdapter(logging.LoggerAdapter):
+    """Logger adapter that merges ``extra`` dictionaries from calls and defaults."""
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger.MergedLoggerAdapter")
     def process(self, msg, kwargs):
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("MergedLoggerAdapter.process()")

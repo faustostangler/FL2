@@ -9,13 +9,13 @@ DATA_DIR = "data"
 
 @dataclass(frozen=True)
 class PathConfig:
-    """
-    Configura os caminhos principais do sistema.
+    """Configuration for important filesystem paths.
+
     Attributes:
-        root_dir: Diretório raiz absoluto do projeto (calculado automaticamente).
-        temp_dir: Subpasta para arquivos temporários.
-        log_dir: Subpasta para arquivos de log.
-        data_dir: Subpasta para bancos de dados.
+        root_dir: Absolute project root directory (computed automatically).
+        temp_dir: Subfolder for temporary files.
+        log_dir: Subfolder for log files.
+        data_dir: Subfolder for databases.
     """
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("config.paths.PathConfig")
     temp_dir: Path = field(init=False)
@@ -25,23 +25,22 @@ class PathConfig:
 
     def __post_init__(self):
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("config.paths.PathConfig.__post_init__")
-        # Define o root_dir como o diretório do projeto
+        # Set root_dir to the project directory
         root = Path(__file__).resolve().parent.parent.parent
         object.__setattr__(self, "root_dir", root)
         object.__setattr__(self, "temp_dir", root / TEMP_DIR)
         object.__setattr__(self, "log_dir", root / LOG_DIR)
         object.__setattr__(self, "data_dir", root / DATA_DIR)
 
-        # Cria as pastas se ainda não existirem
+        # Create folders if they do not already exist
         for fld in fields(self):
             p = getattr(self, fld.name)
             if isinstance(p, Path) and fld.name != "root_dir":
                 p.mkdir(parents=True, exist_ok=True)
 
+
 def load_paths() -> PathConfig:
-    """
-    Cria e retorna uma instância de PathConfig com os diretórios garantidos.
-    """
+    """Create and return a ``PathConfig`` instance with ensured directories."""
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("config.paths.load_paths")
 
     return PathConfig()
