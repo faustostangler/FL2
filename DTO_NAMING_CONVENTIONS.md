@@ -1,14 +1,11 @@
 # DTO Naming Conventions
 
-This document defines the standard terminology for the various DTOs used across services.
+DTOs standardise data transferred between layers. All DTOs are immutable dataclasses with `frozen=True` and contain no logic.
 
-- **`<Entity>ListingDTO`** – Data loaded from the listing endpoint (base information).
-- **`<Entity>DetailDTO`** – Information returned by the detail endpoint for a single entity.
-- **`<Entity>RawDTO`** – Temporary merge of listing + detail data, used only inside infrastructure to prepare the final object.
-- **`<Entity>DTO`** – Immutable domain object created from dicts or a Raw DTO. This is the only DTO propagated to application and domain layers.
+## Types
 
-### Flow
+- `RawCompanyDTO` – temporary merge of listing and detail data.
+- `CompanyDTO` – validated domain representation used by services and repositories.
+- `SyncCompaniesResultDTO` – aggregate with metrics returned by the sync use case.
 
-adapter → `ListingDTO`/`DetailDTO` → `RawDTO` → `EntityDTO` → model/repository
-
-The `RawDTO` should remain an implementation detail. If convenient, the domain `from_dict()` helper may create and discard a `RawDTO` internally, avoiding propagation of intermediate types outside the infrastructure layer.
+Use the suffix `DTO` for transport objects only. Instantiate them with all required values and avoid setters.
