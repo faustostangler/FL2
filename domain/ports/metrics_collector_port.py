@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Protocol
 
+from domain.ports.worker_pool_port import MetricsDTO
+
 
 class MetricsCollectorPort(Protocol):
     """Collects and exposes metrics for network and processing byte counts."""
@@ -22,4 +24,8 @@ class MetricsCollectorPort(Protocol):
     @property
     def processing_bytes(self) -> int:
         """Total bytes processed locally."""
+        raise NotImplementedError
+
+    def get_metrics(self, elapsed_time: float) -> MetricsDTO:
+        """Return collected metrics as a DTO."""
         raise NotImplementedError
