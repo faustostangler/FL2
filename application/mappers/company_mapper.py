@@ -69,5 +69,5 @@ class CompanyMapper:
 
             date_quotation = detail.date_quotation or None, 
             last_date = detail.last_date, 
-            listing_date = base.listing_date or "", 
+            listing_date = base.listing_date,
         )

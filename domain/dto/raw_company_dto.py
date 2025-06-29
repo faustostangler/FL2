@@ -25,7 +25,7 @@ class CompanyListingDTO:
     cnpj: Optional[str]
     market_indicator: Optional[str]
     type_bdr: Optional[str]
-    listing_date: Optional[str]
+    listing_date: Optional[datetime]
     status: Optional[str]
     segment: Optional[str]
     segment_eng: Optional[str]
