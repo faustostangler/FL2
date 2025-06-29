@@ -19,14 +19,14 @@ class NSDDTO:
     sent_date: Optional[datetime]
     reason: Optional[str]
 
+
     @staticmethod
     def from_dict(raw: dict) -> "NSDDTO":
-        """
-        Constrói um NSDDTO a partir de um dicionário bruto vindo do scraping.
+        """Build an ``NSDDTO`` from scraped raw data.
 
-        Converte valores de datas para string no formato 'YYYY-MM-DD' ou 'YYYY-MM-DD HH:MM:SS',
-        caso já estejam como datetime. Não realiza parsing — espera-se que o HTML já tenha
-        sido transformado em tipos Python apropriados.
+        Date values are converted to ``YYYY-MM-DD`` or ``YYYY-MM-DD HH:MM:SS`` strings
+        if already ``datetime`` objects. Parsing is not performed; the HTML is expected
+        to be preprocessed into proper Python types.
         """
         def format_date(val: Optional[datetime]) -> Optional[str]:
             if isinstance(val, datetime):

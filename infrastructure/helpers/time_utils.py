@@ -7,26 +7,23 @@ from infrastructure.config import Config
 
 
 class TimeUtils:
-    """
-    Utilitários para controle de tempo adaptado à carga da CPU.
-    """
+    """Helper for dynamic sleep intervals based on CPU usage."""
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("time_utils.TimeUtils")
     def __init__(self, config: Config):
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("TimeUtils.__init__")
         self.config = config
 
     def sleep_dynamic(self, wait: Optional[float] = None, cpu_interval: Optional[float] = None) -> None:
-        """
-        Aguarda dinamicamente com base no uso de CPU.
+        """Sleep for a dynamically adjusted time based on CPU utilization.
 
-        A lógica ajusta o tempo de espera:
-        - Alta CPU (>80%): aumenta aleatoriamente o delay.
-        - Média CPU (50–80%): delay moderado.
-        - Baixa CPU (<50%): delay curto.
+        The logic adjusts the delay as follows:
+        - High CPU (>80%): randomly increases the wait time.
+        - Medium CPU (50–80%): moderate delay.
+        - Low CPU (<50%): short delay.
 
         Args:
-            wait (float): Tempo base de espera.
-            cpu_interval (float): Intervalo de amostragem da CPU.
+            wait: Base wait time in seconds.
+            cpu_interval: Sampling interval for ``psutil.cpu_percent``.
         """
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("TimeUtils.sleep_dynamic()")
         wait = wait or self.config.global_settings.wait or 2

@@ -152,17 +152,8 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
             session.close()
 
     def get_all_primary_keys(self) -> set[str]:
-        """
-        Retorna um conjunto com todos os códigos CVM já salvos no banco.
-
-        :return: Conjunto de códigos CVM únicos.
-        """
-        import logging
-
-        logging.basicConfig(level=logging.DEBUG)
-        logging.debug(
-            "SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort).get_all_primary_keys()"
-        )
+        """Return a set of all CVM codes already persisted."""
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort).get_all_primary_keys()")
         session = self.Session()
         try:
             results = session.query(CompanyModel.cvm_code).distinct().all()

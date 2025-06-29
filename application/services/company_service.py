@@ -7,9 +7,7 @@ from infrastructure.logging import Logger
 
 
 class CompanyService:
-    """
-    Application Service que coordena os casos de uso relacionados a Company.
-    """
+    """Coordinate company-related use cases within the application."""
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_service.CompanyService")
 
     def __init__(
@@ -19,7 +17,7 @@ class CompanyService:
         repository: CompanyRepositoryPort,
         scraper: CompanySourcePort,
     ):
-        """Initialize the service with injected repository and scraper."""
+        """Initialize dependencies for company synchronization."""
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_service.CompanyService.__init__")
         self.logger = logger
         self.config = config
@@ -33,13 +31,9 @@ class CompanyService:
         )
 
 #     def run(self) -> SyncCompaniesResultDTO:
-#         """
-#         Executa a sincronização de empresas usando o caso de uso apropriado.
-#         """
+#         """Run company synchronization and return a result summary."""
 #         return self.sync_usecase.execute()
     def run(self) -> None:
-        """
-        Executa a sincronização de empresas usando o caso de uso apropriado.
-        """
+        """Execute company synchronization using the injected use case."""
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_service.CompanyService.run()")
         self.sync_usecase.execute()

@@ -8,7 +8,7 @@ from .raw_company_dto import CompanyRawDTO
 
 @dataclass(frozen=True)
 class CompanyDTO:
-    """Representa os dados estruturados de uma empresa listada na B3."""
+    """Structured company data extracted from B3."""
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_dto.CompanyDTO")
 
     cvm_code: Optional[str]
@@ -55,7 +55,7 @@ class CompanyDTO:
 
     @staticmethod
     def from_dict(raw: dict) -> "CompanyDTO":
-        """Constrói um DTO imutável a partir de um dicionário bruto."""
+        """Build an immutable DTO from a raw dictionary."""
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_dto CompanyDTO.from_dict()")
 
         return CompanyDTO(
@@ -94,6 +94,7 @@ class CompanyDTO:
             last_date=raw.get("last_date"),
             listing_date=raw.get("listing_date"),
         )
+
 
     @staticmethod
     def from_raw(raw: CompanyRawDTO) -> "CompanyDTO":

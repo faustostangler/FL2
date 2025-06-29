@@ -10,9 +10,7 @@ from infrastructure.logging import Logger
 
 
 class SyncCompaniesUseCase:
-    """
-    UseCase responsável por sincronizar os dados das empresas da fonte externa com o repositório local.
-    """
+    """Use case for synchronizing company data from the scraper to the repository."""
     import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("sync_companies.SyncCompaniesUseCase")
     def __init__(
         self,
@@ -22,6 +20,7 @@ class SyncCompaniesUseCase:
         max_workers: int,
     ):
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("sync_companies.SyncCompaniesUseCase.__init__")
+        """Store dependencies and configure use case execution."""
         self.logger = logger
         self.logger.log("Start SyncCompaniesUseCase", level="info")
 
@@ -30,11 +29,12 @@ class SyncCompaniesUseCase:
         self.max_workers = max_workers
 
     def execute(self) -> SyncCompaniesResultDTO:
-        """
-        Executa a sincronização:
-        - Carrega dados do scraper (fonte externa)
-        - Converte para CompanyDTO
-        - Persiste no repositório
+        """Run the full synchronization pipeline.
+
+        Steps:
+            1. Fetch data from the scraper.
+            2. Convert results into ``CompanyDTO`` objects.
+            3. Persist them using the repository.
         """
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("sync_companies.SyncCompaniesUseCase.execute()")
         self.logger.log("SyncCompaniesUseCase Execute", level="info")
