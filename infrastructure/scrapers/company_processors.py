@@ -14,7 +14,7 @@ from infrastructure.logging import Logger
 
 class EntryCleaner:
     """Clean raw company listing entries."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors class EntryCleaner")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors.EntryCleaner")
 
     def __init__(self, data_cleaner: DataCleaner) -> None:
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("EntryCleaner __init__")
@@ -36,7 +36,7 @@ class EntryCleaner:
 
 
 class DetailFetcher:
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors class DetailFetcher")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors.DetailFetcher")
     """Fetch and clean detailed company information."""
 
     def __init__(
@@ -96,7 +96,7 @@ class DetailFetcher:
 
 class CompanyMerger:
     """Merge base and detail DTOs."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors class CompanyMerger")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors.CompanyMerger")
 
     def __init__(self, mapper: CompanyMapper, logger: Logger) -> None:
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyMerger __init__")
@@ -116,7 +116,7 @@ class CompanyMerger:
 
 class CompanyDetailProcessor:
     """Pipeline to process a single company entry."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors class CompanyDetailProcessor")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors.CompanyDetailProcessor")
 
     def __init__(
         self, cleaner: EntryCleaner, fetcher: DetailFetcher, merger: CompanyMerger

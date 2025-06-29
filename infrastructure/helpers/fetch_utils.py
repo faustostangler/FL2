@@ -18,7 +18,7 @@ class FetchUtils:
     """
     Utility class for HTTP operations with retry and randomized headers.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("fetch_utils class FetchUtils")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("fetch_utils.FetchUtils")
 
     def __init__(self, config: Config, logger: Logger):
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("FetchUtils __init__")

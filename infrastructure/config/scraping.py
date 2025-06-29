@@ -24,7 +24,7 @@ class ScrapingConfig:
         referers: Lista de Referer, carregada de referers.json.
         languages: Lista de Accept-Language, carregada de languages.json.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("scraping class ScrapingConfig")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("scraping.ScrapingConfig")
 
     user_agents: List[str]
     referers: List[str]

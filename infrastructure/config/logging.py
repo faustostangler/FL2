@@ -16,7 +16,7 @@ class LoggingConfig:
         level: Default logging level.
         full_path: Full path to the log file.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logging class LoggingConfig")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logging.LoggingConfig")
     log_dir: Path
     log_file_name: str = field(default=LOG_FILENAME)
     level: str = field(default=LEVEL)

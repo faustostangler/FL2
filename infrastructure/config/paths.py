@@ -17,7 +17,7 @@ class PathConfig:
         log_dir: Subpasta para arquivos de log.
         data_dir: Subpasta para bancos de dados.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("paths class PathConfig")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("paths.PathConfig")
     temp_dir: Path = field(init=False)
     log_dir: Path = field(init=False)
     data_dir: Path = field(init=False)

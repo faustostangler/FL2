@@ -12,7 +12,7 @@ class Config:
     Aggregates all specialized configurations into a single object.
     Each attribute is an immutable and validated instance of its respective domain.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("config class Config")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("config.Config")
 
     def __init__(self):
         """

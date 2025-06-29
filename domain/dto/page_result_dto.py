@@ -6,7 +6,7 @@ from typing import Dict, List
 @dataclass(frozen=True)
 class PageResultDTO:
     """Container for paginated fetch results and metadata."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("page_result_dto class PageResultDTO")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("page_result_dto.PageResultDTO")
 
     items: List[Dict]
     total_pages: int

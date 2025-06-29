@@ -9,7 +9,7 @@ from .raw_company_dto import CompanyRawDTO
 @dataclass(frozen=True)
 class CompanyDTO:
     """Representa os dados estruturados de uma empresa listada na B3."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_dto class CompanyDTO")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_dto.CompanyDTO")
 
     cvm_code: Optional[str]
     issuing_company: Optional[str]

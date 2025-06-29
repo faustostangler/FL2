@@ -9,7 +9,7 @@ R = TypeVar("R")
 
 
 class LoggerPort(Protocol):
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("worker_pool_port class LoggerPort")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("worker_pool_port.LoggerPort")
 
     def log(
         self,
@@ -25,7 +25,7 @@ class LoggerPort(Protocol):
 
 @dataclass
 class Metrics:
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("worker_pool_port class Metrics")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("worker_pool_port.Metrics")
 
     elapsed_time: float
     network_bytes: int = 0
@@ -36,14 +36,14 @@ class Metrics:
 @dataclass
 class ExecutionResult(Generic[R]):
     """Results and metrics returned by :class:`WorkerPoolPort.run`."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("worker_pool_port class ExecutionResult(Generic[R])")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("worker_pool_port.ExecutionResult(Generic[R])")
 
     items: List[R]
     metrics: Metrics
 
 
 class WorkerPoolPort(Protocol):
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("worker_pool_port class WoWorkerPoolPort(Protocol)")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("worker_pool_port.WoWorkerPoolPort(Protocol)")
 
     def run(
         self,

@@ -20,7 +20,7 @@ R = TypeVar("R")
 
 
 class WorkerPool(WorkerPoolPort):
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("worker_pool class WorkerPoll(WorkerPoolPort)")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("worker_pool.WorkerPoll(WorkerPoolPort)")
     def __init__(
         self,
         config: Config,

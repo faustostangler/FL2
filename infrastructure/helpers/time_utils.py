@@ -10,7 +10,7 @@ class TimeUtils:
     """
     Utilitários para controle de tempo adaptado à carga da CPU.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("time_utils class TimeUtils")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("time_utils.TimeUtils")
     def __init__(self, config: Config):
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("TimeUtils __init__")
         self.config = config

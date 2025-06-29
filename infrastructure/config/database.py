@@ -24,7 +24,7 @@ class DatabaseConfig:
         db_path: Caminho completo para o arquivo de banco.
         connection_string: URI de conexão SQLAlchemy.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("database class DatabaseConfig")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("database.DatabaseConfig")
 
     data_dir: Path
     db_filename: str = field(default=DB_FILENAME)

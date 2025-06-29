@@ -9,7 +9,7 @@ class WorkerThreadIdentifier:
 
     Exemplo de identificador: "W1", "W2", ..., até o limite de max_workers definido no Config.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("threading class WorkerThreadIdentifier")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("threading.WorkerThreadIdentifier")
 
     def __init__(self, config: Config):
         """

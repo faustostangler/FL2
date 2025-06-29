@@ -14,7 +14,7 @@ from infrastructure.scrapers.nsd_scraper import NsdScraper
 
 class CLIController:
     """CLI controller that orchestrates the FLY application execution."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("cli class CLIController")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("cli.CLIController")
 
     def __init__(self, config: Config, logger: Logger, data_cleaner):
         """Initialize the controller with config and logger.

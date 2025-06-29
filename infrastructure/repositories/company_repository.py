@@ -19,7 +19,7 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
     Concrete implementation of BaseRepository for CompanyDTO,
     using SQLite and SQLAlchemy for persistence.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_repository class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_repository.SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)")
 
     def __init__(self, config: Config, logger: Logger):
         """

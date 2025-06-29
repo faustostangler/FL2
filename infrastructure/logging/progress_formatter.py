@@ -6,7 +6,7 @@ class ProgressFormatter:
     """
     Responsável por formatar informações de progresso para logs.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("progress_formatter class ProgressFormatter")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("progress_formatter.ProgressFormatter")
 
     def format(self, progress: dict) -> str:
         """

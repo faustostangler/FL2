@@ -6,7 +6,7 @@ from typing import List, Optional
 @dataclass(frozen=True)
 class SyncCompaniesResultDTO:
     """Summary information returned by :class:`SyncCompaniesUseCase`."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("sync_companies_dto class SyncCompaniesResultDTO")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("sync_companies_dto.SyncCompaniesResultDTO")
 
     processed_count: int
     skipped_count: int

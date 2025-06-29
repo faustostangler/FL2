@@ -13,13 +13,13 @@ from domain.dto.raw_company_dto import CodeDTO, CompanyRawDTO
 
 
 class Base(DeclarativeBase):
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_model class Base")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_model.Base")
     pass
 
 
 class CompanyModel(Base):
     """ORM adapter for the ``tbl_company`` table."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_model class CompanyModel")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_model.CompanyModel")
 
     __tablename__ = "tbl_company"
 

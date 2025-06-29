@@ -7,7 +7,7 @@ T = TypeVar("T")
 
 
 class SaveStrategy(Generic[T]):
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("save_strategy class SaveStrategy(Generic[T])")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("save_strategy.SaveStrategy(Generic[T])")
     """Buffers items and flushes them via a callback."""
 
     def __init__(

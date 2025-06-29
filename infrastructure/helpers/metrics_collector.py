@@ -1,7 +1,7 @@
 import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > metrics_collector")
 class MetricsCollector:
     """Collects network and processing byte counts."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("metrics_collector class MetricsCollector")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("metrics_collector.MetricsCollector")
 
     def __init__(self) -> None:
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("MetricsCollector __init__")

@@ -1,6 +1,6 @@
 import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > byte_formatter")
 class ByteFormatter:
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("byte_formatter class ByteFormatter")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("byte_formatter.ByteFormatter")
 
     def format_bytes(self, bytes_amount: int) -> str:
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("ByteFormatter.format_bytes()")

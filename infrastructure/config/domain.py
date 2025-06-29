@@ -18,7 +18,7 @@ class DomainConfig:
     Attributes:
         words_to_remove (list): A list of words to be removed, initialized with the default value from WORDS_TO_REMOVE.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("domain class DomainConfig")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("domain.DomainConfig")
     # Configuration attributes with defaults from WORDS_TO_REMOVE
     words_to_remove: list = field(default_factory=lambda: WORDS_TO_REMOVE.copy())
 

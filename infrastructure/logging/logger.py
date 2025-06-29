@@ -14,7 +14,7 @@ class Logger:
     Encapsula configuração, contexto e formatação de progresso.
     Usa o sistema de logging nativo do Python.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger class Logger")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger.Logger")
 
     def __init__(self, config: Config, level: str = "DEBUG", logger_name: Optional[str] = None):
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("Logger __init__")
@@ -91,7 +91,7 @@ class Logger:
 
 
 class SafeFormatter(logging.Formatter):
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger class SafeFormatter")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger.SafeFormatter")
     def format(self, record):
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("SafeFormatter.format()")
 
@@ -108,7 +108,7 @@ class SafeFormatter(logging.Formatter):
         return super().format(record)
 
 class MergedLoggerAdapter(logging.LoggerAdapter):
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger class MergedLoggerAdapter")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("logger.MergedLoggerAdapter")
     def process(self, msg, kwargs):
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("MergedLoggerAdapter.process()")
         base = self.extra if isinstance(self.extra, dict) else {}

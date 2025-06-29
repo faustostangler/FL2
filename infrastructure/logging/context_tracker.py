@@ -7,7 +7,7 @@ class ContextTracker:
     """
     Extrai a origem da chamada no projeto para logs de depuração.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("context_tracker class ContextTracker")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("context_tracker.ContextTracker")
 
     def __init__(self, project_root: Path):
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("ContextTracker __init__")

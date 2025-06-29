@@ -8,7 +8,7 @@ import json
 @dataclass(frozen=True)
 class CodeDTO:
     """Represents a pair of ticker/ISIN codes."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("raw_company_dto class CodeDTO")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("raw_company_dto.CodeDTO")
 
     code: Optional[str]
     isin: Optional[str]
@@ -17,7 +17,7 @@ class CodeDTO:
 @dataclass(frozen=True)
 class CompanyListingDTO:
     """DTO for base company data from the list endpoint."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("raw_company_dto class CompanyListingDTO")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("raw_company_dto.CompanyListingDTO")
 
     cvm_code: Optional[str]
     issuing_company: Optional[str]
@@ -57,7 +57,7 @@ class CompanyListingDTO:
 @dataclass(frozen=True)
 class CompanyDetailDTO:
     """DTO for detailed company data from the detail endpoint."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("raw_company_dto class CompanyDetailDTO")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("raw_company_dto.CompanyDetailDTO")
 
     issuing_company: Optional[str]
     company_name: Optional[str]
@@ -127,7 +127,7 @@ class CompanyDetailDTO:
 @dataclass(frozen=True)
 class CompanyRawDTO:
     """Raw parsed data returned by the scraper before mapping to the domain."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("raw_company_dto class CompanyRawDTO")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("raw_company_dto.CompanyRawDTO")
 
     cvm_code: Optional[str]
     issuing_company: Optional[str]

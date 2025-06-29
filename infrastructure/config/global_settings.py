@@ -24,7 +24,7 @@ class GlobalSettingsConfig:
     2. Use 'field' to set default values from external constants (WAIT, THRESHOLD). # Set defaults using WAIT and THRESHOLD
     3. These settings can be used throughout the application for consistent configuration. # Use these settings app-wide
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("global_settings class GlobalSettingsConfig")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("global_settings.GlobalSettingsConfig")
 
     # Configuration attributes with defaults
     app_name: str = field(default=APP_NAME)

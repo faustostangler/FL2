@@ -25,7 +25,7 @@ class B3ApiConfig:
         language: Language code for requests (fixed to "pt-br").
         company_endpoint: Mapping of logical names to B3 URLs.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("b3_api class B3ApiConfig")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("b3_api.B3ApiConfig")
     language: str = field(default=LANGUAGE)
     company_endpoint: Mapping[str, str] = field(default_factory=lambda: COMPANY_ENDPOINT)
     nsd_endpoint: str = field(default=NSD_ENDPOINT)

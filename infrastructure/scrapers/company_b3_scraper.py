@@ -26,7 +26,7 @@ class CompanyB3Scraper(CompanySourcePort):
     Scraper adapter responsible for fetching raw company data.
     In a real implementation, this could use requests, BeautifulSoup, or Selenium.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_b3_scraper class CompanyB3Scraper(CompnaySourcePort)")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_b3_scraper.CompanyB3Scraper(CompnaySourcePort)")
 
     def __init__(
         self,

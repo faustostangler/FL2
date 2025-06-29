@@ -15,7 +15,7 @@ class DataCleaner:
     Classe utilitária para normalização de dados brutos (textos, datas, números).
     Depende de configuração externa (ex: palavras a remover) e logger.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("data_cleaner class DataCleaner")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("data_cleaner.DataCleaner")
 
     def __init__(self, config: Config, logger: Logger):
         import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DataCleaner __init__")

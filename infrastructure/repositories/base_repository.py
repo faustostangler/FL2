@@ -9,7 +9,7 @@ class BaseRepository(ABC, Generic[T]):
     Contract - Interface genérica para repositórios de leitura/escrita.
     Pode ser especializada para qualquer tipo de DTO.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("base_repository class BaseRepository(ABC, Generic[t])")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("base_repository.BaseRepository(ABC, Generic[t])")
 
     @abstractmethod
     def save_all(self, items: List[T]) -> None:

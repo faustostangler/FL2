@@ -9,7 +9,7 @@ from domain.dto.company_dto import CompanyDTO
 
 class CompanyRepositoryPort(ABC):
     """Port for company persistence operations."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_repository_port class CompanyReposirotyPort(ABC)")
+    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_repository_port.CompanyReposirotyPort(ABC)")
 
     @abstractmethod
     def save_all(self, items: List[CompanyDTO]) -> None:
