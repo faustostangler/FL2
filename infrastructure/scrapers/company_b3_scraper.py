@@ -21,9 +21,10 @@ from infrastructure.scrapers.company_processors import (
 
 
 class CompanyB3Scraper(CompanySourcePort):
-    """
-    Scraper adapter responsible for fetching raw company data.
-    In a real implementation, this could use requests, BeautifulSoup, or Selenium.
+    """Scraper adapter responsible for fetching raw company data.
+
+    In a real implementation, this could use requests, BeautifulSoup, or
+    Selenium.
     """
 
     def __init__(
@@ -65,7 +66,7 @@ class CompanyB3Scraper(CompanySourcePort):
         self.data_cleaner = data_cleaner
         self.mapper = mapper
         self.executor = executor
-        self.metrics_collector = metrics_collector
+        self._metrics_collector = metrics_collector
 
         # Log the initialization of the CompanyB3Scraper
         self.logger.log("Start CompanyB3Scraper", level="info")
@@ -102,6 +103,12 @@ class CompanyB3Scraper(CompanySourcePort):
             fetcher=self.detail_fetcher,
             merger=self.company_merger,
         )
+
+    @property
+    def metrics_collector(self) -> MetricsCollectorPort:
+        """Metrics collector used by the scraper."""
+
+        return self._metrics_collector
 
     def fetch_all(
         self,
@@ -158,8 +165,7 @@ class CompanyB3Scraper(CompanySourcePort):
         threshold: Optional[int] = None,
         save_callback: Optional[Callable[[List[Dict]], None]] = None,
     ) -> List[Dict]:
-        """
-        Busca o conjunto inicial de empresas disponíveis na B3.
+        """Busca o conjunto inicial de empresas disponíveis na B3.
 
         :return: Lista de empresas com código CVM e nome base.
         """
@@ -212,8 +218,7 @@ class CompanyB3Scraper(CompanySourcePort):
         return results
 
     def _encode_payload(self, payload: dict) -> str:
-        """
-        Codifica um dicionário JSON para o formato base64 usado pela B3.
+        """Codifica um dicionário JSON para o formato base64 usado pela B3.
 
         :param payload: Dicionário de entrada
         :return: String base64
