@@ -1,6 +1,30 @@
 # FLY
+Finance Ledger Yearly (FLY) gathers financial documents from companies listed on B3. It scrapes company data and stores them in a local database.
 
-FLY is a small data pipeline for gathering financial information about companies traded on B3. It scrapes company metadata and sequential document numbers (NSD) and stores them in a local SQLite database.
+## How It Works, Behind the Wheels
+The FLY list below outlines the core steps in fetching company data and financial documents.
+
+1. **Company Information Scraping**  
+   - Finds company names, tickers, sectors, and registration data.
+   - Saves the latest updates to avoid redundant data.
+
+2. **Financial Reports Processing**  
+   - Extracts and standardizes company financial statements.
+   - Ensures that data follows a structured, readable format.
+   - Only updates reports if new information is available.
+
+3. **NSD (Document Number) Tracking**  
+   - Keeps track of financial disclosure documents.
+   - Fills in missing document sequences intelligently.
+
+4. **Stock Market & Corporate Events Analysis**  
+   - Fetches stock prices, stock splits, and dividend information.
+   - Matches stock performance with financial statements.
+
+5. **Performance & Optimization**
+   - Supports concurrent processing with a configurable number of workers for improved performance.
+   - Tracks memory and execution time to keep things running smoothly.
+
 
 ## Technologies
 
@@ -22,16 +46,16 @@ FLY is a small data pipeline for gathering financial information about companies
    python run.py
    ```
 
-The CLI invokes the application services to synchronize companies and NSD records. Logs are written to `fly_logger.log` in the project root.
+The CLI invokes the application services to synchronize companies and NSD records. Logs are written to a `.log` in the project root.
 
 ## Services
 
-Two main services can be triggered individually:
+Example services can be triggered individually:
 
 - `sync_companies` – Fetch company listings and details from B3.
 - `sync_nsd` – Download sequential document information.
 
-Both services are started from `presentation/cli.py` when you execute `run.py`.
+Services are started from `presentation/cli.py` when you execute `run.py`.
 
 ## Project Layout
 
@@ -43,3 +67,9 @@ presentation/   # CLI entry point
 ```
 
 Development and production runs use the same entry point. Adjust configuration files in `infrastructure/config` if you need to change paths or logging levels.
+
+## License
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+---
+"Inspired by the Pampas and crafted with yerba mate in South America: an authentic gaucho product."
