@@ -55,15 +55,14 @@ class WorkerPool(WorkerPoolPort):
             # Map each submitted future back to its originating task
             future_to_task = {executor.submit(processor, task): task for task in tasks}
 
-            for future in as_completed(future_to_task):
-                task: T = future_to_task[future]
+            for index, future in enumerate(as_completed(future_to_task)):
+                future_to_task[future]
                 try:
                     result = future.result()
                 except Exception as exc:  # noqa: BLE001
                     logger.log(f"worker error: {exc}", level="warning")
                     continue
 
-                index, entry = task
                 logger.log(f"task processed {index}", level="info")
                 self.metrics_collector.record_processing_bytes(
                     len(json.dumps(result, default=str).encode("utf-8"))
@@ -83,7 +82,7 @@ class WorkerPool(WorkerPoolPort):
 
         logger.log(
             f"Executed {len(results)} tasks in {elapsed:.2f}s ("
-            f"{self.byte_formatter.format_bytes(self.metrics_collector.processing_bytes)})",
+            f"{self.byte_formatter.format_bytes(self.metrics_collector.processing_bytes)} {self.byte_formatter.format_bytes(self.metrics_collector.network_bytes)})",
             level="info",
         )
 

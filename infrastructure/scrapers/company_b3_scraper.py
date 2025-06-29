@@ -6,7 +6,13 @@ from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from application import CompanyMapper
 from domain.dto import CompanyRawDTO, PageResultDTO
-from domain.ports import CompanySourcePort, MetricsCollectorPort, WorkerPoolPort
+from domain.ports import (
+    CompanySourcePort,
+    ExecutionResultDTO,
+    MetricsCollectorPort,
+    WorkerPoolPort,
+)
+from domain.ports.worker_pool_port import MetricsDTO
 from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.byte_formatter import ByteFormatter
@@ -142,9 +148,10 @@ class CompanyB3Scraper(CompanySourcePort):
         companies_list = self._fetch_companies_list(
             skip_codes, threshold, save_callback=noop
         )
+
         # Fetch and parse detailed information for each company, with optional skipping and periodic saving
         companies = self._fetch_companies_details(
-            companies_list,
+            companies_list.items,
             skip_codes,
             save_callback,
             threshold,
@@ -164,7 +171,7 @@ class CompanyB3Scraper(CompanySourcePort):
         skip_codes: Optional[Set[str]] = None,
         threshold: Optional[int] = None,
         save_callback: Optional[Callable[[List[Dict]], None]] = None,
-    ) -> List[Dict]:
+    ) -> ExecutionResultDTO[Dict]:
         """Busca o conjunto inicial de empresas disponíveis na B3.
 
         :return: Lista de empresas com código CVM e nome base.
@@ -173,6 +180,9 @@ class CompanyB3Scraper(CompanySourcePort):
 
         threshold = threshold or self.config.global_settings.threshold or 50
         strategy: SaveStrategy[Dict] = SaveStrategy(save_callback, threshold)
+        page_exec = ExecutionResultDTO(
+            items=[], metrics=self.metrics_collector.get_metrics(0)
+        )
 
         first_page = self._fetch_page(1)
         results = list(first_page.items)
@@ -196,6 +206,7 @@ class CompanyB3Scraper(CompanySourcePort):
                 processor=processor,
                 logger=self.logger,
             )
+
             self.logger.log(
                 "page_results done",
                 level="info",
@@ -204,8 +215,6 @@ class CompanyB3Scraper(CompanySourcePort):
             # Merge and flush each fetched page
             for page_data in page_exec.items:
                 results.extend(page_data.items)
-                for item in page_data.items:
-                    strategy.handle(item)
 
         strategy.finalize()
 
@@ -214,7 +223,7 @@ class CompanyB3Scraper(CompanySourcePort):
             level="info",
         )
 
-        return results
+        return ExecutionResultDTO(items=results, metrics=page_exec.metrics)
 
     def _encode_payload(self, payload: dict) -> str:
         """Codifica um dicionário JSON para o formato base64 usado pela B3.
@@ -252,7 +261,7 @@ class CompanyB3Scraper(CompanySourcePort):
         save_callback: Optional[Callable[[List[CompanyRawDTO]], None]] = None,
         threshold: Optional[int] = None,
         max_workers: int | None = None,
-    ) -> List[CompanyRawDTO]:
+    ) -> ExecutionResultDTO[Dict]:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
         Args:
@@ -273,6 +282,9 @@ class CompanyB3Scraper(CompanySourcePort):
         threshold = threshold or self.config.global_settings.threshold or 50
         skip_codes = skip_codes or set()
         strategy: SaveStrategy[CompanyRawDTO] = SaveStrategy(save_callback, threshold)
+        page_exec = ExecutionResultDTO(
+            items=[], metrics=self.metrics_collector.get_metrics(0)
+        )
 
         self.logger.log("Start CompanyB3Scraper fetch_companies_details", level="info")
 
@@ -304,4 +316,6 @@ class CompanyB3Scraper(CompanySourcePort):
 
         strategy.finalize()
 
-        return [item for item in detail_exec.items if item is not None]
+        results = [item for item in detail_exec.items if item is not None]
+
+        return ExecutionResultDTO(items=results, metrics=page_exec.metrics)
