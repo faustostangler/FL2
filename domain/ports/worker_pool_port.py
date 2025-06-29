@@ -1,5 +1,5 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("domain > ports > worker_pool_port")
 from __future__ import annotations
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("domain > ports > worker_pool_port")
 
 from dataclasses import dataclass
 from typing import Callable, Generic, Iterable, List, Optional, Protocol, TypeVar

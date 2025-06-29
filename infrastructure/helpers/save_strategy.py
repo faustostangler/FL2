@@ -1,5 +1,5 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > save_strategy")
 from __future__ import annotations
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > save_strategy")
 
 from typing import Callable, Generic, List, Optional, TypeVar
 

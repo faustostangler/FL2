@@ -1,5 +1,5 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > company_repository")
 from __future__ import annotations
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > company_repository")
 
 from typing import List
 

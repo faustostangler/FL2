@@ -1,5 +1,5 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > fetch_utils")
 from __future__ import annotations
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > fetch_utils")
 
 import random
 import ssl

@@ -1,5 +1,5 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > worker_pool")
 from __future__ import annotations
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > worker_pool")
 
 import json
 import time

@@ -32,7 +32,7 @@ class DatabaseConfig:
     connection_string: str = field(init=False)
     
     def __post_init__(self):
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DatabaseConfig __post_init__")
+        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DatabaseConfig __post_init__")
 
         # Calcula dinamicamente a URI de conexão
         object.__setattr__(

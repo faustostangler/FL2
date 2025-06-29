@@ -1,5 +1,5 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > company_b3_scraper")
 from __future__ import annotations
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > company_b3_scraper")
 
 import base64
 import json

@@ -1,5 +1,5 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("domain > ports > company_repository_port")
 from __future__ import annotations
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("domain > ports > company_repository_port")
 
 from abc import ABC, abstractmethod
 from typing import List, Set

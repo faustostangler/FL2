@@ -1,5 +1,5 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("application > mappers > company_mapper.py")
 from __future__ import annotations
+import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("application > mappers > company_mapper.py")
 
 from infrastructure.helpers.data_cleaner import DataCleaner
 from domain.dto import (
