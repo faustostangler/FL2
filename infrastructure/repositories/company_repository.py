@@ -1,10 +1,5 @@
 from __future__ import annotations
 
-import logging
-
-logging.basicConfig(level=logging.DEBUG)
-logging.debug("infrastructure > company_repository")
-
 from typing import List
 
 from sqlalchemy import create_engine, text
@@ -20,28 +15,10 @@ from infrastructure.repositories.base_repository import BaseRepository
 
 
 class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort):
-    """
-    Concrete implementation of BaseRepository for CompanyDTO,
-    using SQLite and SQLAlchemy for persistence.
-    """
-
-    import logging
-
-    logging.basicConfig(level=logging.DEBUG)
-    logging.debug(
-        "company_repository.SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)"
-    )
+    """Concrete implementation of the company repository using SQLite."""
 
     def __init__(self, config: Config, logger: Logger):
-        """
-        Initializes the SQLite database connection and ensures table creation.
-        """
-        import logging
-
-        logging.basicConfig(level=logging.DEBUG)
-        logging.debug(
-            "SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort).__init__"
-        )
+        """Initialize the SQLite database connection and ensure tables exist."""
         self.config = config
         self.logger = logger
         self.logger.log("Start SQLiteCompanyRepository", level="info")
@@ -56,17 +33,7 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
         Base.metadata.create_all(self.engine)
 
     def save_all(self, items: List[CompanyDTO]) -> None:
-        """
-        Saves or updates a list of CompanyDTOs into the database.
-
-        :param items: List of CompanyDTO instances to persist
-        """
-        import logging
-
-        logging.basicConfig(level=logging.DEBUG)
-        logging.debug(
-            "SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort).save_all()"
-        )
+        """Persist a list of ``CompanyDTO`` objects."""
         session = self.Session()
         try:
             models = [CompanyModel.from_dto(dto) for dto in items]
@@ -87,17 +54,7 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
             session.close()
 
     def get_all(self) -> List[CompanyDTO]:
-        """
-        Retrieves all companies from the database.
-
-        :return: A list of CompanyDTOs
-        """
-        import logging
-
-        logging.basicConfig(level=logging.DEBUG)
-        logging.debug(
-            "SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort).get_all()"
-        )
+        """Return all companies stored in the database."""
         session = self.Session()
         try:
             results = session.query(CompanyModel).all()
@@ -106,18 +63,7 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
             session.close()
 
     def has_item(self, identifier: str) -> bool:
-        """
-        Checks if a company with the given CVM code exists in the database.
-
-        :param identifier: CVM code to verify
-        :return: True if the company exists, False otherwise
-        """
-        import logging
-
-        logging.basicConfig(level=logging.DEBUG)
-        logging.debug(
-            "SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort).has_item()"
-        )
+        """Return ``True`` if a company with ``identifier`` exists."""
         session = self.Session()
         try:
             return (
@@ -128,19 +74,7 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
             session.close()
 
     def get_by_id(self, id: str) -> CompanyDTO:
-        """
-        Retrieves a single company from the database by CVM code.
-
-        :param id: The CVM code identifier
-        :return: A CompanyDTO representing the retrieved company
-        :raises ValueError: If no company is found
-        """
-        import logging
-
-        logging.basicConfig(level=logging.DEBUG)
-        logging.debug(
-            "SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort).get_by_id()"
-        )
+        """Retrieve a company by CVM code or raise ``ValueError`` if missing."""
         session = self.Session()
         try:
             obj = session.query(CompanyModel).filter_by(cvm_code=id).first()

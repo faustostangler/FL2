@@ -196,6 +196,7 @@ class CompanyB3Scraper(CompanySourcePort):
                 level="info",
             )
 
+            # Merge and flush each fetched page
             for page_data in page_exec.items:
                 results.extend(page_data.items)
                 for item in page_data.items:
@@ -221,7 +222,6 @@ class CompanyB3Scraper(CompanySourcePort):
         return base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
 
     def _fetch_page(self, page_number: int) -> PageResultDTO:
-
         payload = {
             "language": self.language,
             "pageNumber": page_number,
@@ -272,11 +272,13 @@ class CompanyB3Scraper(CompanySourcePort):
 
         self.logger.log("Start CompanyB3Scraper fetch_companies_details", level="info")
 
+        # Pair each company dict with its index for progress logging
         tasks = list(enumerate(companies_list))
 
         def processor(item: Tuple[int, Dict]) -> Optional[CompanyRawDTO]:
             index, entry = item
             if entry.get("codeCVM") in skip_codes:
+                # Skip already persisted companies
                 return None
 
             processed_entry = self.detail_processor.run(entry)
@@ -285,6 +287,7 @@ class CompanyB3Scraper(CompanySourcePort):
             return processed_entry
 
         def handle_batch(item: Optional[CompanyRawDTO]) -> None:
+            # Buffer each parsed company and flush when threshold is hit
             strategy.handle(item)
 
         detail_exec = self.executor.run(
