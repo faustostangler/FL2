@@ -1,8 +1,6 @@
 from application.usecases.sync_companies import SyncCompaniesUseCase
-# from domain.dto import SyncCompaniesResultDTO
-from domain.ports import CompanyRepositoryPort, CompanySourcePort
+from domain.ports import CompanyRepositoryPort, CompanySourcePort, LoggerPort
 from infrastructure.config import Config
-from infrastructure.logging import Logger
 
 
 class CompanyService:
@@ -11,14 +9,14 @@ class CompanyService:
     def __init__(
         self,
         config: Config,
-        logger: Logger,
+        logger: LoggerPort,
         repository: CompanyRepositoryPort,
         scraper: CompanySourcePort,
     ):
         """Initialize dependencies for company synchronization."""
         self.logger = logger
         self.config = config
-        logger.log("Start CompanyService", level="info")
+        self.logger.log("Start CompanyService", level="info")
 
         self.sync_usecase = SyncCompaniesUseCase(
             logger=self.logger,
@@ -27,9 +25,6 @@ class CompanyService:
             max_workers=self.config.global_settings.max_workers,
         )
 
-#     def run(self) -> SyncCompaniesResultDTO:
-#         """Run company synchronization and return a result summary."""
-#         return self.sync_usecase.execute()
     def run(self) -> None:
         """Execute company synchronization using the injected use case."""
         self.sync_usecase.execute()

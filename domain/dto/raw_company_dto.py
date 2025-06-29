@@ -1,7 +1,9 @@
+from __future__ import annotations
+
+import json
 from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional
-import json
 
 
 @dataclass(frozen=True)
@@ -32,13 +34,12 @@ class CompanyListingDTO:
 
     @staticmethod
     def from_dict(raw: dict) -> "CompanyListingDTO":
-
         return CompanyListingDTO(
             cvm_code=raw.get("codeCVM"),
             issuing_company=raw.get("issuingCompany"),
             company_name=raw.get("companyName"),
             trading_name=raw.get("tradingName"),
-            cnpj=raw.get("cnpj"), 
+            cnpj=raw.get("cnpj"),
             market_indicator=raw.get("marketIndicator"),
             type_bdr=raw.get("typeBDR"),
             listing_date=raw.get("dateListing"),
@@ -86,7 +87,9 @@ class CompanyDetailDTO:
         other_codes = raw.get("otherCodes") or []
         if isinstance(other_codes, str):
             other_codes = json.loads(other_codes)
-        code_dtos = [CodeDTO(code=c.get("code"), isin=c.get("isin")) for c in other_codes]
+        code_dtos = [
+            CodeDTO(code=c.get("code"), isin=c.get("isin")) for c in other_codes
+        ]
         company_detail_dto = CompanyDetailDTO(
             issuing_company=raw.get("issuingCompany"),
             company_name=raw.get("companyName"),
@@ -111,7 +114,6 @@ class CompanyDetailDTO:
             type_bdr=raw.get("typeBDR"),
             company_category=raw.get("describleCategoryBVMF"),
             date_quotation=raw.get("dateQuotation"),
-
             listing_segment=raw.get("listingSegment"),
             registrar=raw.get("registrar"),
         )
@@ -131,7 +133,7 @@ class CompanyRawDTO:
     ticker_codes: List[str]
     isin_codes: List[str]
     other_codes: List[CodeDTO]
-    
+
     industry_sector: Optional[str]
     industry_subsector: Optional[str]
     industry_segment: Optional[str]
@@ -149,7 +151,7 @@ class CompanyRawDTO:
     website: Optional[str]
     institution_common: Optional[str]
     institution_preferred: Optional[str]
-    
+
     market: Optional[str]
     status: Optional[str]
     market_indicator: Optional[str]
@@ -159,7 +161,7 @@ class CompanyRawDTO:
     type_bdr: Optional[str]
     has_quotation: Optional[bool]
     has_emissions: Optional[bool]
-    
+
     date_quotation: Optional[datetime]
     last_date: Optional[datetime]
     listing_date: Optional[datetime]

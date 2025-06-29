@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import json
 from dataclasses import dataclass
 from typing import Optional
@@ -91,7 +93,6 @@ class CompanyDTO:
             last_date=raw.get("last_date"),
             listing_date=raw.get("listing_date"),
         )
-
 
     @staticmethod
     def from_raw(raw: CompanyRawDTO) -> "CompanyDTO":

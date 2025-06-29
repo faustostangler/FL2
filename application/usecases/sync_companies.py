@@ -4,16 +4,16 @@ from typing import List
 from domain.dto import SyncCompaniesResultDTO
 from domain.dto.company_dto import CompanyDTO
 from domain.dto.raw_company_dto import CompanyRawDTO
-from domain.ports import CompanyRepositoryPort, CompanySourcePort
-from infrastructure.logging import Logger
+from domain.ports import CompanyRepositoryPort, CompanySourcePort, LoggerPort
 
 
 class SyncCompaniesUseCase:
-    """Use case for synchronizing company data from the scraper to the repository."""
+    """Use case for synchronizing company data from the scraper to the
+    repository."""
 
     def __init__(
         self,
-        logger: Logger,
+        logger: LoggerPort,
         repository: CompanyRepositoryPort,
         scraper: CompanySourcePort,
         max_workers: int,
