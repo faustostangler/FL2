@@ -6,7 +6,7 @@ from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from application import CompanyMapper
 from domain.dto import CompanyRawDTO, PageResultDTO
-from domain.ports import CompanySourcePort, WorkerPoolPort
+from domain.ports import CompanySourcePort, MetricsCollectorPort, WorkerPoolPort
 from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.byte_formatter import ByteFormatter
@@ -33,7 +33,7 @@ class CompanyB3Scraper(CompanySourcePort):
         data_cleaner: DataCleaner,
         mapper: CompanyMapper,
         executor: WorkerPoolPort,
-        metrics_collector,
+        metrics_collector: MetricsCollectorPort,
     ):
         """Set up configuration, logger and helper utilities for the scraper.
 

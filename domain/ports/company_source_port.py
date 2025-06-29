@@ -5,6 +5,8 @@ from typing import Callable, List, Optional, Set
 
 from domain.dto.raw_company_dto import CompanyRawDTO
 
+from .metrics_collector_port import MetricsCollectorPort
+
 
 class CompanySourcePort(ABC):
     """Port for external company data providers."""
@@ -18,4 +20,10 @@ class CompanySourcePort(ABC):
         max_workers: int | None = None,
     ) -> List[CompanyRawDTO]:
         """Fetch all available companies."""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def metrics_collector(self) -> MetricsCollectorPort:
+        """Metrics collector used by the scraper."""
         raise NotImplementedError

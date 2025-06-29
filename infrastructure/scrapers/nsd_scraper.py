@@ -7,10 +7,10 @@ from typing import Callable, Dict, List, Optional
 
 from bs4 import BeautifulSoup
 
+from domain.ports import MetricsCollectorPort
 from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.data_cleaner import DataCleaner
-from infrastructure.helpers.metrics_collector import MetricsCollector
 from infrastructure.logging import Logger
 
 
@@ -22,7 +22,7 @@ class NsdScraper:
         config: Config,
         logger: Logger,
         data_cleaner: DataCleaner,
-        metrics_collector: MetricsCollector,
+        metrics_collector: MetricsCollectorPort,
     ):
         self.config = config
         self.logger = logger

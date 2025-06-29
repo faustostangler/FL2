@@ -5,6 +5,7 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable, Iterable, List, Optional, TypeVar
 
+from domain.ports import MetricsCollectorPort
 from domain.ports.worker_pool_port import (
     ExecutionResultDTO,
     LoggerPort,
@@ -12,7 +13,6 @@ from domain.ports.worker_pool_port import (
 )
 from infrastructure.config import Config
 from infrastructure.helpers.byte_formatter import ByteFormatter
-from infrastructure.helpers.metrics_collector import MetricsCollector
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -24,7 +24,7 @@ class WorkerPool(WorkerPoolPort):
     def __init__(
         self,
         config: Config,
-        metrics_collector: MetricsCollector,
+        metrics_collector: MetricsCollectorPort,
         max_workers: Optional[int] = None,
     ) -> None:
         """Initialize the worker pool with configuration and metrics."""
