@@ -20,8 +20,8 @@ class LoggerPort(Protocol):
         raise NotImplementedError
 
 
-@dataclass
-class Metrics:
+@dataclass(frozen=True)
+class MetricsDTO:
 
     elapsed_time: float
     network_bytes: int = 0
@@ -29,12 +29,12 @@ class Metrics:
     failures: int = 0
 
 
-@dataclass
-class ExecutionResult(Generic[R]):
+@dataclass(frozen=True)
+class ExecutionResultDTO(Generic[R]):
     """Results and metrics returned by :class:`WorkerPoolPort.run`."""
 
     items: List[R]
-    metrics: Metrics
+    metrics: MetricsDTO
 
 
 class WorkerPoolPort(Protocol):
@@ -46,5 +46,5 @@ class WorkerPoolPort(Protocol):
         logger: LoggerPort,
         on_result: Optional[Callable[[R], None]] = None,
         post_callback: Optional[Callable[[List[R]], None]] = None,
-    ) -> ExecutionResult[R]:
+    ) -> ExecutionResultDTO[R]:
         raise NotImplementedError

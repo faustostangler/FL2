@@ -25,6 +25,6 @@ class CompanyService:
             max_workers=self.config.global_settings.max_workers,
         )
 
-    def run(self) -> None:
+    def run(self):
         """Execute company synchronization using the injected use case."""
-        self.sync_usecase.execute()
+        return self.sync_usecase.execute()

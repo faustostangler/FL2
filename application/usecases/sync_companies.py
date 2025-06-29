@@ -39,7 +39,7 @@ class SyncCompaniesUseCase:
         start = time.perf_counter()
         existing_codes = self.repository.get_all_primary_keys()
 
-        self.scraper.fetch_all(
+        results = self.scraper.fetch_all(
             skip_codes=existing_codes,
             save_callback=self._save_batch,
             max_workers=self.max_workers,
@@ -51,12 +51,12 @@ class SyncCompaniesUseCase:
             level="info",
         )
 
-    #         return SyncCompaniesResultDTO(
-    #             processed_count=len(results),
-    #             skipped_count=len(existing_codes),
-    #             bytes_downloaded=bytes_downloaded,
-    #             elapsed_time=elapsed,
-    #         )
+        return SyncCompaniesResultDTO(
+            processed_count=len(results),
+            skipped_count=len(existing_codes),
+            bytes_downloaded=bytes_downloaded,
+            elapsed_time=elapsed,
+        )
 
     def _save_batch(self, buffer: List[CompanyRawDTO]) -> None:
         """Convert raw companies to domain DTOs before saving."""
