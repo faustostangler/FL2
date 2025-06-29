@@ -1,4 +1,5 @@
 import threading
+
 from infrastructure.config import Config
 
 

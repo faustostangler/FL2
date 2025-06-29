@@ -1,10 +1,11 @@
-from .paths import load_paths, PathConfig
-from .database import load_database_config, DatabaseConfig
-from .b3_api import load_b3_api_config, B3ApiConfig
-from .scraping import load_scraping_config, ScrapingConfig
-from .logging import load_logging_config, LoggingConfig
-from .global_settings import load_global_settings_config, GlobalSettingsConfig
-from .domain import load_domain_config, DomainConfig
+from .b3_api import B3ApiConfig, load_b3_api_config
+from .database import DatabaseConfig, load_database_config
+from .domain import DomainConfig, load_domain_config
+from .global_settings import GlobalSettingsConfig, load_global_settings_config
+from .logging import LoggingConfig, load_logging_config
+from .paths import PathConfig, load_paths
+from .scraping import ScrapingConfig, load_scraping_config
+
 
 class Config:
     """

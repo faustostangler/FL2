@@ -1,5 +1,5 @@
-from pathlib import Path
 from dataclasses import dataclass, field, fields
+from pathlib import Path
 
 # Subpastas nomeadas (relativas ao root)
 TEMP_DIR = "temp"

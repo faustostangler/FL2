@@ -36,5 +36,5 @@ def load_b3_api_config() -> B3ApiConfig:
     return B3ApiConfig(
         language = LANGUAGE,
         company_endpoint = COMPANY_ENDPOINT,
-        nsd_endpoint = NSD_ENDPOINT, 
+        nsd_endpoint = NSD_ENDPOINT,
     )

@@ -2,15 +2,15 @@ from __future__ import annotations
 
 import random
 import ssl
-from typing import Optional
 import time
+from typing import Optional
 
 import certifi
 import requests
 
 from infrastructure.config import Config
-from infrastructure.logging import Logger
 from infrastructure.helpers.time_utils import TimeUtils
+from infrastructure.logging import Logger
 
 
 class FetchUtils:

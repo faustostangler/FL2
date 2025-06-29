@@ -2,6 +2,7 @@
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Mapping
+
 from .paths import load_paths
 
 DB_FILENAME="fly.db"
@@ -28,7 +29,7 @@ class DatabaseConfig:
     db_filename: str = field(default=DB_FILENAME)
     tables: Mapping[str, str] = field(default_factory=lambda: TABLES)
     connection_string: str = field(init=False)
-    
+
     def __post_init__(self):
 
         # Dynamically compute the connection URI
@@ -47,5 +48,5 @@ def load_database_config() -> DatabaseConfig:
     return DatabaseConfig(
         data_dir = paths.data_dir,
         db_filename = DB_FILENAME,
-        tables = TABLES, 
+        tables = TABLES,
     )

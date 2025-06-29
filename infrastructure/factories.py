@@ -1,5 +1,5 @@
-from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.config import Config
+from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.logging import Logger
 
 

@@ -1,6 +1,6 @@
 import json
-from pathlib import Path
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import List
 
 TEST_INTERNET = "https://www.google.com"  # URL usada para verificar conectividade
@@ -44,7 +44,7 @@ def load_scraping_config() -> ScrapingConfig:
     return ScrapingConfig(
         user_agents=user_agents,
         referers=referers,
-        languages=languages, 
+        languages=languages,
         test_internet=TEST_INTERNET,
         timeout=TIMEOUT,
         max_attempts=MAX_ATTEMPTS

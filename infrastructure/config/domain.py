@@ -6,7 +6,7 @@ WORDS_TO_REMOVE = [
     "EXTRAJUDICIAL",
     "EM RECUPERACAO JUDICIAL",
     "EM REC JUDICIAL",
-    "EMPRESA FALIDA", 
+    "EMPRESA FALIDA",
 ]
 
 @dataclass(frozen=True)

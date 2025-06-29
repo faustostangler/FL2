@@ -1,7 +1,9 @@
-import time
-import psutil
 import random
+import time
 from typing import Optional
+
+import psutil
+
 from infrastructure.config import Config
 
 
