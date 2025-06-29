@@ -6,7 +6,8 @@ from sqlalchemy.orm import sessionmaker
 from domain.dto.nsd_dto import NSDDTO
 from infrastructure.config import Config
 from infrastructure.logging import Logger
-from infrastructure.models.nsd_model import Base, NSDModel
+from infrastructure.models.base import Base
+from infrastructure.models.nsd_model import NSDModel
 from infrastructure.repositories.base_repository import BaseRepository
 
 

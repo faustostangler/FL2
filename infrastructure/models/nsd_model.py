@@ -1,7 +1,11 @@
-from sqlalchemy.orm import Mapped, mapped_column
 from typing import Optional
-from .company_model import Base
+
+from sqlalchemy.orm import Mapped, mapped_column
+
 from domain.dto.nsd_dto import NSDDTO
+
+from .base import Base
+
 
 class NSDModel(Base):
     """ORM model for the tbl_nsd table."""
