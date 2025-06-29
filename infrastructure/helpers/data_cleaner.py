@@ -1,4 +1,3 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > data_cleaner")
 import re
 import string
 from datetime import datetime
@@ -15,10 +14,8 @@ class DataCleaner:
 
     Requires external configuration (e.g. words to remove) and a logger.
     """
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("data_cleaner.DataCleaner")
 
     def __init__(self, config: Config, logger: Logger):
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DataCleaner.__init__")
         self.config = config
         self.logger = logger
 
@@ -26,7 +23,6 @@ class DataCleaner:
         self, text: Optional[str], words_to_remove: Optional[List[str]] = None
     ) -> Optional[str]:
         """Normalize a text string by removing punctuation, accents and stop words."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DataCleaner.clean_text()")
         try:
             if not text:
                 return None
@@ -50,7 +46,6 @@ class DataCleaner:
 
     def clean_number(self, text: str) -> Optional[float]:
         """Convert a stringified number (BR/US formats) to ``float``."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DataCleaner.clean_number()")
         if not text:
             return None
         try:
@@ -62,7 +57,6 @@ class DataCleaner:
 
     def clean_date(self, text: Optional[str]) -> Optional[datetime]:
         """Attempt to parse a date string using several common formats."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DataCleaner.clean_date()")
         if isinstance(text, datetime):
             return text
 
@@ -91,7 +85,6 @@ class DataCleaner:
 
     def clean_company_entry(self, entry: dict) -> dict:
         """Normalize relevant fields in a raw company listing entry."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DataCleaner.clean_company_entry()")
 
         text_keys = [
             "companyName",

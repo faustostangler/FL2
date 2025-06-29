@@ -1,5 +1,4 @@
 from __future__ import annotations
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > company_processors")
 
 import base64
 import json
@@ -14,14 +13,11 @@ from infrastructure.logging import Logger
 
 class EntryCleaner:
     """Clean raw company listing entries."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors.EntryCleaner")
 
     def __init__(self, data_cleaner: DataCleaner) -> None:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("EntryCleaner.__init__")
         self.data_cleaner = data_cleaner
 
     def run(self, entry: Dict) -> CompanyListingDTO:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("EntryCleaner.run()")
         cleaned = self.data_cleaner.clean_company_entry(entry)
         return CompanyListingDTO.from_dict(cleaned)
 
@@ -36,7 +32,6 @@ class EntryCleaner:
 
 
 class DetailFetcher:
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors.DetailFetcher")
     """Fetch and clean detailed company information."""
 
     def __init__(
@@ -48,7 +43,6 @@ class DetailFetcher:
         metrics_collector: MetricsCollector,
         data_cleaner: DataCleaner,
     ) -> None:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DetailFetcher.__init__")
         self.fetch_utils = fetch_utils
         self.session = session
         self.endpoint_detail = endpoint_detail
@@ -57,7 +51,6 @@ class DetailFetcher:
         self.data_cleaner = data_cleaner
 
     def run(self, cvm_code: str) -> CompanyDetailDTO:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("DetailFetcher.run()")
         payload = {"codeCVM": cvm_code, "language": self.language}
         token = base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
         url = self.endpoint_detail + token
@@ -96,17 +89,14 @@ class DetailFetcher:
 
 class CompanyMerger:
     """Merge base and detail DTOs."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors.CompanyMerger")
 
     def __init__(self, mapper: CompanyMapper, logger: Logger) -> None:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyMerger.__init__")
         self.mapper = mapper
         self.logger = logger
 
     def run(
         self, base: CompanyListingDTO, detail: CompanyDetailDTO
     ) -> Optional[CompanyRawDTO]:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyMerger.run()")
         try:
             return self.mapper.merge_company_dtos(base, detail)
         except Exception as exc:  # noqa: BLE001
@@ -116,18 +106,15 @@ class CompanyMerger:
 
 class CompanyDetailProcessor:
     """Pipeline to process a single company entry."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_processors.CompanyDetailProcessor")
 
     def __init__(
         self, cleaner: EntryCleaner, fetcher: DetailFetcher, merger: CompanyMerger
     ) -> None:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyDetailProcessor.__init__")
         self.cleaner = cleaner
         self.fetcher = fetcher
         self.merger = merger
 
     def run(self, entry: Dict) -> Optional[CompanyRawDTO]:
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CompanyDetailProcessor.run()")
         base = self.cleaner.run(entry)
         detail = self.fetcher.run(str(base.cvm_code))
         return self.merger.run(base, detail)

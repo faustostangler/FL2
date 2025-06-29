@@ -1,4 +1,3 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("domain > dto > company_dto")
 import json
 from dataclasses import dataclass
 from typing import Optional
@@ -9,7 +8,6 @@ from .raw_company_dto import CompanyRawDTO
 @dataclass(frozen=True)
 class CompanyDTO:
     """Structured company data extracted from B3."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_dto.CompanyDTO")
 
     cvm_code: Optional[str]
     issuing_company: Optional[str]
@@ -56,7 +54,6 @@ class CompanyDTO:
     @staticmethod
     def from_dict(raw: dict) -> "CompanyDTO":
         """Build an immutable DTO from a raw dictionary."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_dto CompanyDTO.from_dict()")
 
         return CompanyDTO(
             cvm_code=raw.get("cvm_code") or raw.get("codeCVM"),
@@ -99,7 +96,6 @@ class CompanyDTO:
     @staticmethod
     def from_raw(raw: CompanyRawDTO) -> "CompanyDTO":
         """Build a ``CompanyDTO`` from a ``CompanyRawDTO`` instance."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("company_dto CompanyDTO.from_raw()")
 
         other_codes = (
             json.dumps([{"code": c.code, "isin": c.isin} for c in raw.other_codes])

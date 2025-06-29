@@ -1,4 +1,3 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > config.__init__")
 from .data_cleaner import DataCleaner
 from .fetch_utils import FetchUtils
 from .metrics_collector import MetricsCollector

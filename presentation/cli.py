@@ -1,4 +1,3 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("presentation > cli")
 from application import CompanyMapper
 from application.services.company_service import CompanyService
 from application.services.nsd_service import NsdService
@@ -14,7 +13,6 @@ from infrastructure.scrapers.nsd_scraper import NsdScraper
 
 class CLIController:
     """CLI controller that orchestrates the FLY application execution."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("cli.CLIController")
 
     def __init__(self, config: Config, logger: Logger, data_cleaner):
         """Initialize the controller with config and logger.
@@ -23,14 +21,12 @@ class CLIController:
             config (Config): Application configuration object.
             logger (Logger): Logger used for CLI messages.
         """
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CLIController.__init__")
         self.config = config
         self.logger = logger
         self.data_cleaner = data_cleaner
 
     def run(self):
         """Execute the main CLI tasks."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CLIController.run()")
 
         # Log the start of the CLI application
         self.logger.log("Start FLY CLI", level="info")
@@ -41,7 +37,6 @@ class CLIController:
 
     def run_company_sync(self):
         """Run the company synchronization workflow."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("CLIController.run_sync_company()")
 
         # Log the start of the company synchronization
         self.logger.log("Start Companies Sync Use Case", level="info")

@@ -1,14 +1,11 @@
-import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("infrastructure > helpers > progress_formatter")
 import time
 
 
 class ProgressFormatter:
     """Format progress information for logging."""
-    import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("progress_formatter.ProgressFormatter")
 
     def format(self, progress: dict) -> str:
         """Return a formatted progress string like ``"15/100 | 15.00% | 0h00m10s + 0h01m00s = 0h01m10s"``."""
-        import logging; logging.basicConfig(level=logging.DEBUG); logging.debug("ProgressFormatter.format()")
         try:
             index = progress.get("index", 0)
             size = progress.get("size", 1)
