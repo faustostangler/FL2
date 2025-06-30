@@ -38,14 +38,6 @@ class EntryCleaner:
         return CompanyListingDTO.from_dict(cleaned)
 
 
-#         entry["companyName"] = self.data_cleaner.clean_text(entry.get("companyName"))
-#         entry["issuingCompany"] = self.data_cleaner.clean_text(
-#             entry.get("issuingCompany")
-#         )
-#         entry["tradingName"] = self.data_cleaner.clean_text(entry.get("tradingName"))
-#         entry["dateListing"] = self.data_cleaner.clean_date(entry.get("dateListing"))
-#         return CompanyListingDTO.from_dict(entry)
-
 
 class DetailFetcher:
     """Fetch and clean detailed company information."""

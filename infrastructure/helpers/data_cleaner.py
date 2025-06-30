@@ -55,6 +55,7 @@ class DataCleaner:
         number_keys: Optional[List[str]] = None,
     ) -> dict:
         """Return a cleaned ``entry`` using ``utils.clean_dict_fields``."""
+
         return util_clean_dict_fields(
             entry,
             text_keys,

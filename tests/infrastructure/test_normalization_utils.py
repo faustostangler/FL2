@@ -1,5 +1,3 @@
-"""Tests for normalization utilities."""
-
 import copy
 
 from infrastructure.utils.normalization import clean_dict_fields

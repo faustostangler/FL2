@@ -1,5 +1,3 @@
-"""Normalization helper functions for text, dates and numbers."""
-
 from __future__ import annotations
 
 import re

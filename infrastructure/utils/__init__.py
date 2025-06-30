@@ -1,5 +1,3 @@
-"""Utility exports for normalization helpers."""
-
 from .normalization import clean_date, clean_dict_fields, clean_number, clean_text
 
 __all__ = [
