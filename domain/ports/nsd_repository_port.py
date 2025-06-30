@@ -2,19 +2,16 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from typing import List, Set
+from abc import abstractmethod
+from typing import Set
 
 from domain.dto.nsd_dto import NSDDTO
 
+from .base_repository_port import BaseRepositoryPort
 
-class NSDRepositoryPort(ABC):
+
+class NSDRepositoryPort(BaseRepositoryPort[NSDDTO]):
     """Port for NSD persistence operations."""
-
-    @abstractmethod
-    def save_all(self, items: List[NSDDTO]) -> None:
-        """Persist a batch of NSD records."""
-        raise NotImplementedError
 
     @abstractmethod
     def get_all_primary_keys(self) -> Set[int]:

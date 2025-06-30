@@ -15,6 +15,16 @@ class BaseRepositoryPort(ABC, Generic[T]):
         raise NotImplementedError
 
     @abstractmethod
+    def get_all(self) -> List[T]:
+        """Retrieve all items from the repository."""
+        raise NotImplementedError
+
+    @abstractmethod
+    def has_item(self, identifier: str) -> bool:
+        """Check if an item exists in the repository."""
+        raise NotImplementedError
+
+    @abstractmethod
     def get_by_id(self, id: str) -> T:
         """Retrieve an item by its identifier."""
         raise NotImplementedError

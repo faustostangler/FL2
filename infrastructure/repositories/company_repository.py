@@ -6,10 +6,13 @@ from typing import List, Set
 
 from domain.dto.company_dto import CompanyDTO
 from domain.ports import CompanyRepositoryPort
+from infrastructure.config import Config
+from infrastructure.logging import Logger
 from infrastructure.models.company_model import CompanyModel
+from infrastructure.repositories.base_repository import BaseRepository
 
 
-class SQLiteCompanyRepository(CompanyRepositoryPort):
+class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort):
     """Concrete implementation of the repository using SQLite.
 
     Note:
@@ -20,8 +23,7 @@ class SQLiteCompanyRepository(CompanyRepositoryPort):
     """
 
     def __init__(self, config: Config, logger: Logger):
-        super().__init__(config, logger, model_metadata=CompanyModel.metadata)
-
+        super().__init__(config, logger)
 
     def save_all(self, items: List[CompanyDTO]) -> None:
         """Persist a list of ``CompanyDTO`` objects."""
@@ -42,6 +44,26 @@ class SQLiteCompanyRepository(CompanyRepositoryPort):
                 level="error",
             )
             raise
+        finally:
+            session.close()
+
+    def get_all(self) -> List[CompanyDTO]:
+        """Return every persisted company."""
+        session = self.Session()
+        try:
+            results = session.query(CompanyModel).all()
+            return [model.to_dto() for model in results]
+        finally:
+            session.close()
+
+    def has_item(self, identifier: str) -> bool:
+        """Check if a company exists for the given CVM code."""
+        session = self.Session()
+        try:
+            return (
+                session.query(CompanyModel).filter_by(cvm_code=identifier).first()
+                is not None
+            )
         finally:
             session.close()
 

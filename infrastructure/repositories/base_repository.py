@@ -1,20 +1,23 @@
 from abc import ABC, abstractmethod
-from typing import Generic, List, TypeVar
+from typing import List, TypeVar
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+from domain.ports.base_repository_port import BaseRepositoryPort
 from infrastructure.config import Config
 from infrastructure.logging import Logger
 from infrastructure.models.base_model import BaseModel
 
 T = TypeVar("T")  # T pode ser CompanyDTO, StatementDTO, etc.
 
-class BaseRepository(ABC, Generic[T]):
+
+class BaseRepository(BaseRepositoryPort[T], ABC):
     """
     Contract - Interface genérica para repositórios de leitura/escrita.
     Pode ser especializada para qualquer tipo de DTO.
     """
+
     def __init__(self, config: Config, logger: Logger):
         """Initialize the SQLite database connection and ensure tables
         exist."""
@@ -30,33 +33,27 @@ class BaseRepository(ABC, Generic[T]):
         with self.engine.connect() as conn:
             conn.execute(text("PRAGMA journal_mode=WAL"))
 
-        self.Session = sessionmaker(bind=self.engine, autoflush=True, expire_on_commit=True)
+        self.Session = sessionmaker(
+            bind=self.engine, autoflush=True, expire_on_commit=True
+        )
         BaseModel.metadata.create_all(self.engine)
-
 
     @abstractmethod
     def save_all(self, items: List[T]) -> None:
-        """
-        Saves in repository.
-        """
+        """Saves in repository."""
         pass
 
     @abstractmethod
     def get_all(self) -> List[T]:
-        """
-        Get all items from repository.
-        """
+        """Get all items from repository."""
         pass
 
     @abstractmethod
     def has_item(self, identifier: str) -> bool:
-        """
-        Check if it is in repository.
-        """
+        """Check if it is in repository."""
         pass
 
     @abstractmethod
     def get_by_id(self, id: str) -> T:
         """Recupera uma empresa a partir do ticker."""
         pass
-
