@@ -14,6 +14,7 @@ from domain.ports import (
     MetricsCollectorPort,
     WorkerPoolPort,
 )
+from domain.dto import ExecutionResultDTO, WorkerTaskDTO
 from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.byte_formatter import ByteFormatter
@@ -214,15 +215,17 @@ class CompanyB3Scraper(CompanySourcePort):
         if total_pages > 1:
             tasks = list(enumerate(range(2, total_pages + 1)))
 
-            def processor(task: Tuple[int, int]) -> PageResultDTO:
-                index, page = task
+            def processor(task: WorkerTaskDTO) -> PageResultDTO:
+                index = task.index
+                entry = task.data
+                worker_id = task.worker_id
                 pre_downloaded = self._metrics_collector.network_bytes
-                fetch = self._fetch_page(page)
+                fetch = self._fetch_page(entry)
                 extra_info = {
                     "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre_downloaded),
                     "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
                     }
-                self.logger.log(f"Page {page}/{total_pages}",
+                self.logger.log(f"Page {entry}/{total_pages}",
                     level="info",
                     progress={
                         "index": index + 1,
@@ -230,6 +233,7 @@ class CompanyB3Scraper(CompanySourcePort):
                         "start_time": start_time,
                     },
                     extra=extra_info,
+                    worker_id=worker_id
                 )
                 return fetch
 
@@ -324,8 +328,11 @@ class CompanyB3Scraper(CompanySourcePort):
         tasks = list(enumerate(companies_list))
         start_time = time.perf_counter()
 
-        def processor(item: Tuple[int, Dict]) -> Optional[CompanyRawDTO]:
-            index, entry = item
+        def processor(task: WorkerTaskDTO) -> Optional[CompanyRawDTO]:
+            index = task.index
+            entry = task.data
+            worker_id = task.worker_id
+
             code_cvm = entry.get("codeCVM")
             if code_cvm in skip_codes:
                 # Log and skip already persisted companies
@@ -339,6 +346,7 @@ class CompanyB3Scraper(CompanySourcePort):
                         "start_time": start_time,
                     },
                     extra=extra_info,
+                    worker_id=worker_id,
                 )
 
                 return None
