@@ -1,12 +1,22 @@
-import re
-import string
+"""Helpers for applying normalization to raw company data."""
+
 from datetime import datetime
 from typing import List, Optional
 
-import unidecode
-
 from infrastructure.config import Config
 from infrastructure.logging import Logger
+from infrastructure.utils.normalization import (
+    clean_date as util_clean_date,
+)
+from infrastructure.utils.normalization import (
+    clean_dict_fields as util_clean_dict_fields,
+)
+from infrastructure.utils.normalization import (
+    clean_number as util_clean_number,
+)
+from infrastructure.utils.normalization import (
+    clean_text as util_clean_text,
+)
 
 
 class DataCleaner:
@@ -16,92 +26,40 @@ class DataCleaner:
     """
 
     def __init__(self, config: Config, logger: Logger):
+        """Store configuration and logger."""
         self.config = config
         self.logger = logger
 
     def clean_text(
         self, text: Optional[str], words_to_remove: Optional[List[str]] = None
     ) -> Optional[str]:
-        """Normalize a text string by removing punctuation, accents and stop words."""
-        try:
-            if not text:
-                return None
-
-            words_to_remove = words_to_remove or self.config.domain.words_to_remove
-
-            text = unidecode.unidecode(text)
-            text = text.translate(str.maketrans("", "", string.punctuation))
-            text = text.upper().strip()
-            text = re.sub(r"\s+", " ", text)
-
-            if words_to_remove:
-                pattern = r"\b(?:" + "|".join(map(re.escape, words_to_remove)) + r")\b"
-                text = re.sub(pattern, "", text)
-                text = re.sub(r"\s+", " ", text).strip()
-
-            return text
-        except Exception as e:
-            self.logger.log(f"Failed to clean text: {e}", level="warning")
-            return None
+        """Normalize a text string using ``utils.clean_text``."""
+        words_to_remove = words_to_remove or self.config.domain.words_to_remove
+        return util_clean_text(
+            text, words_to_remove=words_to_remove, logger=self.logger
+        )
 
     def clean_number(self, text: str) -> Optional[float]:
-        """Convert a stringified number (BR/US formats) to ``float``."""
-        if not text:
-            return None
-        try:
-            text = text.replace(".", "").replace(",", ".")
-            return float(text)
-        except Exception as e:
-            self.logger.log(f"Failed to clean number: {e}", level="warning")
-            return None
+        """Convert a stringified number using ``utils.clean_number``."""
+        return util_clean_number(text, logger=self.logger)
 
     def clean_date(self, text: Optional[str]) -> Optional[datetime]:
-        """Attempt to parse a date string using several common formats."""
-        if isinstance(text, datetime):
-            return text
+        """Parse a date string using ``utils.clean_date``."""
+        return util_clean_date(text, logger=self.logger)
 
-        if not text:
-            return None
-
-        patterns = [
-            "%d/%m/%Y %H:%M:%S",
-            "%m/%d/%Y %H:%M:%S",
-            "%Y-%m-%d %H:%M:%S",
-            "%d/%m/%Y",
-            "%m/%d/%Y",
-            "%Y-%m-%d",
-        ]
-        for fmt in patterns:
-            try:
-                return datetime.strptime(text.strip(), fmt)
-            except Exception:
-                continue
-
-        self.logger.log(
-            f"Failed to parse date: unsupported format '{text}'",
-            level="debug",
+    def clean_dict_fields(
+        self,
+        entry: dict,
+        text_keys: List[str],
+        date_keys: List[str],
+        number_keys: Optional[List[str]] = None,
+    ) -> dict:
+        """Return a cleaned ``entry`` using ``utils.clean_dict_fields``."""
+        return util_clean_dict_fields(
+            entry,
+            text_keys,
+            date_keys,
+            number_keys,
+            logger=self.logger,
+            words_to_remove=self.config.domain.words_to_remove,
         )
-        return None
-
-    def clean_company_entry(self, entry: dict) -> dict:
-        """Normalize relevant fields in a raw company listing entry."""
-
-        text_keys = [
-            "companyName",
-            "issuingCompany",
-            "tradingName",
-            "segment",
-            "segmentEng",
-            "market",
-        ]
-        date_keys = ["dateListing"]
-
-        for key in text_keys:
-            if key in entry:
-                entry[key] = self.clean_text(entry.get(key))
-
-        for key in date_keys:
-            if key in entry:
-                entry[key] = self.clean_date(entry.get(key))
-
-        return entry
