@@ -18,7 +18,8 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
     """Concrete implementation of the company repository using SQLite."""
 
     def __init__(self, config: Config, logger: Logger):
-        """Initialize the SQLite database connection and ensure tables exist."""
+        """Initialize the SQLite database connection and ensure tables
+        exist."""
         self.config = config
         self.logger = logger
         self.logger.log("Start SQLiteCompanyRepository", level="info")
@@ -37,7 +38,8 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
         session = self.Session()
         try:
             models = [CompanyModel.from_dto(dto) for dto in items]
-            session.bulk_save_objects(models)
+            for model in models:
+                session.merge(model)
             session.commit()
             self.logger.log(
                 f"Saved {len(items)} companies",
@@ -74,7 +76,8 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
             session.close()
 
     def get_by_id(self, id: str) -> CompanyDTO:
-        """Retrieve a company by CVM code or raise ``ValueError`` if missing."""
+        """Retrieve a company by CVM code or raise ``ValueError`` if
+        missing."""
         session = self.Session()
         try:
             obj = session.query(CompanyModel).filter_by(cvm_code=id).first()
