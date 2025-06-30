@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import time
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from application import CompanyMapper
@@ -182,11 +183,19 @@ class CompanyB3Scraper(CompanySourcePort):
             items=[], metrics=self.metrics_collector.get_metrics(0)
         )
 
+        start_time = time.perf_counter()
+
         first_page = self._fetch_page(1)
         results = list(first_page.items)
         for item in first_page.items:
             strategy.handle(item)
         total_pages = first_page.total_pages
+
+        self.logger.log(
+            "Fetching page 1",
+            level="info",
+            progress={"index": 0, "size": total_pages, "start_time": start_time},
+        )
 
         if total_pages > 1:
             tasks = list(enumerate(range(2, total_pages + 1)))
@@ -195,8 +204,13 @@ class CompanyB3Scraper(CompanySourcePort):
                 index, page = task
                 fetch = self._fetch_page(page)
                 self.logger.log(
-                    f"processor task {index} in _fetch_page",
+                    f"Fetching page {page}",
                     level="info",
+                    progress={
+                        "index": index + 1,
+                        "size": total_pages,
+                        "start_time": start_time,
+                    },
                 )
                 return fetch
 
@@ -292,6 +306,8 @@ class CompanyB3Scraper(CompanySourcePort):
 
         # Pair each company dict with its index for progress logging
         tasks = list(enumerate(companies_list))
+        size = len(tasks)
+        start_time = time.perf_counter()
 
         def processor(item: Tuple[int, Dict]) -> Optional[CompanyRawDTO]:
             index, entry = item
@@ -300,7 +316,11 @@ class CompanyB3Scraper(CompanySourcePort):
                 return None
 
             processed_entry = self.detail_processor.run(entry)
-            self.logger.log(f"Processor processed_entry {index}", level="info")
+            self.logger.log(
+                f"Processed entry {index}",
+                level="info",
+                progress={"index": index, "size": size, "start_time": start_time},
+            )
 
             return processed_entry
 
