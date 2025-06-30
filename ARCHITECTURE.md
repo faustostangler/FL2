@@ -30,7 +30,7 @@ Each feature is expressed as a use case class. Services build the use case, inje
 
 ## Conceptual Overview – The FLY Metaphor
 
-Imagine an old-fashioned company called FLY (Financial Yearly Ledger). It has no technology or code, but you’ve hired it to provide accurate and up-to-date financial data about companies listed on the B3 stock exchange. In this analogy, you are the user and FLY is the codebase—a structured organization that operates with logic and precision.
+Imagine an old-fashioned company called FLY (Financial Yearly Ledger). It has no technology or code, but you’ve hired it to provide accurate and up-to-date financial data about companies listed on a stock exchange. In this analogy, you are the user and FLY is the codebase—a structured organization that operates with logic and precision.
 
 We will walk through each layer of the software architecture by imagining what role it plays inside the company FLY.
 
@@ -95,7 +95,7 @@ The FLY owner never talks to a worker directly. He calls the Head of the Company
 The Head turns to the Company Synchronization Specialist (SyncCompaniesUseCase) and gives him tools and instructions:
 
 - Ask the archive (Repository) for the existing company codes.
-- Ask the scout (Source) to fetch new company data from B3.
+- Ask the scout (Source) to fetch new company data from the exchange.
 - Compare new and existing records.
 - Ask the archive to save only what’s missing.
 - No domain logic is defined here—it’s all orchestration.
@@ -112,10 +112,10 @@ This is the operational floor of FLY: developers, clerks, file cabinets, scraper
 
 It includes:
 
-- Adapters: e.g., B3CompanyScraper implements SourcePort.
+- Adapters: e.g., CompanyExchangeScraper implements SourcePort.
 - Repositories: e.g., SQLiteCompanyRepository implements RepositoryPort.
 - ORM Models: Define the data schema using SQLAlchemy.
-- Scrapers: Fetch HTML, XML, or JSON from B3.
+- Scrapers: Fetch HTML, XML, or JSON from the exchange.
 - Parsers & Cleaners: Normalize raw data.
 - Helpers: Utilities like threading, time handling, or logging context.
 - Logging: Captures process info for monitoring and debugging.

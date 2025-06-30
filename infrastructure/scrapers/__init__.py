@@ -1,4 +1,4 @@
-from .company_b3_scraper import CompanyB3Scraper
+from .company_exchange_scraper import CompanyExchangeScraper
 from .company_processors import (
     CompanyDetailProcessor,
     CompanyMerger,
@@ -8,7 +8,7 @@ from .company_processors import (
 from .nsd_scraper import NsdScraper
 
 __all__ = [
-    "CompanyB3Scraper",
+    "CompanyExchangeScraper",
     "NsdScraper",
     "EntryCleaner",
     "DetailFetcher",

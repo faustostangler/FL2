@@ -1,4 +1,4 @@
-"""Scraper implementation for fetching company data from B3."""
+"""Scraper implementation for fetching company data from the stock exchange."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ from infrastructure.scrapers.company_processors import (
 )
 
 
-class CompanyB3Scraper(CompanySourcePort):
+class CompanyExchangeScraper(CompanySourcePort):
     """Scraper adapter responsible for fetching raw company data.
 
     In a real implementation, this could use requests, BeautifulSoup, or
@@ -46,14 +46,14 @@ class CompanyB3Scraper(CompanySourcePort):
         """Set up configuration, logger and helper utilities for the scraper.
 
         Args:
-            config (Config): Global configuration with B3 company_endpoint.
+            config (Config): Global configuration with exchange endpoints.
             logger (Logger): Logger used for progress and error messages.
 
         Attributes:
             config (Config): Stored configuration instance.
             logger (Logger): Stored logger instance.
             fetch_utils (FetchUtils): Utility for HTTP requests with retries.
-            language (str): Language code for B3 API requests.
+            language (str): Language code for API requests.
             endpoint_companies_list (str): URL for the companies list endpoint.
             endpoint_detail (str): URL for the company detail endpoint.
             endpoint_financial (str): URL for the financial data endpoint.
@@ -75,17 +75,17 @@ class CompanyB3Scraper(CompanySourcePort):
         self.executor = executor
         self._metrics_collector = metrics_collector
 
-        # Log the initialization of the CompanyB3Scraper
-        self.logger.log("Start CompanyB3Scraper", level="info")
+        # Log the initialization of the scraper
+        self.logger.log("Start CompanyExchangeScraper", level="info")
 
         # Initialize FetchUtils for HTTP request utilities
         self.fetch_utils = FetchUtils(config, logger)
 
         # Set language and API company_endpoint from configuration
-        self.language = config.b3.language
-        self.endpoint_companies_list = config.b3.company_endpoint["initial"]
-        self.endpoint_detail = config.b3.company_endpoint["detail"]
-        self.endpoint_financial = config.b3.company_endpoint["financial"]
+        self.language = config.exchange.language
+        self.endpoint_companies_list = config.exchange.company_endpoint["initial"]
+        self.endpoint_detail = config.exchange.company_endpoint["detail"]
+        self.endpoint_financial = config.exchange.company_endpoint["financial"]
 
         # Initialize a requests session for HTTP requests
         self.session = self.fetch_utils.create_scraper()
@@ -124,7 +124,7 @@ class CompanyB3Scraper(CompanySourcePort):
         save_callback: Optional[Callable[[List[CompanyRawDTO]], None]] = None,
         max_workers: int | None = None,
     ) -> ExecutionResultDTO[CompanyRawDTO]:
-        """Fetch all companies from B3.
+        """Fetch all companies from the exchange.
 
         Args:
             threshold: Number of companies to buffer before saving.
@@ -135,14 +135,14 @@ class CompanyB3Scraper(CompanySourcePort):
         Returns:
             List of dictionaries representing raw company data.
         """
-        self.logger.log("Start (B3 Scraper) fetch_all", level="info")
+        self.logger.log("Start fetch_all", level="info")
 
         # Ensure skip_codes is a set (to avoid None and allow fast lookup)
         skip_codes = skip_codes or set()
         # Determine the save threshold (number of companies before saving buffer)
         threshold = threshold or self.config.global_settings.threshold or 50
 
-        # Fetch the initial list of companies from B3, possibly skipping some CVM codes
+        # Fetch the initial list of companies, possibly skipping some CVM codes
         def noop(_buffer: List[Dict]) -> None:
             return None
 
@@ -173,11 +173,11 @@ class CompanyB3Scraper(CompanySourcePort):
         threshold: Optional[int] = None,
         save_callback: Optional[Callable[[List[Dict]], None]] = None,
     ) -> ExecutionResultDTO[Dict]:
-        """Busca o conjunto inicial de empresas disponíveis na B3.
+        """Busca o conjunto inicial de empresas disponíveis na bolsa.
 
         :return: Lista de empresas com código CVM e nome base.
         """
-        self.logger.log("Fetch Existing Companies from B3", level="info")
+        self.logger.log("Fetch Existing Companies", level="info")
 
         threshold = threshold or self.config.global_settings.threshold or 50
         strategy: SaveStrategy[Dict] = SaveStrategy(
@@ -200,10 +200,15 @@ class CompanyB3Scraper(CompanySourcePort):
         total_pages = fetch.total_pages
 
         extra_info = {
-            "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre_downloaded),
-            "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
-            }
-        self.logger.log(f"Page {page}/{total_pages}",
+            "Download": self.byte_formatter.format_bytes(
+                self._metrics_collector.network_bytes - pre_downloaded
+            ),
+            "Total download": self.byte_formatter.format_bytes(
+                self.metrics_collector.network_bytes
+            ),
+        }
+        self.logger.log(
+            f"Page {page}/{total_pages}",
             level="info",
             progress={
                 "index": 0,
@@ -220,10 +225,15 @@ class CompanyB3Scraper(CompanySourcePort):
                 pre_downloaded = self._metrics_collector.network_bytes
                 fetch = self._fetch_page(task.data)
                 extra_info = {
-                    "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre_downloaded),
-                    "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
-                    }
-                self.logger.log(f"Page {task.data}/{total_pages}",
+                    "Download": self.byte_formatter.format_bytes(
+                        self._metrics_collector.network_bytes - pre_downloaded
+                    ),
+                    "Total download": self.byte_formatter.format_bytes(
+                        self.metrics_collector.network_bytes
+                    ),
+                }
+                self.logger.log(
+                    f"Page {task.data}/{total_pages}",
                     level="info",
                     progress={
                         "index": task.index + 1,
@@ -231,7 +241,7 @@ class CompanyB3Scraper(CompanySourcePort):
                         "start_time": start_time,
                     },
                     extra=extra_info,
-                    worker_id=task.worker_id
+                    worker_id=task.worker_id,
                 )
                 return fetch
 
@@ -255,7 +265,7 @@ class CompanyB3Scraper(CompanySourcePort):
         return ExecutionResultDTO(items=results, metrics=page_exec.metrics)
 
     def _encode_payload(self, payload: dict) -> str:
-        """Codifica um dicionário JSON para o formato base64 usado pela B3.
+        """Codifica um dicionário JSON para o formato base64 usado pela API.
 
         :param payload: Dicionário de entrada
         :return: String base64
@@ -320,7 +330,9 @@ class CompanyB3Scraper(CompanySourcePort):
             items=[], metrics=self.metrics_collector.get_metrics(0)
         )
 
-        self.logger.log("Start CompanyB3Scraper fetch_companies_details", level="info")
+        self.logger.log(
+            "Start CompanyExchangeScraper fetch_companies_details", level="info"
+        )
 
         # Pair each company dict with its index for progress logging
         tasks = list(enumerate(companies_list))
@@ -356,10 +368,15 @@ class CompanyB3Scraper(CompanySourcePort):
             extra_info = {
                 "issuingCompany": issuingCompany,
                 "trading_name": tradingName,
-                "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre_downloaded),
-                "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
-                }
-            self.logger.log(f"{code_cvm}",
+                "Download": self.byte_formatter.format_bytes(
+                    self._metrics_collector.network_bytes - pre_downloaded
+                ),
+                "Total download": self.byte_formatter.format_bytes(
+                    self.metrics_collector.network_bytes
+                ),
+            }
+            self.logger.log(
+                f"{code_cvm}",
                 level="info",
                 progress={
                     "index": index,
