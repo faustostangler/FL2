@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Callable, Generic, List, Optional, TypeVar
 
+from infrastructure.config import Config
+
 T = TypeVar("T")
 
 
@@ -11,7 +13,8 @@ class SaveStrategy(Generic[T]):
     def __init__(
         self,
         save_callback: Optional[Callable[[List[T]], None]] = None,
-        threshold: int = 50,
+        threshold: Optional[int] = None,
+        config: Optional[Config] = None,
     ) -> None:
         """Create a new strategy instance.
 
@@ -19,8 +22,11 @@ class SaveStrategy(Generic[T]):
             save_callback: Function invoked when the buffer is flushed.
             threshold: Number of items to collect before flushing.
         """
+        self.config = config
         self.save_callback = save_callback or (lambda buffer: None)
-        self.threshold = threshold
+        self.threshold = threshold or (
+            config.global_settings.threshold if config else 50
+        )
         self.buffer: List[T] = []
 
     def handle(self, item: Optional[T], remaining: Optional[int] = None) -> None:
@@ -34,6 +40,9 @@ class SaveStrategy(Generic[T]):
 
         if item is None:
             return
+
+        if remaining is None and self.config:
+            remaining = self.config.global_settings.threshold
 
         self.buffer.append(item)
 

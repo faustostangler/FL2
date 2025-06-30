@@ -66,7 +66,9 @@ class NsdScraper:
         nsd = start
         index = 0
 
-        strategy: SaveStrategy[Dict] = SaveStrategy(save_callback, threshold)
+        strategy: SaveStrategy[Dict] = SaveStrategy(
+            save_callback, threshold, config=self.config
+        )
         results: List[Dict] = []
         start_time = time.perf_counter()
 

@@ -180,7 +180,9 @@ class CompanyB3Scraper(CompanySourcePort):
         self.logger.log("Fetch Existing Companies from B3", level="info")
 
         threshold = threshold or self.config.global_settings.threshold or 50
-        strategy: SaveStrategy[Dict] = SaveStrategy(save_callback, threshold)
+        strategy: SaveStrategy[Dict] = SaveStrategy(
+            save_callback, threshold, config=self.config
+        )
         page_exec = ExecutionResultDTO(
             items=[], metrics=self.metrics_collector.get_metrics(0)
         )
@@ -195,20 +197,24 @@ class CompanyB3Scraper(CompanySourcePort):
             strategy.handle(item)
         total_pages = fetch.total_pages
 
-
         extra_info = {
-            "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre),
-            "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
-            }
-        self.logger.log(f"Page {page}/{total_pages}", 
+            "Download": self.byte_formatter.format_bytes(
+                self._metrics_collector.network_bytes - pre
+            ),
+            "Total download": self.byte_formatter.format_bytes(
+                self.metrics_collector.network_bytes
+            ),
+        }
+        self.logger.log(
+            f"Page {page}/{total_pages}",
             level="info",
             progress={
                 "index": 0,
                 "size": total_pages,
                 "start_time": start_time,
-                },
+            },
             extra=extra_info,
-            )
+        )
 
         if total_pages > 1:
             tasks = list(enumerate(range(2, total_pages + 1)))
@@ -218,18 +224,23 @@ class CompanyB3Scraper(CompanySourcePort):
                 pre = self._metrics_collector.network_bytes
                 fetch = self._fetch_page(page)
                 extra_info = {
-                    "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre),
-                    "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
-                    }
-                self.logger.log(f"Page {page}/{total_pages}",
+                    "Download": self.byte_formatter.format_bytes(
+                        self._metrics_collector.network_bytes - pre
+                    ),
+                    "Total download": self.byte_formatter.format_bytes(
+                        self.metrics_collector.network_bytes
+                    ),
+                }
+                self.logger.log(
+                    f"Page {page}/{total_pages}",
                     level="info",
                     progress={
                         "index": index + 1,
                         "size": total_pages,
                         "start_time": start_time,
-                        },
+                    },
                     extra=extra_info,
-                    )
+                )
                 return fetch
 
             page_exec = self.executor.run(
@@ -310,7 +321,9 @@ class CompanyB3Scraper(CompanySourcePort):
 
         threshold = threshold or self.config.global_settings.threshold or 50
         skip_codes = skip_codes or set()
-        strategy: SaveStrategy[CompanyRawDTO] = SaveStrategy(save_callback, threshold)
+        strategy: SaveStrategy[CompanyRawDTO] = SaveStrategy(
+            save_callback, threshold, config=self.config
+        )
         detail_exec: ExecutionResultDTO[Optional[CompanyRawDTO]] = ExecutionResultDTO(
             items=[], metrics=self.metrics_collector.get_metrics(0)
         )
@@ -326,17 +339,17 @@ class CompanyB3Scraper(CompanySourcePort):
             code_cvm = entry.get("codeCVM")
             if code_cvm in skip_codes:
                 # Log and skip already persisted companies
-                extra_info = {
-                    }
-                self.logger.log(f"{code_cvm}",
+                extra_info = {}
+                self.logger.log(
+                    f"{code_cvm}",
                     level="info",
                     progress={
                         "index": index,
                         "size": len(tasks),
                         "start_time": start_time,
-                        },
+                    },
                     extra=extra_info,
-                    )
+                )
 
                 return None
 
@@ -347,18 +360,23 @@ class CompanyB3Scraper(CompanySourcePort):
             extra_info = {
                 "issuingCompany": issuingCompany,
                 "trading_name": tradingName,
-                "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre),
-                "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
-                }
-            self.logger.log(f"{code_cvm}",
+                "Download": self.byte_formatter.format_bytes(
+                    self._metrics_collector.network_bytes - pre
+                ),
+                "Total download": self.byte_formatter.format_bytes(
+                    self.metrics_collector.network_bytes
+                ),
+            }
+            self.logger.log(
+                f"{code_cvm}",
                 level="info",
                 progress={
                     "index": index,
                     "size": len(tasks),
                     "start_time": start_time,
-                    },
+                },
                 extra=extra_info,
-                )
+            )
 
             return result
 
