@@ -1,6 +1,8 @@
+"""SQLite-backed repository implementation for company data."""
+
 from __future__ import annotations
 
-from typing import List
+from typing import List, Set
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
@@ -11,10 +13,9 @@ from infrastructure.config import Config
 from infrastructure.logging import Logger
 from infrastructure.models.base import Base
 from infrastructure.models.company_model import CompanyModel
-from infrastructure.repositories.base_repository import BaseRepository
 
 
-class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort):
+class SQLiteCompanyRepository(CompanyRepositoryPort):
     """Concrete implementation of the company repository using SQLite."""
 
     def __init__(self, config: Config, logger: Logger):
@@ -55,26 +56,6 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
         finally:
             session.close()
 
-    def get_all(self) -> List[CompanyDTO]:
-        """Return all companies stored in the database."""
-        session = self.Session()
-        try:
-            results = session.query(CompanyModel).all()
-            return [obj.to_dto() for obj in results]
-        finally:
-            session.close()
-
-    def has_item(self, identifier: str) -> bool:
-        """Return ``True`` if a company with ``identifier`` exists."""
-        session = self.Session()
-        try:
-            return (
-                session.query(CompanyModel).filter_by(cvm_code=identifier).first()
-                is not None
-            )
-        finally:
-            session.close()
-
     def get_by_id(self, id: str) -> CompanyDTO:
         """Retrieve a company by CVM code or raise ``ValueError`` if
         missing."""
@@ -88,7 +69,7 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
         finally:
             session.close()
 
-    def get_all_primary_keys(self) -> set[str]:
+    def get_all_primary_keys(self) -> Set[str]:
         """Return a set of all CVM codes already persisted."""
         session = self.Session()
         try:
