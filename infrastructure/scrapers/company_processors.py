@@ -95,11 +95,11 @@ class CompanyMerger:
         self.logger = logger
 
     def run(
-        self, base: CompanyListingDTO, detail: CompanyDetailDTO
+        self, listing: CompanyListingDTO, detail: CompanyDetailDTO
     ) -> Optional[CompanyRawDTO]:
         """Merge listing and detail DTOs into a raw DTO."""
         try:
-            return self.mapper.merge_company_dtos(base, detail)
+            return self.mapper.merge_company_dtos(listing, detail)
         except Exception as exc:  # noqa: BLE001
             self.logger.log(f"erro {exc}", level="debug")
             return None
@@ -118,6 +118,9 @@ class CompanyDetailProcessor:
 
     def run(self, entry: Dict) -> Optional[CompanyRawDTO]:
         """Clean, fetch details, and merge into a raw DTO."""
-        listing = self.cleaner.run(entry)
-        detail = self.fetcher.run(str(listing.cvm_code))
-        return self.merger.run(listing, detail)
+        try:
+            listing = self.cleaner.run(entry)
+            detail = self.fetcher.run(str(listing.cvm_code))
+            return self.merger.run(listing, detail)
+        except Exception as e:
+            pass

@@ -5,16 +5,15 @@ from __future__ import annotations
 import base64
 import json
 import time
-from typing import Callable, Dict, List, Optional, Set, Tuple
+from typing import Callable, Dict, List, Optional, Set
 
 from application import CompanyMapper
-from domain.dto import CompanyRawDTO, ExecutionResultDTO, PageResultDTO
+from domain.dto import CompanyRawDTO, ExecutionResultDTO, PageResultDTO, WorkerTaskDTO
 from domain.ports import (
     CompanySourcePort,
     MetricsCollectorPort,
     WorkerPoolPort,
 )
-from domain.dto import ExecutionResultDTO, WorkerTaskDTO
 from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.byte_formatter import ByteFormatter
@@ -187,6 +186,8 @@ class CompanyB3Scraper(CompanySourcePort):
         page_exec = ExecutionResultDTO(
             items=[], metrics=self.metrics_collector.get_metrics(0)
         )
+        fetch = PageResultDTO(items=[], total_pages=0, bytes_downloaded=0)
+        results = []
 
         start_time = time.perf_counter()
 
@@ -202,7 +203,7 @@ class CompanyB3Scraper(CompanySourcePort):
             "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre_downloaded),
             "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
             }
-        self.logger.log(f"Page {page}/{total_pages}", 
+        self.logger.log(f"Page {page}/{total_pages}",
             level="info",
             progress={
                 "index": 0,
@@ -216,24 +217,21 @@ class CompanyB3Scraper(CompanySourcePort):
             tasks = list(enumerate(range(2, total_pages + 1)))
 
             def processor(task: WorkerTaskDTO) -> PageResultDTO:
-                index = task.index
-                entry = task.data
-                worker_id = task.worker_id
                 pre_downloaded = self._metrics_collector.network_bytes
-                fetch = self._fetch_page(entry)
+                fetch = self._fetch_page(task.data)
                 extra_info = {
                     "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre_downloaded),
                     "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
                     }
-                self.logger.log(f"Page {entry}/{total_pages}",
+                self.logger.log(f"Page {task.data}/{total_pages}",
                     level="info",
                     progress={
-                        "index": index + 1,
+                        "index": task.index + 1,
                         "size": total_pages,
                         "start_time": start_time,
                     },
                     extra=extra_info,
-                    worker_id=worker_id
+                    worker_id=task.worker_id
                 )
                 return fetch
 

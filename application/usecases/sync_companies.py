@@ -60,7 +60,7 @@ class SyncCompaniesUseCase:
         )
 
         return SyncCompaniesResultDTO(
-            processed_count=len(results),
+            processed_count=len(results.items),
             skipped_count=len(existing_codes),
             bytes_downloaded=bytes_downloaded,
             elapsed_time=elapsed,

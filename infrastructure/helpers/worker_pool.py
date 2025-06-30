@@ -58,7 +58,6 @@ class WorkerPool(WorkerPoolPort):
         start_time = time.perf_counter()
 
         def worker(worker_id: str) -> None:
-            logger.log(f"worker {worker_id} started", level="info", worker_id=worker_id)
             while True:
                 item = queue.get()
                 if item is sentinel:
@@ -66,18 +65,8 @@ class WorkerPool(WorkerPoolPort):
                     break
                 index, entry = item
                 task = WorkerTaskDTO(index=index, data=entry, worker_id=worker_id)
-                logger.log(
-                    f"worker {worker_id} got another task from queue {queue.unfinished_tasks} tasks",
-                    level="info",
-                    worker_id=worker_id,
-                )
                 try:
-                    logger.log(f"running {item[1]['codeCVM']}", level="info")
                     result = processor(task)
-
-                    self.metrics_collector.record_processing_bytes(
-                        len(json.dumps(result, default=str).encode("utf-8"))
-                    )
                     with lock:
                         results.append(result)
                         if callable(on_result):
@@ -90,10 +79,6 @@ class WorkerPool(WorkerPoolPort):
                     queue.task_done()
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            logger.log(
-                f"ThreadPoolExecutor started with {self.max_workers} workers",
-                level="info",
-            )
             futures = [
                 executor.submit(worker, uuid.uuid4().hex[:8])
                 for _ in range(self.max_workers)
@@ -107,8 +92,6 @@ class WorkerPool(WorkerPoolPort):
 
             queue.join()
 
-            logger.log("ThreadPoolExecutor finished", level="info")
-
             for future in futures:
                 future.result()
 
@@ -121,12 +104,5 @@ class WorkerPool(WorkerPoolPort):
         if callable(post_callback):
             logger.log("Callable found", level="info")
             post_callback(results)
-
-        # Summarize execution in the logs
-        logger.log(
-            f"Executed {len(results)} tasks in {elapsed:.2f}s ("
-            f"{self.byte_formatter.format_bytes(self.metrics_collector.processing_bytes)} {self.byte_formatter.format_bytes(self.metrics_collector.network_bytes)})",
-            level="info",
-        )
 
         return ExecutionResultDTO(items=results, metrics=metrics)

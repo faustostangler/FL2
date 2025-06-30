@@ -17,7 +17,7 @@ class CompanyMapper:
 
     def merge_company_dtos(
         self,
-        base: CompanyListingDTO,
+        listing: CompanyListingDTO,
         detail: CompanyDetailDTO,
     ) -> CompanyRawDTO:
         """Combine listing and detail information into a single DTO."""
@@ -39,11 +39,11 @@ class CompanyMapper:
 
         # Build the raw company DTO with all collected information.
         return CompanyRawDTO(
-            cvm_code=detail.cvm_code or base.cvm_code,
-            issuing_company=detail.issuing_company or base.issuing_company,
-            trading_name=detail.trading_name or base.trading_name,
-            company_name=detail.company_name or base.company_name,
-            cnpj=detail.cnpj or base.cnpj,
+            cvm_code=detail.cvm_code or listing.cvm_code,
+            issuing_company=detail.issuing_company or listing.issuing_company,
+            trading_name=detail.trading_name or listing.trading_name,
+            company_name=detail.company_name or listing.company_name,
+            cnpj=detail.cnpj or listing.cnpj,
             ticker_codes=[c.code for c in codes if c.code],
             isin_codes=[c.isin for c in codes if c.isin],
             other_codes=codes,
@@ -53,24 +53,24 @@ class CompanyMapper:
             industry_classification=industry_classification,
             industry_classification_eng=detail.industry_classification_eng or None,
             activity=detail.activity or None,
-            company_segment=base.segment or None,
-            company_segment_eng=base.segment_eng or None,
+            company_segment=listing.segment or None,
+            company_segment_eng=listing.segment_eng or None,
             company_category=detail.company_category or None,
-            company_type=base.company_type or None,
+            company_type=listing.company_type or None,
             listing_segment=detail.listing_segment or None,
             registrar=detail.registrar or None,
             website=detail.website or None,
             institution_common=detail.institution_common or None,
             institution_preferred=detail.institution_preferred or None,
-            market=detail.market or base.market,
-            status=detail.status or base.status,
-            market_indicator=detail.market_indicator or base.market_indicator,
+            market=detail.market or listing.market,
+            status=detail.status or listing.status,
+            market_indicator=detail.market_indicator or listing.market_indicator,
             code=detail.code or None,
             has_bdr=detail.has_bdr or None,
-            type_bdr=detail.type_bdr or base.type_bdr,
+            type_bdr=detail.type_bdr or listing.type_bdr,
             has_quotation=detail.has_quotation or None,
             has_emissions=detail.has_emissions or None,
             date_quotation=detail.date_quotation or None,
             last_date=detail.last_date,
-            listing_date=base.listing_date,
+            listing_date=listing.listing_date,
         )
