@@ -13,13 +13,17 @@ class NsdService:
         repository: NSDRepositoryPort,
         scraper: NSDSourcePort,
     ) -> None:
+        """Instantiate the service with its required dependencies."""
         self.logger = logger
+        # Log the start of the service for observability.
         self.logger.log("Start NsdService", level="info")
 
+        # Set up the underlying use case that performs the synchronization.
         self.sync_usecase = SyncNSDUseCase(
             logger=self.logger, repository=repository, scraper=scraper
         )
 
     def run(self) -> None:
         """Run the NSD synchronization workflow."""
+        # Delegate the work to the injected use case.
         self.sync_usecase.execute()

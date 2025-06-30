@@ -20,8 +20,10 @@ class SyncCompaniesUseCase:
     ):
         """Store dependencies and configure use case execution."""
         self.logger = logger
+        # Emit a log entry to signal the use case was created.
         self.logger.log("Start SyncCompaniesUseCase", level="info")
 
+        # Keep references to infrastructure components.
         self.repository = repository
         self.scraper = scraper
         self.max_workers = max_workers
@@ -36,14 +38,20 @@ class SyncCompaniesUseCase:
         """
         self.logger.log("Start SyncCompaniesUseCase (B3 Scraper) Execute", level="info")
 
+        # Mark the start time to calculate performance metrics later.
         start = time.perf_counter()
+
+        # Retrieve primary keys already stored to avoid reprocessing them.
         existing_codes = self.repository.get_all_primary_keys()
 
+        # Fetch all companies from the scraper and persist them batch-wise.
         results = self.scraper.fetch_all(
             skip_codes=existing_codes,
             save_callback=self._save_batch,
             max_workers=self.max_workers,
         )
+
+        # Measure download time and network usage.
         elapsed = time.perf_counter() - start
         bytes_downloaded = self.scraper.metrics_collector.network_bytes
         self.logger.log(
@@ -60,7 +68,11 @@ class SyncCompaniesUseCase:
 
     def _save_batch(self, buffer: List[CompanyRawDTO]) -> None:
         """Convert raw companies to domain DTOs before saving."""
+        # Debug log for observability of background execution.
         self.logger.log("SyncCompaniesUseCase _save_batch", level="info")
 
+        # Transform raw DTOs from the scraper to domain DTOs.
         dtos = [CompanyDTO.from_raw(item) for item in buffer]
+
+        # Persist the converted DTOs in bulk for efficiency.
         self.repository.save_all(dtos)

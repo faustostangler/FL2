@@ -1,3 +1,5 @@
+"""Run the FLY CLI in background for debugging purposes."""
+
 from infrastructure.config import Config
 from infrastructure.factories import create_data_cleaner
 from infrastructure.logging import Logger
