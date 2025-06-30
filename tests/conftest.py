@@ -40,5 +40,6 @@ class DummyConfig:
     class Global:
         app_name = "TEST"
         max_workers = 1
+        queue_size = 10
 
     global_settings = Global()
