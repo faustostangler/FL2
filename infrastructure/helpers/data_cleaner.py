@@ -1,3 +1,5 @@
+"""Helpers for applying normalization to raw company data."""
+
 from datetime import datetime
 from typing import List, Optional
 
@@ -24,6 +26,7 @@ class DataCleaner:
     """
 
     def __init__(self, config: Config, logger: Logger):
+        """Store configuration and logger."""
         self.config = config
         self.logger = logger
 
@@ -31,7 +34,6 @@ class DataCleaner:
         self, text: Optional[str], words_to_remove: Optional[List[str]] = None
     ) -> Optional[str]:
         """Normalize a text string using ``utils.clean_text``."""
-
         words_to_remove = words_to_remove or self.config.domain.words_to_remove
         return util_clean_text(
             text, words_to_remove=words_to_remove, logger=self.logger
@@ -39,12 +41,10 @@ class DataCleaner:
 
     def clean_number(self, text: str) -> Optional[float]:
         """Convert a stringified number using ``utils.clean_number``."""
-
         return util_clean_number(text, logger=self.logger)
 
     def clean_date(self, text: Optional[str]) -> Optional[datetime]:
         """Parse a date string using ``utils.clean_date``."""
-
         return util_clean_date(text, logger=self.logger)
 
     def clean_dict_fields(

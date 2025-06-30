@@ -15,8 +15,10 @@ def clean_text(
     words_to_remove: Optional[List[str]] = None,
     logger: Optional[Logger] = None,
 ) -> Optional[str]:
-    """Normalize a text string by removing punctuation, accents and stop
-    words."""
+    """Normalize a text string.
+
+    Remove punctuation, accents and stop words.
+    """
     try:
         if not text:
             return None
@@ -39,7 +41,7 @@ def clean_text(
 
 
 def clean_number(text: str, logger: Optional[Logger] = None) -> Optional[float]:
-    """Convert a stringified number (BR/US formats) to ``float``."""
+    """Convert a stringified number to ``float``."""
     if not text:
         return None
     try:
@@ -52,9 +54,10 @@ def clean_number(text: str, logger: Optional[Logger] = None) -> Optional[float]:
 
 
 def clean_date(
-    text: Optional[str], logger: Optional[Logger] = None
+    text: Optional[str],
+    logger: Optional[Logger] = None,
 ) -> Optional[datetime]:
-    """Attempt to parse a date string using several common formats."""
+    """Attempt to parse a date string using common formats."""
     if isinstance(text, datetime):
         return text
 
@@ -89,8 +92,10 @@ def clean_dict_fields(
     logger: Optional[Logger] = None,
     words_to_remove: Optional[List[str]] = None,
 ) -> Dict:
-    """Return a cleaned copy of ``entry`` with normalized text, dates and
-    numbers."""
+    """Return a cleaned copy of ``entry``.
+
+    Normalize its text, date and number fields.
+    """
     number_keys = number_keys or []
     cleaned = entry.copy()
 
