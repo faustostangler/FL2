@@ -1,3 +1,5 @@
+"""Exports for domain port interfaces."""
+
 from .company_repository_port import CompanyRepositoryPort
 from .company_source_port import CompanySourcePort
 from .metrics_collector_port import MetricsCollectorPort

@@ -1,3 +1,5 @@
+"""Port for collecting metrics from scraping and processing."""
+
 from __future__ import annotations
 
 from typing import Protocol

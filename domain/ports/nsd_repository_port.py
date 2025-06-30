@@ -1,3 +1,5 @@
+"""Port definitions for NSD persistence repositories."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

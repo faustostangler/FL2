@@ -1,3 +1,5 @@
+"""Core execution port definitions for the worker pool interface."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass
@@ -8,7 +10,6 @@ R = TypeVar("R")
 
 
 class LoggerPort(Protocol):
-
     def log(
         self,
         message: str,
@@ -17,12 +18,13 @@ class LoggerPort(Protocol):
         extra: Optional[dict] = None,
         worker_id: Optional[str] = None,
     ) -> None:
+        """Emit a log message from a worker thread."""
+
         raise NotImplementedError
 
 
 @dataclass(frozen=True)
 class MetricsDTO:
-
     elapsed_time: float
     network_bytes: int = 0
     processing_bytes: int = 0
@@ -38,7 +40,6 @@ class ExecutionResultDTO(Generic[R]):
 
 
 class WorkerPoolPort(Protocol):
-
     def run(
         self,
         tasks: Iterable[T],
@@ -47,4 +48,6 @@ class WorkerPoolPort(Protocol):
         on_result: Optional[Callable[[R], None]] = None,
         post_callback: Optional[Callable[[List[R]], None]] = None,
     ) -> ExecutionResultDTO[R]:
+        """Execute tasks concurrently using worker threads."""
+
         raise NotImplementedError

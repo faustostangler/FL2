@@ -1,3 +1,5 @@
+"""Port definitions for external company data sources."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

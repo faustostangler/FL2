@@ -1,3 +1,5 @@
+"""Publicly exposed company DTO used throughout the application."""
+
 from __future__ import annotations
 
 import json
@@ -58,6 +60,8 @@ class CompanyDTO:
     def from_dict(raw: dict) -> "CompanyDTO":
         """Build an immutable DTO from a raw dictionary."""
 
+        # Map incoming keys to the canonical DTO fields. Alternative names are
+        # also handled for backward compatibility with existing scrapers.
         return CompanyDTO(
             cvm_code=raw.get("cvm_code") or raw.get("codeCVM"),
             issuing_company=raw.get("issuing_company") or raw.get("issuingCompany"),
@@ -99,12 +103,14 @@ class CompanyDTO:
     def from_raw(raw: CompanyRawDTO) -> "CompanyDTO":
         """Build a ``CompanyDTO`` from a ``CompanyRawDTO`` instance."""
 
+        # Encode list of :class:`CodeDTO` objects as a JSON string if present.
         other_codes = (
             json.dumps([{"code": c.code, "isin": c.isin} for c in raw.other_codes])
             if raw.other_codes
             else None
         )
 
+        # Instantiate the immutable DTO using the serialized raw values
         return CompanyDTO(
             cvm_code=raw.cvm_code,
             issuing_company=raw.issuing_company,
