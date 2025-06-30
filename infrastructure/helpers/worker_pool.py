@@ -61,12 +61,16 @@ class WorkerPool(WorkerPoolPort):
             logger.log(f"worker {worker_id} started", level="info", worker_id=worker_id)
             while True:
                 item = queue.get()
-                index, entry = item
-                task = WorkerTaskDTO(index=index, data=entry, worker_id=worker_id)
-                logger.log(f"worker {worker_id} got another task from qeue {queue.unfinished_tasks} tasks", level="info", worker_id=worker_id)
                 if item is sentinel:
                     queue.task_done()
                     break
+                index, entry = item
+                task = WorkerTaskDTO(index=index, data=entry, worker_id=worker_id)
+                logger.log(
+                    f"worker {worker_id} got another task from queue {queue.unfinished_tasks} tasks",
+                    level="info",
+                    worker_id=worker_id,
+                )
                 try:
                     logger.log(f"running {item[1]['codeCVM']}", level="info")
                     result = processor(task)
@@ -86,7 +90,10 @@ class WorkerPool(WorkerPoolPort):
                     queue.task_done()
 
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            logger.log(f"ThreadPoolExecutor started with {self.max_workers} workers", level="info")
+            logger.log(
+                f"ThreadPoolExecutor started with {self.max_workers} workers",
+                level="info",
+            )
             futures = [
                 executor.submit(worker, uuid.uuid4().hex[:8])
                 for _ in range(self.max_workers)
