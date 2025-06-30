@@ -12,6 +12,7 @@ from .raw_company_dto import (
     CompanyRawDTO,
 )
 from .sync_companies_result_dto import SyncCompaniesResultDTO
+from .worker_class_dto import WorkerTaskDTO
 
 __all__ = [
     "CompanyDTO",
@@ -23,5 +24,6 @@ __all__ = [
     "ExecutionResultDTO",
     "MetricsDTO",
     "PageResultDTO",
+    "WorkerTaskDTO",
     "SyncCompaniesResultDTO",
 ]

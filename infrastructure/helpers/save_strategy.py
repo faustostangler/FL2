@@ -1,3 +1,5 @@
+"""Provide buffering logic for saving batches of items."""
+
 from __future__ import annotations
 
 from typing import Callable, Generic, List, Optional, TypeVar
@@ -21,6 +23,8 @@ class SaveStrategy(Generic[T]):
         Args:
             save_callback: Function invoked when the buffer is flushed.
             threshold: Number of items to collect before flushing.
+            config: Configuration object used when ``threshold`` is not
+                provided.
         """
         self.config = config
         self.save_callback = save_callback or (lambda buffer: None)
@@ -37,7 +41,6 @@ class SaveStrategy(Generic[T]):
             remaining: Number of items left to process. If provided, the buffer
                 flushes when this value is a multiple of ``threshold`` or zero.
         """
-
         if item is None:
             return
 
@@ -48,20 +51,18 @@ class SaveStrategy(Generic[T]):
 
         should_flush = len(self.buffer) >= self.threshold
 
-        # if remaining is not None:
-        #     should_flush = should_flush or remaining % self.threshold == 0
+        if remaining is not None:
+            should_flush = should_flush or remaining % self.threshold == 0
 
         if remaining == 0 or should_flush:
             self.flush()
 
     def flush(self) -> None:
         """Invoke the callback with all buffered items and clear the buffer."""
-
         if self.buffer:
             self.save_callback(self.buffer)
             self.buffer.clear()
 
     def finalize(self) -> None:
         """Flush any remaining items at the end of processing."""
-
         self.flush()
