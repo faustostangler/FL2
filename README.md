@@ -1,5 +1,5 @@
 # FLY
-Finance Ledger Yearly (FLY) gathers financial documents from companies listed on B3. It scrapes company data and stores them in a local database.
+Finance Ledger Yearly (FLY) gathers financial documents from companies listed on a stock exchange. It scrapes company data and stores them in a local database.
 
 ## How It Works, Behind the Wheels
 The FLY list below outlines the core steps in fetching company data and financial documents.
@@ -50,9 +50,9 @@ The CLI invokes the application services to synchronize companies and NSD record
 
 ## Services
 
-Example services can be triggered individually:
+- Example services can be triggered individually:
 
-- `sync_companies` – Fetch company listings and details from B3.
+- `sync_companies` – Fetch company listings and details from the exchange.
 - `sync_nsd` – Download sequential document information.
 
 Services are started from `presentation/cli.py` when you execute `run.py`.

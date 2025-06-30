@@ -2,7 +2,7 @@
 
 The detail pipeline is triggered by `sync_companies.py` via `CompanyService`.
 
-1. `CompanyB3Scraper.fetch_all()` retrieves a list of companies and for each one:
+1. `CompanyExchangeScraper.fetch_all()` retrieves a list of companies and for each one:
    - `EntryCleaner` normalizes the listing entry.
    - `DetailFetcher` downloads the detail page and converts it to `CompanyDetailDTO`.
    - `CompanyMerger` merges listing and detail data into `CompanyRawDTO`.

@@ -36,7 +36,7 @@ class SyncCompaniesUseCase:
             2. Convert results into ``CompanyDTO`` objects.
             3. Persist them using the repository.
         """
-        self.logger.log("Start SyncCompaniesUseCase (B3 Scraper) Execute", level="info")
+        self.logger.log("Start SyncCompaniesUseCase Execute", level="info")
 
         # Mark the start time to calculate performance metrics later.
         start = time.perf_counter()

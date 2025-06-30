@@ -24,7 +24,7 @@ def test_execute_converts_and_saves():
         industry_segment="IT",
         listing_segment="Novo Mercado",
         activity="Development",
-        registrar="B3",
+        registrar="EXCHANGE",
         cnpj="00.000.000/0001-91",
         website="example.com",
         company_type="SA",
