@@ -71,7 +71,27 @@ class CompanyModel(Base):
             [] if attr("issuing_company") is None else [attr("issuing_company")]
         )
         isin_codes = attr("isin_codes") or []
-        other_codes = attr("other_codes") or []
+        other_codes = attr("other_codes")
+
+        def format_code_field(value):
+            if value is None:
+                return None
+            if isinstance(value, str):
+                try:
+                    parsed = json.loads(value)
+                    if isinstance(parsed, list):
+                        return ",".join(parsed) if parsed else None
+                except json.JSONDecodeError:
+                    return value
+                return value
+            return ",".join(value) if value else None
+
+        def format_other_codes(value):
+            if not value:
+                return None
+            if isinstance(value, str):
+                return value
+            return json.dumps([{"code": c.code, "isin": c.isin} for c in value])
 
         return CompanyModel(
             cvm_code=attr("cvm_code") or attr("issuing_company") or "",
@@ -79,13 +99,9 @@ class CompanyModel(Base):
             trading_name=attr("trading_name"),
             company_name=attr("company_name"),
             cnpj=attr("cnpj"),
-            ticker_codes=",".join(ticker_codes) if ticker_codes else None,
-            isin_codes=",".join(isin_codes) if isin_codes else None,
-            other_codes=(
-                json.dumps([{"code": c.code, "isin": c.isin} for c in other_codes])
-                if other_codes
-                else None
-            ),
+            ticker_codes=format_code_field(ticker_codes),
+            isin_codes=format_code_field(isin_codes),
+            other_codes=format_other_codes(other_codes),
             industry_sector=attr("industry_sector"),
             industry_subsector=attr("industry_subsector"),
             industry_segment=attr("industry_segment"),

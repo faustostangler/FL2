@@ -22,3 +22,23 @@ def test_save_all(SessionLocal, engine):
     with engine.connect() as conn:
         result = conn.execute(text("SELECT COUNT(*) FROM tbl_company")).scalar()
     assert result == 2
+
+
+def test_save_all_json_string(SessionLocal, engine):
+    repo = SQLiteCompanyRepository(config=DummyConfig(), logger=DummyLogger())
+    repo.engine = engine
+    repo.Session = SessionLocal
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+
+    json_codes = '[{"code": "AAA", "isin": "123"}]'
+    companies = [
+        CompanyDTO.from_dict({"issuing_company": "AAA", "other_codes": json_codes})
+    ]
+
+    repo.save_all(companies)
+
+    with engine.connect() as conn:
+        saved = conn.execute(text("SELECT other_codes FROM tbl_company")).scalar()
+
+    assert saved == json_codes
