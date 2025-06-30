@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable, Iterable, List, Optional, TypeVar
@@ -60,7 +59,7 @@ class WorkerPool(WorkerPoolPort):
 
             # Collect results as tasks complete
             for index, future in enumerate(as_completed(future_to_task)):
-                task = future_to_task[future]  # keep a reference for debugging
+                _ = future_to_task[future]  # keep a reference for debugging
                 try:
                     # Retrieve result from worker thread
                     result = future.result()
