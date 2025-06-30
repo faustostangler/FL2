@@ -7,6 +7,8 @@ from typing import Callable, Generic, List, Optional, Set, TypeVar
 
 from domain.dto import ExecutionResultDTO
 
+from .metrics_collector_port import MetricsCollectorPort
+
 T = TypeVar("T")
 
 
@@ -22,4 +24,10 @@ class BaseSourcePort(ABC, Generic[T]):
         max_workers: Optional[int] = None,
     ) -> ExecutionResultDTO[T]:
         """Retrieve all available records."""
+        raise NotImplementedError
+
+    @property
+    @abstractmethod
+    def metrics_collector(self) -> MetricsCollectorPort:
+        """Metrics collector used by the scraper."""
         raise NotImplementedError

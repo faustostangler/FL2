@@ -6,7 +6,7 @@ from sqlalchemy.orm import sessionmaker
 from domain.dto.nsd_dto import NSDDTO
 from infrastructure.config import Config
 from infrastructure.logging import Logger
-from infrastructure.models.base import Base
+from infrastructure.models.base_model import BaseModel
 from infrastructure.models.nsd_model import NSDModel
 from infrastructure.repositories.base_repository import BaseRepository
 
@@ -26,7 +26,7 @@ class SQLiteNSDRepository(BaseRepository[NSDDTO]):
         with self.engine.connect() as conn:
             conn.execute(text("PRAGMA journal_mode=WAL"))
         self.Session = sessionmaker(bind=self.engine)
-        Base.metadata.create_all(self.engine)
+        BaseModel.metadata.create_all(self.engine)
 
     def save_all(self, items: List[NSDDTO]) -> None:
         session = self.Session()

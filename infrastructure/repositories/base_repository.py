@@ -1,6 +1,13 @@
 from abc import ABC, abstractmethod
 from typing import Generic, List, TypeVar
 
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
+
+from infrastructure.config import Config
+from infrastructure.logging import Logger
+from infrastructure.models.base_model import BaseModel
+
 T = TypeVar("T")  # T pode ser CompanyDTO, StatementDTO, etc.
 
 class BaseRepository(ABC, Generic[T]):
@@ -8,6 +15,24 @@ class BaseRepository(ABC, Generic[T]):
     Contract - Interface genérica para repositórios de leitura/escrita.
     Pode ser especializada para qualquer tipo de DTO.
     """
+    def __init__(self, config: Config, logger: Logger):
+        """Initialize the SQLite database connection and ensure tables
+        exist."""
+        self.config = config
+        self.logger = logger
+        self.logger.log(f"Start {self.__class__.__name__}", level="info")
+
+        self.engine = create_engine(
+            config.database.connection_string,
+            connect_args={"check_same_thread": False},
+            future=True,
+        )
+        with self.engine.connect() as conn:
+            conn.execute(text("PRAGMA journal_mode=WAL"))
+
+        self.Session = sessionmaker(bind=self.engine, autoflush=True, expire_on_commit=True)
+        BaseModel.metadata.create_all(self.engine)
+
 
     @abstractmethod
     def save_all(self, items: List[T]) -> None:

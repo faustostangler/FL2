@@ -10,10 +10,10 @@ from sqlalchemy.orm import Mapped, mapped_column
 from domain.dto.company_dto import CompanyDTO
 from domain.dto.raw_company_dto import CodeDTO, CompanyRawDTO
 
-from .base import Base
+from .base_model import BaseModel
 
 
-class CompanyModel(Base):
+class CompanyModel(BaseModel):
     """ORM adapter for the ``tbl_company`` table."""
 
     __tablename__ = "tbl_company"

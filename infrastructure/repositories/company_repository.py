@@ -4,35 +4,24 @@ from __future__ import annotations
 
 from typing import List, Set
 
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-
 from domain.dto.company_dto import CompanyDTO
 from domain.ports import CompanyRepositoryPort
-from infrastructure.config import Config
-from infrastructure.logging import Logger
-from infrastructure.models.base import Base
 from infrastructure.models.company_model import CompanyModel
 
 
 class SQLiteCompanyRepository(CompanyRepositoryPort):
-    """Concrete implementation of the company repository using SQLite."""
+    """Concrete implementation of the repository using SQLite.
+
+    Note:
+        This repository uses `check_same_thread=False` for SQLite connections,
+        which allows connections to be shared across threads. Ensure that
+        session and connection usage is properly managed to avoid thread-safety
+        issues.
+    """
 
     def __init__(self, config: Config, logger: Logger):
-        """Initialize the SQLite database connection and ensure tables
-        exist."""
-        self.config = config
-        self.logger = logger
-        self.logger.log("Start SQLiteCompanyRepository", level="info")
+        super().__init__(config, logger, model_metadata=CompanyModel.metadata)
 
-        self.engine = create_engine(
-            config.database.connection_string,
-            connect_args={"check_same_thread": False},
-        )
-        with self.engine.connect() as conn:
-            conn.execute(text("PRAGMA journal_mode=WAL"))
-        self.Session = sessionmaker(bind=self.engine)
-        Base.metadata.create_all(self.engine)
 
     def save_all(self, items: List[CompanyDTO]) -> None:
         """Persist a list of ``CompanyDTO`` objects."""
