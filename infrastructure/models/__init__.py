@@ -4,4 +4,7 @@ from .base_model import BaseModel
 from .company_model import CompanyModel
 from .nsd_model import NSDModel
 
-__all__ = ["Base",  "CompanyModel", "NSDModel"]
+# Provide a common "Base" alias expected by tests
+Base = BaseModel
+
+__all__ = ["Base", "CompanyModel", "NSDModel"]

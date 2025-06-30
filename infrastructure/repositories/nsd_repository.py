@@ -1,32 +1,18 @@
 from typing import List
 
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-
 from domain.dto.nsd_dto import NSDDTO
+from domain.ports.nsd_repository_port import NSDRepositoryPort
 from infrastructure.config import Config
 from infrastructure.logging import Logger
-from infrastructure.models.base_model import BaseModel
 from infrastructure.models.nsd_model import NSDModel
 from infrastructure.repositories.base_repository import BaseRepository
 
 
-class SQLiteNSDRepository(BaseRepository[NSDDTO]):
+class SQLiteNSDRepository(BaseRepository[NSDDTO], NSDRepositoryPort):
     """Concrete repository for NSDDTO using SQLite via SQLAlchemy."""
 
     def __init__(self, config: Config, logger: Logger):
-        self.config = config
-        self.logger = logger
-        self.logger.log("Start SQLiteNSDRepository", level="info")
-
-        self.engine = create_engine(
-            config.database.connection_string,
-            connect_args={"check_same_thread": False},
-        )
-        with self.engine.connect() as conn:
-            conn.execute(text("PRAGMA journal_mode=WAL"))
-        self.Session = sessionmaker(bind=self.engine)
-        BaseModel.metadata.create_all(self.engine)
+        super().__init__(config, logger)
 
     def save_all(self, items: List[NSDDTO]) -> None:
         session = self.Session()
@@ -57,8 +43,8 @@ class SQLiteNSDRepository(BaseRepository[NSDDTO]):
             session.close()
 
     def has_item(self, identifier: str) -> bool:
-        """
-        Checks if an item with the specified identifier exists in the database.
+        """Checks if an item with the specified identifier exists in the
+        database.
 
         Args:
             identifier (str): The unique identifier of the item to check.
@@ -73,8 +59,8 @@ class SQLiteNSDRepository(BaseRepository[NSDDTO]):
             session.close()
 
     def get_by_id(self, id: str) -> NSDDTO:
-        """
-        Fetches an NSD record from the database by its unique identifier.
+        """Fetches an NSD record from the database by its unique identifier.
+
         Args:
             id (str): The unique identifier (ticker) of the NSD to retrieve.
         Returns:
@@ -92,8 +78,7 @@ class SQLiteNSDRepository(BaseRepository[NSDDTO]):
             session.close()
 
     def get_all_primary_keys(self) -> set[int]:
-        """
-        Retrieve all distinct primary key values from the NSDModel table.
+        """Retrieve all distinct primary key values from the NSDModel table.
 
         Returns: All unique primary key values (nsd) from the NSDModel table.
         """
