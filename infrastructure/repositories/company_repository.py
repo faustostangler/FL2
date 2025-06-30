@@ -1,3 +1,5 @@
+"""SQLite-backed repository implementation for company data."""
+
 from __future__ import annotations
 
 from typing import List, Set
