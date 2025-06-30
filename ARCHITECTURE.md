@@ -66,6 +66,20 @@ Ports are abstract protocols for interacting with the outside world. Two types a
 
 Each department has a manual (interface) that strictly defines how work must be done, ensuring loose coupling. The archive team doesn’t know how the prospector does his job. A prospector can be replaced (e.g., switch from HTTP to Selenium) without affecting the rest of the company—as long as the rules in the manual (the interface) are respected.
 
+##### Port Convention: Generic Base → Specific Port → Concrete Adapter
+To ensure consistency, all external adapters (repositories, scrapers, queues, etc.) follow this layered pattern:
+
+BasePort[T] (generic, domain)
+        ↓
+SpecificPort (typed, domain)
+        ↓
+ConcreteAdapter (implementation, infrastructure)
+
+Example: 
+Layer: Base Port | Element BaseRepositoryPort(T) | File domain/ports/base_repository_port.py
+Layer: Specific Port | Element CompanyRepositoryPort | File domain/ports/company_repository_port.py
+Layer: Implementation | Element SQLiteCompanyRepository | File infrastructure/repositories/company_repository.py
+
 ### 2. Application – The Managers and Project Coordinators
 This layer bridges the domain and the real execution. It doesn't know about technology (no SQL or HTTP) and doesn't contain business rules (no validations), but it coordinates everything.
 
