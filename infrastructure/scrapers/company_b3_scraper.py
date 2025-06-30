@@ -12,7 +12,6 @@ from domain.ports import (
     MetricsCollectorPort,
     WorkerPoolPort,
 )
-from domain.ports.worker_pool_port import MetricsDTO
 from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.byte_formatter import ByteFormatter
@@ -192,6 +191,7 @@ class CompanyB3Scraper(CompanySourcePort):
 
         if total_pages > 1:
             tasks = list(enumerate(range(2, total_pages + 1)))
+
             def processor(task: Tuple[int, int]) -> PageResultDTO:
                 index, page = task
                 fetch = self._fetch_page(page)
@@ -261,17 +261,20 @@ class CompanyB3Scraper(CompanySourcePort):
         save_callback: Optional[Callable[[List[CompanyRawDTO]], None]] = None,
         threshold: Optional[int] = None,
         max_workers: int | None = None,
-    ) -> ExecutionResultDTO[Dict]:
+    ) -> ExecutionResultDTO[CompanyRawDTO]:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
         Args:
             companies_list (List[Dict]): List of company dictionaries, each containing at least a "codeCVM" key.
             skip_codes (Optional[Set[str]], optional): Set of CVM codes to skip during processing. Defaults to None.
-            save_callback (Optional[Callable[[List[dict]], None]], optional): Callback function to save buffered company details periodically. Defaults to None.
+            save_callback (Optional[Callable[[List[CompanyRawDTO]], None]], optional):
+                Callback function to save buffered company details periodically.
+                Defaults to None.
             threshold (Optional[int], optional): Number of companies to process before triggering the save_callback. If not provided, uses configuration or defaults to 50.
             max_workers (int | None, optional): Reserved for future parallel fetching.
         Returns:
-            List[Dict]: List of parsed company detail dictionaries.
+            ExecutionResultDTO[CompanyRawDTO]: Parsed company detail DTOs and
+            execution metrics.
         Logs:
             - Progress and status information at each step.
             - Warnings for any exceptions encountered during processing.
@@ -282,7 +285,7 @@ class CompanyB3Scraper(CompanySourcePort):
         threshold = threshold or self.config.global_settings.threshold or 50
         skip_codes = skip_codes or set()
         strategy: SaveStrategy[CompanyRawDTO] = SaveStrategy(save_callback, threshold)
-        page_exec = ExecutionResultDTO(
+        detail_exec: ExecutionResultDTO[Optional[CompanyRawDTO]] = ExecutionResultDTO(
             items=[], metrics=self.metrics_collector.get_metrics(0)
         )
 
@@ -318,4 +321,4 @@ class CompanyB3Scraper(CompanySourcePort):
 
         results = [item for item in detail_exec.items if item is not None]
 
-        return ExecutionResultDTO(items=results, metrics=page_exec.metrics)
+        return ExecutionResultDTO(items=results, metrics=detail_exec.metrics)
