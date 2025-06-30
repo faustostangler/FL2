@@ -42,3 +42,28 @@ def test_save_all_json_string(SessionLocal, engine):
         saved = conn.execute(text("SELECT other_codes FROM tbl_company")).scalar()
 
     assert saved == json_codes
+
+
+def test_save_all_upserts(SessionLocal, engine):
+    repo = SQLiteCompanyRepository(config=DummyConfig(), logger=DummyLogger())
+    repo.engine = engine
+    repo.Session = SessionLocal
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+
+    first = [CompanyDTO.from_dict({"issuing_company": "AAA", "company_name": "Alpha"})]
+    repo.save_all(first)
+
+    second = [
+        CompanyDTO.from_dict({"issuing_company": "AAA", "company_name": "Updated"})
+    ]
+    repo.save_all(second)
+
+    with engine.connect() as conn:
+        result = conn.execute(text("SELECT COUNT(*) FROM tbl_company")).scalar()
+        name = conn.execute(
+            text("SELECT company_name FROM tbl_company WHERE cvm_code='AAA'")
+        ).scalar()
+
+    assert result == 1
+    assert name == "Updated"
