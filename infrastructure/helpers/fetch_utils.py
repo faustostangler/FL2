@@ -14,14 +14,18 @@ from infrastructure.logging import Logger
 
 
 class FetchUtils:
-    """Utility class for HTTP operations with retry and randomized headers."""
+    """
+    Utility class for HTTP operations with retry and randomized headers.
+    """
 
     def __init__(self, config: Config, logger: Logger):
         self.config = config
         self.logger = logger
 
     def header_random(self) -> dict:
-        """Generate random HTTP headers based on scraping config."""
+        """
+        Generate random HTTP headers based on scraping config.
+        """
         try:
             return {
                 "User-Agent": random.choice(self.config.scraping.user_agents),
@@ -76,7 +80,9 @@ class FetchUtils:
     def test_internet(
         self, url: Optional[str] = None, timeout: Optional[int] = None
     ) -> bool:
-        """Checks if internet connection is active via HTTP GET request."""
+        """
+        Checks if internet connection is active via HTTP GET request.
+        """
         url = url or self.config.scraping.test_internet or "https://www.google.com"
         timeout = timeout or self.config.scraping.timeout or 5
 
@@ -104,10 +110,8 @@ class FetchUtils:
 
         while True:
             try:
-                # Perform the request with the current session
                 response = scraper.get(url, timeout=timeout)
                 if response.status_code == 200:
-                    # On success, log the total block time if any
                     if block_start:
                         _ = time.perf_counter() - block_start
                         # self.logger.log(
@@ -116,17 +120,13 @@ class FetchUtils:
                         # )
                     return response
             except Exception:  # noqa: BLE001
-                # Ignore network errors and retry with a new scraper
                 pass
                 # self.logger.log(f"Attempt {attempt + 1} failed: {exc}", level="warning")
 
-            # Record the start of blocking period on first failure
             if block_start is None:
                 block_start = time.perf_counter()
 
             attempt += 1
-            # Wait using dynamic sleep to avoid aggressive retries
             TimeUtils(self.config).sleep_dynamic()
-            # Recreate the scraper session in case we were blocked
             scraper = self.create_scraper(insecure=insecure)
             # self.logger.log("Recreating scraper due to block", level="info")
