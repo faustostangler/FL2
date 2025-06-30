@@ -76,6 +76,10 @@ class DetailFetcher:
                 "market",
                 "institutionCommon",
                 "institutionPreferred",
+                "IndustryClassificationEng",
+                "market",
+                "institutionCommon",
+                "institutionPreffered",
             ],
             date_keys=["lastDate", "dateQuotation"],
         )
@@ -114,6 +118,6 @@ class CompanyDetailProcessor:
 
     def run(self, entry: Dict) -> Optional[CompanyRawDTO]:
         """Clean, fetch details, and merge into a raw DTO."""
-        base = self.cleaner.run(entry)
-        detail = self.fetcher.run(str(base.cvm_code))
-        return self.merger.run(base, detail)
+        listing = self.cleaner.run(entry)
+        detail = self.fetcher.run(str(listing.cvm_code))
+        return self.merger.run(listing, detail)
