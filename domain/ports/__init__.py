@@ -1,4 +1,6 @@
 """Exports for domain port interfaces."""
+
+from .base_repository_port import BaseRepositoryPort
 from .company_repository_port import CompanyRepositoryPort
 from .company_source_port import CompanySourcePort
 from .metrics_collector_port import MetricsCollectorPort
@@ -11,6 +13,7 @@ __all__ = [
     "MetricsDTO",
     "LoggerPort",
     "ExecutionResultDTO",
+    "BaseRepositoryPort",
     "CompanyRepositoryPort",
     "CompanySourcePort",
     "MetricsCollectorPort",
