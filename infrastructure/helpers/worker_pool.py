@@ -1,7 +1,11 @@
 from __future__ import annotations
 
+import json
+import threading
 import time
-from concurrent.futures import ThreadPoolExecutor, as_completed
+import uuid
+from concurrent.futures import ThreadPoolExecutor
+from queue import Queue
 from typing import Callable, Iterable, List, Optional, TypeVar
 
 from domain.dto import ExecutionResultDTO
@@ -48,35 +52,54 @@ class WorkerPool(WorkerPoolPort):
         logger.log("Worker pool start", level="info")
 
         results: List[R] = []
+        queue: Queue = Queue(self.config.global_settings.queue_size)
+        lock = threading.Lock()
+        sentinel = object()
         start_time = time.perf_counter()
 
-        # Spawn a pool of threads to execute the processor function
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            logger.log("ThreadPoolExecutor started", level="info")
-
-            # Submit all tasks and keep a mapping of future->task
-            future_to_task = {executor.submit(processor, task): task for task in tasks}
-
-            # Collect results as tasks complete
-            for index, future in enumerate(as_completed(future_to_task)):
-                _ = future_to_task[future]  # keep a reference for debugging
+        def worker(worker_id: str) -> None:
+            while True:
+                item = queue.get()
+                if item is sentinel:
+                    queue.task_done()
+                    break
                 try:
-                    # Retrieve result from worker thread
-                    result = future.result()
+                    result = processor(item)
                 except Exception as exc:  # noqa: BLE001
-                    # Log and skip failed tasks
-                    logger.log(f"worker error: {exc}", level="warning")
+                    logger.log(
+                        f"worker error: {exc}", level="warning", worker_id=worker_id
+                    )
+                    queue.task_done()
                     continue
 
-                # Update metrics and trigger callbacks
-                # self.metrics_collector.record_processing_bytes(
-                #     len(json.dumps(result, default=str).encode("utf-8"))
-                # )
-                results.append(result)
+                self.metrics_collector.record_processing_bytes(
+                    len(json.dumps(result, default=str).encode("utf-8"))
+                )
+                with lock:
+                    results.append(result)
                 if callable(on_result):
                     on_result(result)
+                queue.task_done()
+
+        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+            logger.log("ThreadPoolExecutor started", level="info")
+            futures = [
+                executor.submit(worker, uuid.uuid4().hex[:8])
+                for _ in range(self.max_workers)
+            ]
+
+            for task in tasks:
+                queue.put(task)
+
+            for _ in range(self.max_workers):
+                queue.put(sentinel)
+
+            queue.join()
 
             logger.log("ThreadPoolExecutor finished", level="info")
+
+            for future in futures:
+                future.result()
 
         elapsed = time.perf_counter() - start_time
 
