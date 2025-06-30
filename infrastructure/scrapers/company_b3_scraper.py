@@ -188,7 +188,7 @@ class CompanyB3Scraper(CompanySourcePort):
         start_time = time.perf_counter()
 
         page = 1
-        pre = self._metrics_collector.network_bytes
+        pre_downloaded = self._metrics_collector.network_bytes
         fetch = self._fetch_page(page)
         results = list(fetch.items)
         for item in fetch.items:
@@ -197,7 +197,7 @@ class CompanyB3Scraper(CompanySourcePort):
 
 
         extra_info = {
-            "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre),
+            "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre_downloaded),
             "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
             }
         self.logger.log(f"Page {page}/{total_pages}", 
@@ -215,10 +215,10 @@ class CompanyB3Scraper(CompanySourcePort):
 
             def processor(task: Tuple[int, int]) -> PageResultDTO:
                 index, page = task
-                pre = self._metrics_collector.network_bytes
+                pre_downloaded = self._metrics_collector.network_bytes
                 fetch = self._fetch_page(page)
                 extra_info = {
-                    "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre),
+                    "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre_downloaded),
                     "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
                     }
                 self.logger.log(f"Page {page}/{total_pages}",
@@ -340,14 +340,14 @@ class CompanyB3Scraper(CompanySourcePort):
 
                 return None
 
-            pre = self._metrics_collector.network_bytes
+            pre_downloaded = self._metrics_collector.network_bytes
             result = self.detail_processor.run(entry)
             issuingCompany = entry.get("issuingCompany")
             tradingName = entry.get("tradingName")
             extra_info = {
                 "issuingCompany": issuingCompany,
                 "trading_name": tradingName,
-                "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre),
+                "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre_downloaded),
                 "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
                 }
             self.logger.log(f"{code_cvm}",
