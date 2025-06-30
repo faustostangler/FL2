@@ -121,7 +121,7 @@ class CompanyB3Scraper(CompanySourcePort):
         skip_codes: Optional[Set[str]] = None,
         save_callback: Optional[Callable[[List[CompanyRawDTO]], None]] = None,
         max_workers: int | None = None,
-    ) -> List[CompanyRawDTO]:
+    ) -> ExecutionResultDTO[CompanyRawDTO]:
         """Fetch all companies from B3.
 
         Args:
