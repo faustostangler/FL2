@@ -2,15 +2,12 @@
 
 from application import CompanyMapper
 from application.services.company_service import CompanyService
-from application.services.nsd_service import NsdService
 from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
 from infrastructure.helpers.metrics_collector import MetricsCollector
 from infrastructure.logging import Logger
 from infrastructure.repositories import SQLiteCompanyRepository
-from infrastructure.repositories.nsd_repository import SQLiteNSDRepository
-from infrastructure.scrapers.company_b3_scraper import CompanyB3Scraper
-from infrastructure.scrapers.nsd_scraper import NsdScraper
+from infrastructure.scrapers.company_exchange_scraper import CompanyExchangeScraper
 
 
 class CLIController:
@@ -57,7 +54,7 @@ class CLIController:
         # Worker pool executes scraping tasks concurrently.
         executor = WorkerPool(self.config, metrics_collector=collector)
         # Assemble the scraper with all its collaborators.
-        company_scraper = CompanyB3Scraper(
+        company_scraper = CompanyExchangeScraper(
             config=self.config,
             logger=self.logger,
             data_cleaner=self.data_cleaner,

@@ -12,7 +12,7 @@ from .raw_company_dto import CompanyRawDTO
 
 @dataclass(frozen=True)
 class CompanyDTO:
-    """Structured company data extracted from B3."""
+    """Structured company data extracted from the exchange."""
 
     cvm_code: Optional[str]
     issuing_company: Optional[str]

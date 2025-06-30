@@ -32,7 +32,7 @@ class NsdScraper:
         self.fetch_utils = FetchUtils(config, logger)
         self.session = self.fetch_utils.create_scraper()
 
-        self.nsd_endpoint = self.config.b3.nsd_endpoint
+        self.nsd_endpoint = self.config.exchange.nsd_endpoint
 
         self.metrics_collector = metrics_collector
 
