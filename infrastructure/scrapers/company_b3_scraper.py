@@ -192,10 +192,10 @@ class CompanyB3Scraper(CompanySourcePort):
             tasks = list(enumerate(range(2, total_pages + 1)))
 
             def processor(task: Tuple[int, int]) -> PageResultDTO:
-                index, page = task
+                _, page = task
                 fetch = self._fetch_page(page)
                 self.logger.log(
-                    f"processor task {index} in _fetch_page",
+                    f"Fetching page {page}",
                     level="info",
                 )
                 return fetch

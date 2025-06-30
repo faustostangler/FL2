@@ -64,7 +64,6 @@ class WorkerPool(WorkerPoolPort):
                     logger.log(f"worker error: {exc}", level="warning")
                     continue
 
-                logger.log(f"task processed {index}", level="info")
                 self.metrics_collector.record_processing_bytes(
                     len(json.dumps(result, default=str).encode("utf-8"))
                 )
