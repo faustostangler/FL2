@@ -1,3 +1,5 @@
+"""Common DTOs used for pagination of external data sources."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

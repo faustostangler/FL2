@@ -1,3 +1,5 @@
+"""Port definitions for external NSD data providers."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

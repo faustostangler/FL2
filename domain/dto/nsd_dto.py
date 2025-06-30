@@ -1,4 +1,5 @@
 # domain/models/nsd_dto.py
+"""DTO definitions for normalized NSD (Sequential Document) data."""
 
 from __future__ import annotations
 
@@ -37,6 +38,7 @@ class NSDDTO:
                 return val.strip()
             return None
 
+        # Map raw keys directly to the immutable dataclass fields
         return NSDDTO(
             nsd=int(raw.get("nsd", 0)),
             company_name=raw.get("company_name"),

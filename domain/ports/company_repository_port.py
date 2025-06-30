@@ -1,3 +1,5 @@
+"""Port definitions for company persistence repositories."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod

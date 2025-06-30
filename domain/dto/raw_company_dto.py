@@ -1,3 +1,5 @@
+"""Data transfer objects for raw company information."""
+
 from __future__ import annotations
 
 import json
@@ -34,6 +36,9 @@ class CompanyListingDTO:
 
     @staticmethod
     def from_dict(raw: dict) -> "CompanyListingDTO":
+        """Create a listing DTO from a raw dictionary."""
+
+        # Directly map the expected keys from the raw payload.
         return CompanyListingDTO(
             cvm_code=raw.get("codeCVM"),
             issuing_company=raw.get("issuingCompany"),
@@ -84,12 +89,19 @@ class CompanyDetailDTO:
 
     @staticmethod
     def from_dict(raw: dict) -> "CompanyDetailDTO":
+        """Parse a detailed company payload into a DTO."""
+
+        # ``otherCodes`` may come as a serialized JSON string; normalize to list
         other_codes = raw.get("otherCodes") or []
         if isinstance(other_codes, str):
             other_codes = json.loads(other_codes)
+
+        # Convert dictionaries to :class:`CodeDTO` instances
         code_dtos = [
             CodeDTO(code=c.get("code"), isin=c.get("isin")) for c in other_codes
         ]
+
+        # Populate the DTO using values from the payload
         company_detail_dto = CompanyDetailDTO(
             issuing_company=raw.get("issuingCompany"),
             company_name=raw.get("companyName"),
@@ -117,6 +129,7 @@ class CompanyDetailDTO:
             listing_segment=raw.get("listingSegment"),
             registrar=raw.get("registrar"),
         )
+        # Return the populated DTO instance
         return company_detail_dto
 
 

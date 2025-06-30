@@ -1,3 +1,5 @@
+"""Scraper for NSD (financial statements) web pages."""
+
 from __future__ import annotations
 
 import re
@@ -199,27 +201,29 @@ class NsdScraper:
         return data
 
     def find_last_existing_nsd(self, start: int = 1, max_limit: int = 10**10) -> int:
-        """
-        Busca o maior NSD que realmente existe (tem conteúdo válido),
-        usando busca exponencial seguida de busca binária.
+        """Return the highest NSD number that exists.
+
+        The algorithm performs a linear search followed by exponential and
+        finally binary search to find the last valid NSD within ``max_limit``.
 
         Args:
-            start: valor inicial do NSD para tentar.
-            max_limit: limite máximo de NSD a testar (fail-safe).
+            start: Initial NSD number to try.
+            max_limit: Safety upper bound for NSD probing.
 
         Returns:
-            Último NSD com conteúdo válido.
+            int: The last NSD with valid content.
         """
         self.logger.log("Finding last existing NSD", level="info")
+
         nsd = start - 1
         last_valid = None
 
         max_linear_holes = self.config.global_settings.max_linear_holes or 2000
         hole_count = 0
 
-        # Fase 1: busca linear até encontrar o primeiro válido
+        # Phase 1: linear search to find the first valid NSD
         while nsd <= max_limit and hole_count < max_linear_holes:
-            # self.logger.log(f"Trying NSD {nsd} linear", level="info")
+            # Try sequential NSDs until one is valid or the hole limit is reached
             parsed = self._try_nsd(nsd)
             if parsed:
                 last_valid = nsd
@@ -227,9 +231,8 @@ class NsdScraper:
             nsd += 1
             hole_count += 1
 
-        # Fase 2: Busca exponencial para achar um ponto inválido
+        # Phase 2: exponential search to locate an invalid boundary
         while nsd <= max_limit and hole_count < max_linear_holes:
-            # self.logger.log(f"Trying NSD {nsd} exponential", level="info")
             parsed = self._try_nsd(nsd)
             if parsed:
                 last_valid = nsd
@@ -237,17 +240,16 @@ class NsdScraper:
             else:
                 break
 
-        # Se nada válido foi encontrado, retorna o início
+        # If nothing valid was found at all, fall back to ``start``
         if last_valid is None:
             return start
 
-        # Fase 3: Busca binária entre último válido e primeiro inválido
+        # Phase 3: binary search between last valid and first invalid
         low = last_valid or 1
         high = nsd - 1
 
         while low < high:
             mid = (low + high + 1) // 2  # arredonda para cima para evitar loop infinito
-            # self.logger.log(f"Trying NSD {mid} binary", level="info")
             parsed = self._try_nsd(mid)
 
             if parsed:
@@ -258,10 +260,16 @@ class NsdScraper:
         return low
 
     def _try_nsd(self, nsd: int) -> Optional[dict]:
+        """Attempt to fetch and parse a single NSD page."""
+
         try:
+            # Request the NSD page and parse its HTML
             url = self.nsd_endpoint.format(nsd=nsd)
             response = self.fetch_utils.fetch_with_retry(self.session, url)
             parsed = self._parse_html(nsd, response.text)
+
+            # Only return results if the page contains a "sent_date" field
             return parsed if parsed.get("sent_date") else None
         except Exception:
+            # Ignore any network or parsing errors
             return None

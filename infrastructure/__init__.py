@@ -1,1 +1,5 @@
-# Infrastructure layer entry point (kept empty to avoid tight coupling between submodules)
+"""Infrastructure layer entry point.
+
+This module exposes the infrastructure package without introducing tight
+coupling between submodules.
+"""

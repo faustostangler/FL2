@@ -1,3 +1,5 @@
+"""Exports for domain DTO classes."""
+
 from .company_dto import CompanyDTO
 from .execution_result_dto import ExecutionResultDTO
 from .metrics_dto import MetricsDTO

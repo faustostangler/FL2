@@ -1,3 +1,5 @@
+"""DTO summarizing the results of company synchronization."""
+
 from __future__ import annotations
 
 from dataclasses import dataclass

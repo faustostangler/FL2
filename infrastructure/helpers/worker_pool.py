@@ -45,6 +45,7 @@ class WorkerPool(WorkerPoolPort):
     ) -> ExecutionResultDTO[R]:
         """Process ``tasks`` concurrently using ``processor``."""
 
+        # Inform about the worker pool startup
         logger.log("Worker pool start", level="info")
 
         results: List[R] = []
@@ -53,33 +54,43 @@ class WorkerPool(WorkerPoolPort):
         # Spawn a pool of threads to execute the processor function
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             logger.log("ThreadPoolExecutor started", level="info")
-            # Map each submitted future back to its originating task
+
+            # Submit all tasks and keep a mapping of future->task
             future_to_task = {executor.submit(processor, task): task for task in tasks}
 
+            # Collect results as tasks complete
             for index, future in enumerate(as_completed(future_to_task)):
-                future_to_task[future]
+                future_to_task[future]  # keep a reference for debugging
                 try:
+                    # Retrieve result from worker thread
                     result = future.result()
                 except Exception as exc:  # noqa: BLE001
+                    # Log and skip failed tasks
                     logger.log(f"worker error: {exc}", level="warning")
                     continue
 
+                # Update metrics and trigger callbacks
+                logger.log(f"task processed {index}", level="info")
                 self.metrics_collector.record_processing_bytes(
                     len(json.dumps(result, default=str).encode("utf-8"))
                 )
                 results.append(result)
                 if callable(on_result):
                     on_result(result)
+
             logger.log("ThreadPoolExecutor finished", level="info")
 
         elapsed = time.perf_counter() - start_time
+
         # Package execution metrics (network and processing bytes)
         metrics = self.metrics_collector.get_metrics(elapsed_time=elapsed)
 
+        # Final callback after all tasks are done
         if callable(post_callback):
             logger.log("Callable found", level="info")
             post_callback(results)
 
+        # Summarize execution in the logs
         logger.log(
             f"Executed {len(results)} tasks in {elapsed:.2f}s ("
             f"{self.byte_formatter.format_bytes(self.metrics_collector.processing_bytes)} {self.byte_formatter.format_bytes(self.metrics_collector.network_bytes)})",

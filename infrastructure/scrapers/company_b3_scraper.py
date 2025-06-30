@@ -1,3 +1,5 @@
+"""Scraper implementation for fetching company data from B3."""
+
 from __future__ import annotations
 
 import base64

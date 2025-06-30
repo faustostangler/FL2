@@ -1,3 +1,5 @@
+"""Aggregate configuration object that loads all config sections."""
+
 from .b3_api import B3ApiConfig, load_b3_api_config
 from .database import DatabaseConfig, load_database_config
 from .domain import DomainConfig, load_domain_config
@@ -8,14 +10,15 @@ from .scraping import ScrapingConfig, load_scraping_config
 
 
 class Config:
-    """
-    Aggregates all specialized configurations into a single object.
-    Each attribute is an immutable and validated instance of its respective domain.
+    """Aggregates all specialized configurations into a single object.
+
+    Each attribute is an immutable and validated instance of its
+    respective domain.
     """
 
     def __init__(self):
-        """
-        Initializes the configuration class by loading various configuration sections.
+        """Initializes the configuration class by loading various configuration
+        sections.
 
         Attributes:
             paths (PathConfig): Configuration for file and directory paths, loaded via `load_paths()`.
@@ -28,10 +31,10 @@ class Config:
         """
 
         # Load all configurations
-        self.paths : PathConfig = load_paths()
-        self.database : DatabaseConfig = load_database_config()
-        self.b3 : B3ApiConfig = load_b3_api_config()
-        self.scraping : ScrapingConfig = load_scraping_config()
-        self.logging : LoggingConfig = load_logging_config()
-        self.global_settings : GlobalSettingsConfig = load_global_settings_config()
-        self.domain : DomainConfig = load_domain_config()
+        self.paths: PathConfig = load_paths()
+        self.database: DatabaseConfig = load_database_config()
+        self.b3: B3ApiConfig = load_b3_api_config()
+        self.scraping: ScrapingConfig = load_scraping_config()
+        self.logging: LoggingConfig = load_logging_config()
+        self.global_settings: GlobalSettingsConfig = load_global_settings_config()
+        self.domain: DomainConfig = load_domain_config()

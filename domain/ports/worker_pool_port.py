@@ -1,3 +1,5 @@
+"""Core execution port definitions for the worker pool interface."""
+
 from __future__ import annotations
 
 from typing import Callable, Iterable, List, Optional, Protocol, TypeVar
@@ -17,6 +19,8 @@ class LoggerPort(Protocol):
         extra: Optional[dict] = None,
         worker_id: Optional[str] = None,
     ) -> None:
+        """Emit a log message from a worker thread."""
+
         raise NotImplementedError
 
 
@@ -29,4 +33,6 @@ class WorkerPoolPort(Protocol):
         on_result: Optional[Callable[[R], None]] = None,
         post_callback: Optional[Callable[[List[R]], None]] = None,
     ) -> ExecutionResultDTO[R]:
+        """Execute tasks concurrently using worker threads."""
+
         raise NotImplementedError
