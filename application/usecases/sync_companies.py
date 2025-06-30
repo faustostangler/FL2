@@ -68,8 +68,8 @@ class SyncCompaniesUseCase:
 
     def _save_batch(self, buffer: List[CompanyRawDTO]) -> None:
         """Convert raw companies to domain DTOs before saving."""
-        # Debug log for observability of background execution.
-        self.logger.log("SyncCompaniesUseCase _save_batch", level="info")
+        # # Debug log for observability of background execution.
+        # self.logger.log("SyncCompaniesUseCase _save_batch", level="info")
 
         # Transform raw DTOs from the scraper to domain DTOs.
         dtos = [CompanyDTO.from_raw(item) for item in buffer]

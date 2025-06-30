@@ -187,44 +187,55 @@ class CompanyB3Scraper(CompanySourcePort):
 
         start_time = time.perf_counter()
 
-        first_page = self._fetch_page(1)
-        results = list(first_page.items)
-        for item in first_page.items:
+        page = 1
+        pre = self._metrics_collector.network_bytes
+        fetch = self._fetch_page(page)
+        results = list(fetch.items)
+        for item in fetch.items:
             strategy.handle(item)
-        total_pages = first_page.total_pages
+        total_pages = fetch.total_pages
 
-        self.logger.log(
-            "Fetching page 1",
+
+        extra_info = {
+            "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre),
+            "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
+            }
+        self.logger.log(f"Page {page}/{total_pages}", 
             level="info",
-            progress={"index": 0, "size": total_pages, "start_time": start_time},
-        )
+            progress={
+                "index": 0,
+                "size": total_pages,
+                "start_time": start_time,
+                },
+            extra=extra_info,
+            )
 
         if total_pages > 1:
             tasks = list(enumerate(range(2, total_pages + 1)))
 
             def processor(task: Tuple[int, int]) -> PageResultDTO:
-                _, page = task
+                index, page = task
+                pre = self._metrics_collector.network_bytes
                 fetch = self._fetch_page(page)
-                self.logger.log(
-                    f"Fetching page {page}",
+                extra_info = {
+                    "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre),
+                    "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
+                    }
+                self.logger.log(f"Page {page}/{total_pages}",
                     level="info",
                     progress={
                         "index": index + 1,
                         "size": total_pages,
                         "start_time": start_time,
-                    },
-                )
+                        },
+                    extra=extra_info,
+                    )
                 return fetch
 
             page_exec = self.executor.run(
                 tasks=tasks,
                 processor=processor,
                 logger=self.logger,
-            )
-
-            self.logger.log(
-                "page_results done",
-                level="info",
             )
 
             # Merge and flush each fetched page
@@ -308,23 +319,48 @@ class CompanyB3Scraper(CompanySourcePort):
 
         # Pair each company dict with its index for progress logging
         tasks = list(enumerate(companies_list))
-        size = len(tasks)
         start_time = time.perf_counter()
 
         def processor(item: Tuple[int, Dict]) -> Optional[CompanyRawDTO]:
             index, entry = item
-            if entry.get("codeCVM") in skip_codes:
-                # Skip already persisted companies
+            code_cvm = entry.get("codeCVM")
+            if code_cvm in skip_codes:
+                # Log and skip already persisted companies
+                extra_info = {
+                    }
+                self.logger.log(f"{code_cvm}",
+                    level="info",
+                    progress={
+                        "index": index,
+                        "size": len(tasks),
+                        "start_time": start_time,
+                        },
+                    extra=extra_info,
+                    )
+
                 return None
 
-            processed_entry = self.detail_processor.run(entry)
-            self.logger.log(
-                f"Processed entry {index}",
+            pre = self._metrics_collector.network_bytes
+            result = self.detail_processor.run(entry)
+            issuingCompany = entry.get("issuingCompany")
+            tradingName = entry.get("tradingName")
+            extra_info = {
+                "issuingCompany": issuingCompany,
+                "trading_name": tradingName,
+                "Download": self.byte_formatter.format_bytes(self._metrics_collector.network_bytes - pre),
+                "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
+                }
+            self.logger.log(f"{code_cvm}",
                 level="info",
-                progress={"index": index, "size": size, "start_time": start_time},
-            )
+                progress={
+                    "index": index,
+                    "size": len(tasks),
+                    "start_time": start_time,
+                    },
+                extra=extra_info,
+                )
 
-            return processed_entry
+            return result
 
         def handle_batch(item: Optional[CompanyRawDTO]) -> None:
             # Buffer each parsed company and flush when threshold is hit

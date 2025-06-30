@@ -60,7 +60,7 @@ class WorkerPool(WorkerPoolPort):
 
             # Collect results as tasks complete
             for index, future in enumerate(as_completed(future_to_task)):
-                future_to_task[future]  # keep a reference for debugging
+                task = future_to_task[future]  # keep a reference for debugging
                 try:
                     # Retrieve result from worker thread
                     result = future.result()
@@ -70,10 +70,9 @@ class WorkerPool(WorkerPoolPort):
                     continue
 
                 # Update metrics and trigger callbacks
-                logger.log(f"task processed {index}", level="info")
-                self.metrics_collector.record_processing_bytes(
-                    len(json.dumps(result, default=str).encode("utf-8"))
-                )
+                # self.metrics_collector.record_processing_bytes(
+                #     len(json.dumps(result, default=str).encode("utf-8"))
+                # )
                 results.append(result)
                 if callable(on_result):
                     on_result(result)
