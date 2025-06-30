@@ -3,11 +3,10 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Callable, List, Optional, Set
 
+from domain.dto import ExecutionResultDTO
 from domain.dto.raw_company_dto import CompanyRawDTO
-from domain.ports import (
-    ExecutionResultDTO,
-    MetricsCollectorPort,
-)
+
+from .metrics_collector_port import MetricsCollectorPort
 
 
 class CompanySourcePort(ABC):

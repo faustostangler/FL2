@@ -5,10 +5,9 @@ import json
 from typing import Callable, Dict, List, Optional, Set, Tuple
 
 from application import CompanyMapper
-from domain.dto import CompanyRawDTO, PageResultDTO
+from domain.dto import CompanyRawDTO, ExecutionResultDTO, PageResultDTO
 from domain.ports import (
     CompanySourcePort,
-    ExecutionResultDTO,
     MetricsCollectorPort,
     WorkerPoolPort,
 )

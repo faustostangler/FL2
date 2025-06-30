@@ -5,9 +5,9 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable, Iterable, List, Optional, TypeVar
 
+from domain.dto import ExecutionResultDTO
 from domain.ports import MetricsCollectorPort
 from domain.ports.worker_pool_port import (
-    ExecutionResultDTO,
     LoggerPort,
     WorkerPoolPort,
 )
@@ -19,7 +19,8 @@ R = TypeVar("R")
 
 
 class WorkerPool(WorkerPoolPort):
-    """Simple thread pool implementation tied to the domain ``WorkerPoolPort``."""
+    """Simple thread pool implementation tied to the domain
+    ``WorkerPoolPort``."""
 
     def __init__(
         self,
