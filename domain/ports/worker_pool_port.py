@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from typing import Callable, Iterable, List, Optional, Protocol, TypeVar
+from typing import Any, Callable, Iterable, List, Optional, Protocol, Tuple, TypeVar
 
-from domain.dto import ExecutionResultDTO
+from domain.dto import ExecutionResultDTO, WorkerTaskDTO
 
-T = TypeVar("T")
+T = WorkerTaskDTO
 R = TypeVar("R")
 
 
@@ -27,7 +27,7 @@ class LoggerPort(Protocol):
 class WorkerPoolPort(Protocol):
     def run(
         self,
-        tasks: Iterable[T],
+        tasks: Iterable[Tuple[int, Any]],
         processor: Callable[[T], R],
         logger: LoggerPort,
         on_result: Optional[Callable[[R], None]] = None,

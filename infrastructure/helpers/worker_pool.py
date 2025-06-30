@@ -17,7 +17,7 @@ from domain.ports.worker_pool_port import (
 from infrastructure.config import Config
 from infrastructure.helpers.byte_formatter import ByteFormatter
 
-T = TypeVar("T")
+T = WorkerTaskDTO
 R = TypeVar("R")
 
 
