@@ -5,9 +5,9 @@ import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import Callable, Iterable, List, Optional, TypeVar
 
+from domain.dto import ExecutionResultDTO
 from domain.ports import MetricsCollectorPort
 from domain.ports.worker_pool_port import (
-    ExecutionResultDTO,
     LoggerPort,
     WorkerPoolPort,
 )

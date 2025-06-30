@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Protocol
 
-from domain.ports.worker_pool_port import MetricsDTO
+from domain.dto import MetricsDTO
 
 
 class MetricsCollectorPort(Protocol):

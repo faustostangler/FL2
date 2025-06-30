@@ -1,5 +1,5 @@
+from domain.dto import MetricsDTO
 from domain.ports import MetricsCollectorPort
-from domain.ports.worker_pool_port import MetricsDTO
 
 
 class MetricsCollector(MetricsCollectorPort):
@@ -34,7 +34,6 @@ class MetricsCollector(MetricsCollectorPort):
         return self._processing_bytes
 
     def get_metrics(self, elapsed_time: float):
-
         """Create a :class:`MetricsDTO` instance from the collected values."""
 
         return MetricsDTO(

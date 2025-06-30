@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Callable, Generic, Iterable, List, Optional, Protocol, TypeVar
+from typing import Callable, Iterable, List, Optional, Protocol, TypeVar
+
+from domain.dto import ExecutionResultDTO
 
 T = TypeVar("T")
 R = TypeVar("R")
@@ -21,22 +22,6 @@ class LoggerPort(Protocol):
         """Emit a log message from a worker thread."""
 
         raise NotImplementedError
-
-
-@dataclass(frozen=True)
-class MetricsDTO:
-    elapsed_time: float
-    network_bytes: int = 0
-    processing_bytes: int = 0
-    failures: int = 0
-
-
-@dataclass(frozen=True)
-class ExecutionResultDTO(Generic[R]):
-    """Results and metrics returned by :class:`WorkerPoolPort.run`."""
-
-    items: List[R]
-    metrics: MetricsDTO
 
 
 class WorkerPoolPort(Protocol):
