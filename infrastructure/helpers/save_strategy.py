@@ -23,14 +23,26 @@ class SaveStrategy(Generic[T]):
         self.threshold = threshold
         self.buffer: List[T] = []
 
-    def handle(self, item: Optional[T]) -> None:
-        """Add ``item`` to the buffer and flush when ``threshold`` is reached."""
+    def handle(self, item: Optional[T], remaining: Optional[int] = None) -> None:
+        """Add ``item`` to the buffer and flush when ``threshold`` is reached.
+
+        Args:
+            item: Item to add to the buffer.
+            remaining: Number of items left to process. If provided, the buffer
+                flushes when this value is a multiple of ``threshold`` or zero.
+        """
 
         if item is None:
             return
 
         self.buffer.append(item)
-        if len(self.buffer) >= self.threshold:
+
+        should_flush = len(self.buffer) >= self.threshold
+
+        if remaining is not None:
+            should_flush = should_flush or remaining % self.threshold == 0
+
+        if remaining == 0 or should_flush:
             self.flush()
 
     def flush(self) -> None:
