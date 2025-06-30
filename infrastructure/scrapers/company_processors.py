@@ -19,7 +19,18 @@ class EntryCleaner:
         self.data_cleaner = data_cleaner
 
     def run(self, entry: Dict) -> CompanyListingDTO:
-        cleaned = self.data_cleaner.clean_company_entry(entry)
+        cleaned = self.data_cleaner.clean_dict_fields(
+            entry,
+            text_keys=[
+                "companyName",
+                "issuingCompany",
+                "tradingName",
+                "segment",
+                "segmentEng",
+                "market",
+            ],
+            date_keys=["dateListing"],
+        )
         return CompanyListingDTO.from_dict(cleaned)
 
 
