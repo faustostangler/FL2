@@ -46,10 +46,3 @@ This project adopts a clean and sustainable code style, aligned with modern arch
 
 - Use `pytest` with the `test_*.py` naming pattern.
 - Place all tests under the `tests/` directory.
-
----
-
-## 6. Formatting Tools
-
-- Use `ruff format .` and `ruff check . --fix` for formatting and linting.
-- Use `pydocstyle --convention=google .` and `docformatter --in-place --recursive .` to validate docstrings.
