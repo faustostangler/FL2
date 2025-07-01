@@ -37,6 +37,7 @@ class CLIController:
 
         # Run the company synchronization workflow.
         self.run_company_sync()
+        self.run_nsd_sync()
 
         # Indicate the CLI finished executing.
         self.logger.log("Finish FLY CLI", level="info")
@@ -77,3 +78,29 @@ class CLIController:
 
         # Log the end of the workflow
         self.logger.log("Finish Companies Sync Use Case", level="info")
+    def run_nsd_sync(self):
+        """Build and run the NSD synchronization workflow."""
+
+        # Announce the workflow start.
+        self.logger.log("Start NSD Sync Use Case", level="info")
+
+        # # Set up repository where NSD data will be persisted.
+        # nsd_repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
+        # # Collect metrics for the scraping tasks.
+        # collector = MetricsCollector()
+        # # Scraper fetches data from the NSD site.
+        # nsd_scraper = NsdScraper(
+        #     config=self.config,
+        #     logger=self.logger,
+        #     data_cleaner=self.data_cleaner,
+        #     metrics_collector=collector,
+        # )
+        # # Service coordinates NSD synchronization.
+        # nsd_service = NsdService(
+        #     logger=self.logger,
+        #     repository=nsd_repo,
+        #     scraper=nsd_scraper,
+        # )
+
+        # # Trigger the actual NSD synchronization process.
+        # nsd_service.run()
