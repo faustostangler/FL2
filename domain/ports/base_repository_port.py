@@ -1,7 +1,9 @@
+"""Base repository interface for persistence operations."""
+
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Generic, List, TypeVar
+from typing import Generic, List, Set, TypeVar
 
 T = TypeVar("T")
 
