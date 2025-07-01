@@ -5,13 +5,13 @@ from domain.dto import (
     CompanyListingDTO,
     CompanyRawDTO,
 )
-from infrastructure.helpers.data_cleaner import DataCleaner
+from domain.ports import DataCleanerPort
 
 
 class CompanyMapper:
     """Merge base and detail company data into a parsed DTO."""
 
-    def __init__(self, data_cleaner: DataCleaner):
+    def __init__(self, data_cleaner: DataCleanerPort):
         """Create a new mapper using the provided data cleaner utility."""
         self.data_cleaner = data_cleaner
 

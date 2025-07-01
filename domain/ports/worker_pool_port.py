@@ -6,22 +6,10 @@ from typing import Any, Callable, Iterable, List, Optional, Protocol, Tuple, Typ
 
 from domain.dto import ExecutionResultDTO, WorkerTaskDTO
 
+from .logger_port import LoggerPort
+
 T = WorkerTaskDTO
 R = TypeVar("R")
-
-
-class LoggerPort(Protocol):
-    def log(
-        self,
-        message: str,
-        level: str = "info",
-        progress: Optional[dict] = None,
-        extra: Optional[dict] = None,
-        worker_id: Optional[str] = None,
-    ) -> None:
-        """Emit a log message from a worker thread."""
-
-        raise NotImplementedError
 
 
 class WorkerPoolPort(Protocol):

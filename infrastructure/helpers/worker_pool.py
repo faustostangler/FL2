@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json
 import threading
 import time
 import uuid
@@ -9,11 +8,7 @@ from queue import Queue
 from typing import Any, Callable, Iterable, List, Optional, Tuple, TypeVar
 
 from domain.dto import ExecutionResultDTO, WorkerTaskDTO
-from domain.ports import MetricsCollectorPort
-from domain.ports.worker_pool_port import (
-    LoggerPort,
-    WorkerPoolPort,
-)
+from domain.ports import LoggerPort, MetricsCollectorPort, WorkerPoolPort
 from infrastructure.config import Config
 from infrastructure.helpers.byte_formatter import ByteFormatter
 

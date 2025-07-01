@@ -3,6 +3,7 @@
 from datetime import datetime
 from typing import List, Optional
 
+from domain.ports.data_cleaner_port import DataCleanerPort
 from infrastructure.config import Config
 from infrastructure.logging import Logger
 from infrastructure.utils.normalization import (
@@ -19,7 +20,7 @@ from infrastructure.utils.normalization import (
 )
 
 
-class DataCleaner:
+class DataCleaner(DataCleanerPort):
     """Utility class for normalizing raw text, dates and numbers.
 
     Requires external configuration (e.g. words to remove) and a logger.
