@@ -34,7 +34,7 @@ class NsdScraper(NSDSourcePort):
         metrics_collector: MetricsCollectorPort,
         repository: NSDRepositoryPort,
     ):
-        """Set up configuration, logger and helper utilities for the
+        """Set up configuration, logger, and helper utilities for the
         scraper."""
         # Store configuration and logger for use throughout the scraper
         self.config = config
@@ -87,7 +87,7 @@ class NsdScraper(NSDSourcePort):
         tasks = list(enumerate(range(start, max_nsd + 1)))
         start_time = time.perf_counter()
 
-        def processor(task: WorkerTaskDTO) -> Optional[Dict]:
+        def processor(task: WorkerTaskDTO) -> Optional[NsdDTO]:
             nsd = task.data
             progress = {
                 "index": task.index,
@@ -130,7 +130,7 @@ class NsdScraper(NSDSourcePort):
                     str(len(response.content)),
                 ]
             else:
-                extra_info = [ ]
+                extra_info = []
 
             self.logger.log(
                 "NSD",
@@ -139,9 +139,9 @@ class NsdScraper(NSDSourcePort):
                 worker_id=task.worker_id,
             )
 
-            return parsed
+            return NsdDTO.from_dict(parsed) if parsed else None
 
-        def handle_batch(item: Optional[Dict]) -> None:
+        def handle_batch(item: Optional[NsdDTO]) -> None:
             strategy.handle(item)
 
         exec_result = self.executor.run(
@@ -273,7 +273,9 @@ class NsdScraper(NSDSourcePort):
         nsd_high = nsd - 1
 
         while nsd_low < nsd_high:
-            nsd_mid = (nsd_low + nsd_high + 1) // 2  # arredonda para cima para evitar loop infinito
+            nsd_mid = (
+                nsd_low + nsd_high + 1
+            ) // 2  # arredonda para cima para evitar loop infinito
             parsed = self._try_nsd(nsd_mid)
 
             if parsed:
@@ -298,10 +300,10 @@ class NsdScraper(NSDSourcePort):
             return None
 
     def _find_next_probable_nsd(
-            self,
-            start: int=1,
-            safety_factor: float=1.5,
-        ) -> int:
+        self,
+        start: int = 1,
+        safety_factor: float = 1.5,
+    ) -> int:
         """Estimate next NSD numbers based on historical submission rate.
 
         The prediction is calculated from the most recent ``window_days`` worth
@@ -326,18 +328,22 @@ class NsdScraper(NSDSourcePort):
 
         # First and last date from first and last date
         first_date = self.repository.get_by_id(min(all_nsds)).sent_date
-        last_date  = self.repository.get_by_id(max(all_nsds)).sent_date
+        last_date = self.repository.get_by_id(max(all_nsds)).sent_date
 
         # Days span between dates
-        total_span_days = (last_date - first_date).days or 1   # type: ignore[assignment]
+        total_span_days = (last_date - first_date).days or 1  # type: ignore[assignment]
 
         # Daily nsd per day Average
         daily_avg = len(all_nsds) / total_span_days
 
         # days elapsed since last_date
-        days_elapsed = max((datetime.now() - last_date).days, 0)   # type: ignore[assignment]
+        days_elapsed = max((datetime.now() - last_date).days, 0)  # type: ignore[assignment]
 
         # Estimated nsd
-        last_estimated_nsd = start + int(daily_avg * days_elapsed * safety_factor) + self.config.global_settings.max_linear_holes
+        last_estimated_nsd = (
+            start
+            + int(daily_avg * days_elapsed * safety_factor)
+            + self.config.global_settings.max_linear_holes
+        )
 
         return last_estimated_nsd
