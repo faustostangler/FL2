@@ -22,7 +22,7 @@ class SyncNSDUseCase:
         self.repository = repository
         self.scraper = scraper
 
-    def execute(self) -> None:
+    def run(self) -> None:
         """Run the NSD synchronization workflow."""
         # Retrieve any previously stored document IDs to avoid duplicates.
         existing_ids = self.repository.get_all_primary_keys()

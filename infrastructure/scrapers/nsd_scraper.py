@@ -123,13 +123,15 @@ class NsdScraper(NSDSourcePort):
                     else "",
                     str(len(response.content)),
                 ]
+            else:
+                extra_info = [ ]
 
-                self.logger.log(
-                    "NSD",
-                    level="info",
-                    progress={**progress, "extra_info": extra_info},
-                    worker_id=task.worker_id,
-                )
+            self.logger.log(
+                "NSD",
+                level="info",
+                progress={**progress, "extra_info": extra_info},
+                worker_id=task.worker_id,
+            )
 
             return parsed
 
