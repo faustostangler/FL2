@@ -9,6 +9,8 @@ from .logger_port import LoggerPort
 from .metrics_collector_port import MetricsCollectorPort
 from .nsd_repository_port import NSDRepositoryPort
 from .nsd_source_port import NSDSourcePort
+from .statement_repository_port import StatementRepositoryPort
+from .statement_source_port import StatementSourcePort
 from .worker_pool_port import WorkerPoolPort
 
 __all__ = [
@@ -22,4 +24,6 @@ __all__ = [
     "MetricsCollectorPort",
     "NSDRepositoryPort",
     "NSDSourcePort",
+    "StatementSourcePort",
+    "StatementRepositoryPort",
 ]
