@@ -239,8 +239,6 @@ class NsdScraper(NSDSourcePort):
         Returns:
             int: The last NSD with valid content.
         """
-        self.logger.log("Finding last existing NSD", level="info")
-
         nsd = start - 1
         last_valid = None
 
@@ -321,22 +319,14 @@ class NsdScraper(NSDSourcePort):
             A list of sequential NSD values likely to have been published
             after the last stored record.
         """
-        self.logger.log("Finding next probable NSD", level="info")
-
         # Get all nsd with valid sent_date
         all_nsds = self.repository.get_all_primary_keys()
         if not all_nsds:
             return start
 
-        # First and last nsd records
-        first_nsd = min(all_nsds)
-        last_nsd  = max(all_nsds)
-        first_record = self.repository.get_by_id(first_nsd)
-        last_record  = self.repository.get_by_id(last_nsd)
-
         # First and last date from first and last date
-        first_date   = first_record.sent_date
-        last_date = last_record.sent_date
+        first_date = self.repository.get_by_id(min(all_nsds)).sent_date
+        last_date  = self.repository.get_by_id(max(all_nsds)).sent_date
 
         # Days span between dates
         total_span_days = (last_date - first_date).days or 1   # type: ignore[assignment]
@@ -348,6 +338,6 @@ class NsdScraper(NSDSourcePort):
         days_elapsed = max((datetime.now() - last_date).days, 0)   # type: ignore[assignment]
 
         # Estimated nsd
-        last_estimated_nsd = int(daily_avg * days_elapsed * safety_factor)
+        last_estimated_nsd = start + int(daily_avg * days_elapsed * safety_factor) + self.config.global_settings.max_linear_holes
 
         return last_estimated_nsd
