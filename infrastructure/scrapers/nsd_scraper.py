@@ -221,9 +221,9 @@ class NsdScraper(NSDSourcePort):
         return data
 
     def _find_last_existing_nsd(self, start: int = 1, max_limit: int = 10**10) -> int:
-        """Return the highest NSD number that exists.
+        """Return the nsd_highest NSD number that exists.
 
-        The algorithm performs a linear search followed by exponential and
+        The algorithm performs a linear search folnsd_lowed by exponential and
         finally binary search to find the last valid NSD within ``max_limit``.
 
         Args:
@@ -265,19 +265,19 @@ class NsdScraper(NSDSourcePort):
             return start
 
         # Phase 3: binary search between last valid and first invalid
-        low = last_valid or 1
-        high = nsd - 1
+        nsd_low = last_valid or 1
+        nsd_high = nsd - 1
 
-        while low < high:
-            mid = (low + high + 1) // 2  # arredonda para cima para evitar loop infinito
-            parsed = self._try_nsd(mid)
+        while nsd_low < nsd_high:
+            nsd_mid = (nsd_low + nsd_high + 1) // 2  # arredonda para cima para evitar loop infinito
+            parsed = self._try_nsd(nsd_mid)
 
             if parsed:
-                low = mid  # é válido, sobe o piso
+                nsd_low = nsd_mid  # é válido, sobe o piso
             else:
-                high = mid - 1  # é inválido, desce o teto
+                nsd_high = nsd_mid - 1  # é inválido, desce o teto
 
-        return low
+        return nsd_low
 
     def _try_nsd(self, nsd: int) -> Optional[dict]:
         """Attempt to fetch and parse a single NSD page."""
