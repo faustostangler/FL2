@@ -28,7 +28,7 @@ class SyncCompaniesUseCase:
         self.scraper = scraper
         self.max_workers = max_workers
 
-    def execute(self) -> SyncCompaniesResultDTO:
+    def run(self) -> SyncCompaniesResultDTO:
         """Run the full synchronization pipeline.
 
         Steps:
@@ -60,7 +60,7 @@ class SyncCompaniesUseCase:
         )
 
         return SyncCompaniesResultDTO(
-            processed_count=len(results),
+            processed_count=len(results.items),
             skipped_count=len(existing_codes),
             bytes_downloaded=bytes_downloaded,
             elapsed_time=elapsed,

@@ -122,7 +122,7 @@ class CompanyExchangeScraper(CompanySourcePort):
         threshold: Optional[int] = None,
         skip_codes: Optional[Set[str]] = None,
         save_callback: Optional[Callable[[List[CompanyRawDTO]], None]] = None,
-        max_workers: int | None = None,
+        max_workers: Optional[int] = None,
     ) -> ExecutionResultDTO[CompanyRawDTO]:
         """Fetch all companies from the exchange.
 
@@ -141,22 +141,26 @@ class CompanyExchangeScraper(CompanySourcePort):
         skip_codes = skip_codes or set()
         # Determine the save threshold (number of companies before saving buffer)
         threshold = threshold or self.config.global_settings.threshold or 50
+        # Determine the number of simultaneous process
+        max_workers = max_workers or self.config.global_settings.max_workers or 1
 
         # Fetch the initial list of companies, possibly skipping some CVM codes
         def noop(_buffer: List[Dict]) -> None:
             return None
 
         companies_list = self._fetch_companies_list(
-            skip_codes, threshold, save_callback=noop
+            skip_codes=skip_codes,
+            save_callback=noop,
+            threshold=threshold,
         )
 
         # Fetch and parse detailed information for each company, with optional skipping and periodic saving
         companies = self._fetch_companies_details(
-            companies_list.items,
-            skip_codes,
-            save_callback,
-            threshold,
-            max_workers,
+            companies_list=companies_list.items,
+            skip_codes=skip_codes,
+            save_callback=save_callback,
+            threshold=threshold,
+            max_workers=max_workers,
         )
 
         self.logger.log(
@@ -405,3 +409,4 @@ class CompanyExchangeScraper(CompanySourcePort):
         results = [item for item in detail_exec.items if item is not None]
 
         return ExecutionResultDTO(items=results, metrics=detail_exec.metrics)
+
