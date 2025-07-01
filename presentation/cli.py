@@ -95,6 +95,7 @@ class CLIController:
             data_cleaner=self.data_cleaner,
             executor=executor,
             metrics_collector=collector,
+            repository=nsd_repo,
         )
 
         nsd_service = NsdService(

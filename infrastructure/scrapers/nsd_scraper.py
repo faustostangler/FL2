@@ -13,6 +13,7 @@ from domain.dto import ExecutionResultDTO, NsdDTO, WorkerTaskDTO
 from domain.ports import (
     LoggerPort,
     MetricsCollectorPort,
+    NSDRepositoryPort,
     NSDSourcePort,
     WorkerPoolPort,
 )
@@ -31,6 +32,7 @@ class NsdScraper(NSDSourcePort):
         data_cleaner: DataCleaner,
         executor: WorkerPoolPort,
         metrics_collector: MetricsCollectorPort,
+        repository: NSDRepositoryPort,
     ):
         """Set up configuration, logger and helper utilities for the
         scraper."""
@@ -40,6 +42,7 @@ class NsdScraper(NSDSourcePort):
         self.data_cleaner = data_cleaner
         self.executor = executor
         self._metrics_collector = metrics_collector
+        self.repository = repository
 
         self.fetch_utils = FetchUtils(config, logger)
         self.session = self.fetch_utils.create_scraper()
@@ -68,7 +71,10 @@ class NsdScraper(NSDSourcePort):
         skip_codes_int = {int(code) for code in skip_codes} if skip_codes else set()
         start = max(start, max(skip_codes_int, default=0) + 1)
 
-        max_nsd = max_nsd or self._find_last_existing_nsd(start=start) or 50
+        max_nsd_existing = max_nsd or self._find_last_existing_nsd(start=start) or 50
+        max_nsd_probable = max_nsd or self._find_next_probable_nsd(start=start) or 50
+        max_nsd = max(max_nsd_existing, max_nsd_probable)
+
         threshold = threshold or self.config.global_settings.threshold or 50
         max_workers = max_workers or self.config.global_settings.max_workers or 1
 
@@ -292,3 +298,56 @@ class NsdScraper(NSDSourcePort):
         except Exception:
             # Ignore any network or parsing errors
             return None
+
+    def _find_next_probable_nsd(
+            self,
+            start: int=1,
+            safety_factor: float=1.5,
+        ) -> int:
+        """Estimate next NSD numbers based on historical submission rate.
+
+        The prediction is calculated from the most recent ``window_days`` worth
+        of stored records. It computes the average number of submissions per
+        day and multiplies by the number of days since the last known NSD. The
+        ``safety_factor`` parameter is applied to avoid underestimation.
+
+        Args:
+            repository: Data source providing access to stored NSDs.
+            window_days: Number of days used to calculate the average rate.
+            safety_factor: Multiplier to account for variations in publishing
+                behaviour.
+
+        Returns:
+            A list of sequential NSD values likely to have been published
+            after the last stored record.
+        """
+        self.logger.log("Finding next probable NSD", level="info")
+
+        # Get all nsd with valid sent_date
+        all_nsds = self.repository.get_all_primary_keys()
+        if not all_nsds:
+            return start
+
+        # First and last nsd records
+        first_nsd = min(all_nsds)
+        last_nsd  = max(all_nsds)
+        first_record = self.repository.get_by_id(first_nsd)
+        last_record  = self.repository.get_by_id(last_nsd)
+
+        # First and last date from first and last date
+        first_date   = first_record.sent_date
+        last_date = last_record.sent_date
+
+        # Days span between dates
+        total_span_days = (last_date - first_date).days or 1   # type: ignore[assignment]
+
+        # Daily nsd per day Average
+        daily_avg = len(all_nsds) / total_span_days
+
+        # days elapsed since last_date
+        days_elapsed = max((datetime.now() - last_date).days, 0)   # type: ignore[assignment]
+
+        # Estimated nsd
+        last_estimated_nsd = int(daily_avg * days_elapsed * safety_factor)
+
+        return last_estimated_nsd
