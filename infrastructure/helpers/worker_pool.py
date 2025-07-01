@@ -100,4 +100,5 @@ class WorkerPool(WorkerPoolPort):
             logger.log("Callable found", level="info")
             post_callback(results)
 
+        logger.log("Worker pool finished", level="info")
         return ExecutionResultDTO(items=results, metrics=metrics)
