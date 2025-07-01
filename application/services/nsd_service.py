@@ -27,3 +27,4 @@ class NsdService:
         """Run the NSD synchronization workflow."""
         # Delegate the work to the injected use case.
         self.sync_usecase.execute()
+        self.logger.log("Finish NsdService", level="info")

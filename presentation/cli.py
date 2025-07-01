@@ -38,6 +38,9 @@ class CLIController:
         # Run the company synchronization workflow.
         self.run_company_sync()
 
+        # Indicate the CLI finished executing.
+        self.logger.log("Finish FLY CLI", level="info")
+
     def run_company_sync(self):
         """Build and run the company synchronization workflow."""
 
@@ -71,3 +74,6 @@ class CLIController:
 
         # Trigger the actual company synchronization process.
         company_service.run()
+
+        # Log the end of the workflow
+        self.logger.log("Finish Companies Sync Use Case", level="info")

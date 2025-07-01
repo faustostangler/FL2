@@ -30,4 +30,6 @@ class CompanyService:
     def run(self):
         """Execute company synchronization using the injected use case."""
         # Delegate execution to the underlying use case and return the result.
-        return self.sync_usecase.run()
+        result = self.sync_usecase.run()
+        self.logger.log("Finish CompanyService", level="info")
+        return result

@@ -39,5 +39,5 @@ def test_run_calls_usecase_execute(monkeypatch):
 
     result = service.run()
 
-    mock_usecase_inst.execute.assert_called_once()
-    assert result == mock_usecase_inst.execute.return_value
+    mock_usecase_inst.run.assert_called_once()
+    assert result == mock_usecase_inst.run.return_value

@@ -3,6 +3,8 @@ from unittest.mock import MagicMock
 
 from application.usecases.sync_companies import SyncCompaniesUseCase
 from domain.dto.company_dto import CompanyDTO
+from domain.dto.execution_result_dto import ExecutionResultDTO
+from domain.dto.metrics_dto import MetricsDTO
 from domain.dto.sync_companies_result_dto import SyncCompaniesResultDTO
 from domain.ports import CompanyRepositoryPort, CompanySourcePort
 from tests.conftest import DummyLogger
@@ -50,12 +52,16 @@ def test_execute_converts_and_saves():
     )
 
     def fake_fetch_all(
-        threshold=None, skip_codes=None, save_callback=None, max_workers=None
+        threshold=None,
+        skip_codes=None,
+        save_callback=None,
+        max_workers=None,
     ):
         assert skip_codes == {"SKIP"}
         if save_callback:
             save_callback([raw])
-        return [raw]
+        metrics = MetricsDTO(elapsed_time=0.0, network_bytes=100, processing_bytes=0)
+        return ExecutionResultDTO(items=[raw], metrics=metrics)
 
     scraper = MagicMock(spec=CompanySourcePort)
     scraper.fetch_all.side_effect = fake_fetch_all
@@ -68,7 +74,7 @@ def test_execute_converts_and_saves():
         max_workers=2,
     )
 
-    result = usecase.execute()
+    result = usecase.run()
 
     repo.get_all_primary_keys.assert_called_once()
     scraper.fetch_all.assert_called_once()

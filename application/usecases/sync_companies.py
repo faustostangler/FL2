@@ -59,6 +59,8 @@ class SyncCompaniesUseCase:
             level="info",
         )
 
+        self.logger.log("Finish SyncCompaniesUseCase Execute", level="info")
+
         return SyncCompaniesResultDTO(
             processed_count=len(results.items),
             skipped_count=len(existing_codes),
