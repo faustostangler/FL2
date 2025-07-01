@@ -1,7 +1,7 @@
 import pytest
 
 from domain.dto.company_dto import CompanyDTO
-from domain.dto.nsd_dto import NSDDTO
+from domain.dto.nsd_dto import NsdDTO
 
 
 def test_company_dto_from_dict():
@@ -13,4 +13,4 @@ def test_company_dto_from_dict():
 
 def test_nsd_dto_invalid_nsd():
     with pytest.raises(ValueError):
-        NSDDTO.from_dict({"nsd": "not_a_number"})
+        NsdDTO.from_dict({"nsd": "not_a_number"})

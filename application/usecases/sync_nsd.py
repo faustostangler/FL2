@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from domain.dto.nsd_dto import NSDDTO
+from domain.dto.nsd_dto import NsdDTO
 from domain.ports import LoggerPort, NSDRepositoryPort, NSDSourcePort
 
 
@@ -42,7 +42,7 @@ class SyncNSDUseCase:
     def _save_batch(self, buffer: list[dict]) -> None:
         """Persist a batch of raw data after converting to domain DTOs."""
         # Convert raw dictionaries provided by the scraper to typed DTOs.
-        dtos = [NSDDTO.from_dict(d) for d in buffer]
+        dtos = [NsdDTO.from_dict(d) for d in buffer]
 
         # Save the batch to the repository in a single call.
         self.repository.save_all(dtos)

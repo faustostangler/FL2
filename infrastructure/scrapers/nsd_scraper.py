@@ -5,17 +5,23 @@ from __future__ import annotations
 import re
 import time
 from datetime import datetime
-from typing import Callable, Dict, List, Optional
+from typing import Callable, Dict, List, Optional, Set
 
 from bs4 import BeautifulSoup
 
-from domain.ports import LoggerPort, MetricsCollectorPort
+from domain.dto import ExecutionResultDTO, NsdDTO
+from domain.ports import (
+    LoggerPort,
+    MetricsCollectorPort,
+    NSDSourcePort,
+    WorkerPoolPort,
+)
 from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.data_cleaner import DataCleaner
 
 
-class NsdScraper:
+class NsdScraper(NSDSourcePort):
     """Scraper adapter responsible for fetching raw NSD documents."""
 
     def __init__(
@@ -23,28 +29,40 @@ class NsdScraper:
         config: Config,
         logger: LoggerPort,
         data_cleaner: DataCleaner,
+        executor: WorkerPoolPort,
         metrics_collector: MetricsCollectorPort,
     ):
+        """Set up configuration, logger and helper utilities for the scraper."""
+
+        # Store configuration and logger for use throughout the scraper
         self.config = config
         self.logger = logger
         self.data_cleaner = data_cleaner
+        self._metrics_collector = metrics_collector
+
         self.fetch_utils = FetchUtils(config, logger)
         self.session = self.fetch_utils.create_scraper()
 
         self.nsd_endpoint = self.config.exchange.nsd_endpoint
 
-        self.metrics_collector = metrics_collector
-
         self.logger.log("Start NsdScraper", level="info")
+
+    @property
+    def metrics_collector(self) -> MetricsCollectorPort:
+        """Metrics collector used by the scraper."""
+
+        return self._metrics_collector
 
     def fetch_all(
         self,
+        threshold: Optional[int] = None,
+        skip_codes: Optional[Set[str]] = None,
+        save_callback: Optional[Callable[[List[NsdDTO]], None]] = None,
+        max_workers: Optional[int] = None,
         start: int = 1,
         max_nsd: Optional[int] = None,
-        skip_codes: Optional[set[int]] = None,
-        save_callback: Optional[Callable[[list[dict]], None]] = None,
-        threshold: Optional[int] = None,
-    ) -> List[Dict]:
+        **kwargs,
+    ) -> ExecutionResultDTO[NsdDTO]:
         """Fetch and parse NSD pages.
 
         Args:
@@ -53,19 +71,20 @@ class NsdScraper:
                 means fetch indefinitely until a page fails.
 
         Returns:
-            List of dictionaries compatible with ``NSDDTO.from_dict``.
+            List of dictionaries compatible with ``NsdDTO.from_dict``.
         """
         skip_codes = skip_codes or set()
-        start = max(start, max(skip_codes, default=0) + 1)
-        max_nsd = max_nsd or self.find_last_existing_nsd(start=start) or 50
+        skip_codes_int = {int(code) for code in skip_codes} if skip_codes else set()
+        start = max(start, max(skip_codes_int, default=0) + 1)
+
+        max_nsd = max_nsd or self._find_last_existing_nsd(start=start) or 50
         threshold = threshold or self.config.global_settings.threshold or 50
 
         self.logger.log("Fetch NSD list", level="info")
 
         nsd = start
         index = 0
-
-        strategy: SaveStrategy[Dict] = SaveStrategy(
+        strategy: SaveStrategy[NsdDTO] = SaveStrategy(
             save_callback, threshold, config=self.config
         )
         results: List[Dict] = []
@@ -201,7 +220,7 @@ class NsdScraper:
 
         return data
 
-    def find_last_existing_nsd(self, start: int = 1, max_limit: int = 10**10) -> int:
+    def _find_last_existing_nsd(self, start: int = 1, max_limit: int = 10**10) -> int:
         """Return the highest NSD number that exists.
 
         The algorithm performs a linear search followed by exponential and

@@ -2,29 +2,25 @@
 
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
-from typing import Callable, Dict, List, Optional, Set
+from typing import Callable, List, Optional, Set, TypeVar
 
-from .metrics_collector_port import MetricsCollectorPort
+from domain.dto import ExecutionResultDTO, NsdDTO
+
+from .base_source_port import BaseSourcePort
+
+T = TypeVar("T")
 
 
-class NSDSourcePort(ABC):
+class NSDSourcePort(BaseSourcePort[NsdDTO]):
     """Port for external NSD data providers."""
-
-    @abstractmethod
     def fetch_all(
         self,
+        threshold: Optional[int] = None,
+        skip_codes: Optional[Set[str]] = None,
+        save_callback: Optional[Callable[[List[NsdDTO]], None]] = None,
+        max_workers: Optional[int] = None,
         start: int = 1,
         max_nsd: Optional[int] = None,
-        skip_codes: Optional[Set[int]] = None,
-        save_callback: Optional[Callable[[List[Dict]], None]] = None,
-        threshold: Optional[int] = None,
-    ) -> List[Dict]:
-        """Fetch all available NSD records."""
-        raise NotImplementedError
-
-    @property
-    @abstractmethod
-    def metrics_collector(self) -> MetricsCollectorPort:
-        """Metrics collector used by the scraper."""
+        **kwargs,
+    ) -> ExecutionResultDTO[NsdDTO]:
         raise NotImplementedError

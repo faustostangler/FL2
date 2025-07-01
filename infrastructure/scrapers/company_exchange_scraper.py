@@ -75,9 +75,6 @@ class CompanyExchangeScraper(CompanySourcePort):
         self.executor = executor
         self._metrics_collector = metrics_collector
 
-        # Log the initialization of the scraper
-        self.logger.log("Start CompanyExchangeScraper", level="info")
-
         # Initialize FetchUtils for HTTP request utilities
         self.fetch_utils = FetchUtils(config, logger)
 
@@ -111,6 +108,9 @@ class CompanyExchangeScraper(CompanySourcePort):
             merger=self.company_merger,
         )
 
+        # Log the initialization of the scraper
+        self.logger.log("Start CompanyExchangeScraper", level="info")
+
     @property
     def metrics_collector(self) -> MetricsCollectorPort:
         """Metrics collector used by the scraper."""
@@ -123,6 +123,7 @@ class CompanyExchangeScraper(CompanySourcePort):
         skip_codes: Optional[Set[str]] = None,
         save_callback: Optional[Callable[[List[CompanyRawDTO]], None]] = None,
         max_workers: Optional[int] = None,
+        **kwargs,
     ) -> ExecutionResultDTO[CompanyRawDTO]:
         """Fetch all companies from the exchange.
 

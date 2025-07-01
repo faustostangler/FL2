@@ -8,7 +8,7 @@ from domain.dto.company_dto import CompanyDTO
 from domain.ports import CompanyRepositoryPort, LoggerPort
 from infrastructure.config import Config
 from infrastructure.models.company_model import CompanyModel
-from infrastructure.repositories.base_repository import BaseRepository
+from infrastructure.repositories import BaseRepository
 
 
 class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort):

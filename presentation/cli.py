@@ -82,9 +82,13 @@ class CLIController:
         """Build and run the NSD synchronization workflow."""
         self.logger.log("Start NSD Sync Use Case", level="info")
 
+        # Create repository for persistent storage.
         nsd_repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
+        # Collector gathers metrics for the worker pool.
         collector = MetricsCollector()
-
+        # Worker pool executes scraping tasks concurrently.
+        executor = WorkerPool(self.config, metrics_collector=collector)
+        # Assemble the scraper with all its collaborators.
         nsd_scraper = NsdScraper(
             config=self.config,
             logger=self.logger,

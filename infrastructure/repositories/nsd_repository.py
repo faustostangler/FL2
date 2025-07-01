@@ -1,24 +1,29 @@
+"""SQLite-backed repository implementation for NSD data."""
+
+from __future__ import annotations
+
 from typing import List
 
-from domain.dto.nsd_dto import NSDDTO
-from domain.ports import LoggerPort
-from domain.ports.nsd_repository_port import NSDRepositoryPort
+from domain.dto.nsd_dto import NsdDTO
+from domain.ports import LoggerPort, NSDRepositoryPort
 from infrastructure.config import Config
 from infrastructure.models.nsd_model import NSDModel
-from infrastructure.repositories.base_repository import BaseRepository
+from infrastructure.repositories import BaseRepository
 
 
-class SQLiteNSDRepository(BaseRepository[NSDDTO], NSDRepositoryPort):
-    """Concrete repository for NSDDTO using SQLite via SQLAlchemy."""
+class SQLiteNSDRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
+    """Concrete repository for NsdDTO using SQLite via SQLAlchemy."""
 
     def __init__(self, config: Config, logger: LoggerPort):
         super().__init__(config, logger)
 
-    def save_all(self, items: List[NSDDTO]) -> None:
+    def save_all(self, items: List[NsdDTO]) -> None:
+        """Persist a list of ``CompanyDTO`` objects."""
         session = self.Session()
         try:
             models = [NSDModel.from_dto(dto) for dto in items]
-            session.bulk_save_objects(models)
+            for model in models:
+                session.merge(model)
             session.commit()
             self.logger.log(
                 f"Saved {len(items)} nsd records",
@@ -34,7 +39,7 @@ class SQLiteNSDRepository(BaseRepository[NSDDTO], NSDRepositoryPort):
         finally:
             session.close()
 
-    def get_all(self) -> List[NSDDTO]:
+    def get_all(self) -> List[NsdDTO]:
         session = self.Session()
         try:
             results = session.query(NSDModel).all()
@@ -58,13 +63,13 @@ class SQLiteNSDRepository(BaseRepository[NSDDTO], NSDRepositoryPort):
         finally:
             session.close()
 
-    def get_by_id(self, id: str) -> NSDDTO:
+    def get_by_id(self, id: str) -> NsdDTO:
         """Fetches an NSD record from the database by its unique identifier.
 
         Args:
             id (str): The unique identifier (ticker) of the NSD to retrieve.
         Returns:
-            NSDDTO: Data transfer object representing the retrieved NSD.
+            NsdDTO: Data transfer object representing the retrieved NSD.
         Raises:
             ValueError: If no NSD with the specified identifier is found.
         """

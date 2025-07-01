@@ -1,5 +1,4 @@
-# domain/models/nsd_dto.py
-"""DTO definitions for normalized NSD (Sequential Document) data."""
+"""DTO definitions for normalized NSD (Sequential Document Number, in Portuguese) data."""
 
 from __future__ import annotations
 
@@ -9,7 +8,9 @@ from typing import Optional
 
 
 @dataclass(frozen=True)
-class NSDDTO:
+class NsdDTO:
+    """Structured NSD data extracted from the exchange."""
+
     nsd: int
     company_name: Optional[str]
     quarter: Optional[datetime]
@@ -23,23 +24,11 @@ class NSDDTO:
     reason: Optional[str]
 
     @staticmethod
-    def from_dict(raw: dict) -> "NSDDTO":
-        """Build an ``NSDDTO`` from scraped raw data.
-
-        Date values are converted to ``YYYY-MM-DD`` or ``YYYY-MM-DD HH:MM:SS`` strings
-        if already ``datetime`` objects. Parsing is not performed; the HTML is expected
-        to be preprocessed into proper Python types.
+    def from_dict(raw: dict) -> "NsdDTO":
+        """Build an ``NsdDTO`` from scraped raw data.
         """
-
-        def format_date(val: Optional[datetime]) -> Optional[str]:
-            if isinstance(val, datetime):
-                return val.strftime("%Y-%m-%d %H:%M:%S")
-            if isinstance(val, str):
-                return val.strip()
-            return None
-
         # Map raw keys directly to the immutable dataclass fields
-        return NSDDTO(
+        return NsdDTO(
             nsd=int(raw.get("nsd", 0)),
             company_name=raw.get("company_name"),
             quarter=raw.get("quarter"),

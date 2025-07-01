@@ -28,3 +28,8 @@ class BaseRepositoryPort(ABC, Generic[T]):
     def get_by_id(self, id: str) -> T:
         """Retrieve an item by its identifier."""
         raise NotImplementedError
+
+    @abstractmethod
+    def get_all_primary_keys(self) -> Set[str]:
+        """Return all stored CVM codes."""
+        raise NotImplementedError
