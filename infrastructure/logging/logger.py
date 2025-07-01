@@ -2,12 +2,13 @@ import logging
 import uuid
 from typing import Optional
 
+from domain.ports.logger_port import LoggerPort
 from infrastructure.config.config import Config
 from infrastructure.logging.context_tracker import ContextTracker
 from infrastructure.logging.progress_formatter import ProgressFormatter
 
 
-class Logger:
+class Logger(LoggerPort):
     """Application logger wrapping Python's ``logging`` module."""
 
     def __init__(

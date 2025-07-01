@@ -4,9 +4,9 @@ from typing import List, TypeVar
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
+from domain.ports import LoggerPort
 from domain.ports.base_repository_port import BaseRepositoryPort
 from infrastructure.config import Config
-from infrastructure.logging import Logger
 from infrastructure.models.base_model import BaseModel
 
 T = TypeVar("T")  # T pode ser CompanyDTO, StatementDTO, etc.
@@ -18,7 +18,7 @@ class BaseRepository(BaseRepositoryPort[T], ABC):
     Pode ser especializada para qualquer tipo de DTO.
     """
 
-    def __init__(self, config: Config, logger: Logger):
+    def __init__(self, config: Config, logger: LoggerPort):
         """Initialize the SQLite database connection and ensure tables
         exist."""
         self.config = config

@@ -36,7 +36,7 @@ class SyncCompaniesUseCase:
             2. Convert results into ``CompanyDTO`` objects.
             3. Persist them using the repository.
         """
-        self.logger.log("Start SyncCompaniesUseCase Execute", level="info")
+        self.logger.log("Start SyncCompaniesUseCase Run", level="info")
 
         # Mark the start time to calculate performance metrics later.
         start = time.perf_counter()
@@ -54,10 +54,6 @@ class SyncCompaniesUseCase:
         # Measure download time and network usage.
         elapsed = time.perf_counter() - start
         bytes_downloaded = self.scraper.metrics_collector.network_bytes
-        self.logger.log(
-            f"Downloaded {bytes_downloaded} bytes in {elapsed:.2f}s",
-            level="info",
-        )
 
         self.logger.log("Finish SyncCompaniesUseCase Execute", level="info")
 

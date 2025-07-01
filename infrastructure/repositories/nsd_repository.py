@@ -1,9 +1,9 @@
 from typing import List
 
 from domain.dto.nsd_dto import NSDDTO
+from domain.ports import LoggerPort
 from domain.ports.nsd_repository_port import NSDRepositoryPort
 from infrastructure.config import Config
-from infrastructure.logging import Logger
 from infrastructure.models.nsd_model import NSDModel
 from infrastructure.repositories.base_repository import BaseRepository
 
@@ -11,7 +11,7 @@ from infrastructure.repositories.base_repository import BaseRepository
 class SQLiteNSDRepository(BaseRepository[NSDDTO], NSDRepositoryPort):
     """Concrete repository for NSDDTO using SQLite via SQLAlchemy."""
 
-    def __init__(self, config: Config, logger: Logger):
+    def __init__(self, config: Config, logger: LoggerPort):
         super().__init__(config, logger)
 
     def save_all(self, items: List[NSDDTO]) -> None:

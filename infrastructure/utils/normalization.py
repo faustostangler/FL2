@@ -7,8 +7,6 @@ from typing import Dict, List, Optional
 
 import unidecode
 
-from infrastructure.logging import Logger
-
 
 def clean_text(
     text: Optional[str],

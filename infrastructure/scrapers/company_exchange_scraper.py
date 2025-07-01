@@ -11,6 +11,7 @@ from application import CompanyMapper
 from domain.dto import CompanyRawDTO, ExecutionResultDTO, PageResultDTO, WorkerTaskDTO
 from domain.ports import (
     CompanySourcePort,
+    LoggerPort,
     MetricsCollectorPort,
     WorkerPoolPort,
 )
@@ -18,7 +19,6 @@ from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.byte_formatter import ByteFormatter
 from infrastructure.helpers.data_cleaner import DataCleaner
-from infrastructure.logging import Logger
 from infrastructure.scrapers.company_processors import (
     CompanyDetailProcessor,
     CompanyMerger,
@@ -37,7 +37,7 @@ class CompanyExchangeScraper(CompanySourcePort):
     def __init__(
         self,
         config: Config,
-        logger: Logger,
+        logger: LoggerPort,
         data_cleaner: DataCleaner,
         mapper: CompanyMapper,
         executor: WorkerPoolPort,
@@ -152,6 +152,7 @@ class CompanyExchangeScraper(CompanySourcePort):
             skip_codes=skip_codes,
             save_callback=noop,
             threshold=threshold,
+            max_workers=max_workers,
         )
 
         # Fetch and parse detailed information for each company, with optional skipping and periodic saving
@@ -176,14 +177,20 @@ class CompanyExchangeScraper(CompanySourcePort):
         skip_codes: Optional[Set[str]] = None,
         threshold: Optional[int] = None,
         save_callback: Optional[Callable[[List[Dict]], None]] = None,
+        max_workers: int | None = None,
     ) -> ExecutionResultDTO[Dict]:
         """Busca o conjunto inicial de empresas disponíveis na bolsa.
 
         :return: Lista de empresas com código CVM e nome base.
         """
-        self.logger.log("Fetch Existing Companies", level="info")
+        self.logger.log(
+            "Start CompanyExchangeScraper fetch_companies_listing", level="info"
+            )
 
+        skip_codes = skip_codes or set()
         threshold = threshold or self.config.global_settings.threshold or 50
+        max_workers = max_workers or self.config.global_settings.max_workers or 1
+
         strategy: SaveStrategy[Dict] = SaveStrategy(
             save_callback, threshold, config=self.config
         )
@@ -196,21 +203,21 @@ class CompanyExchangeScraper(CompanySourcePort):
         start_time = time.perf_counter()
 
         page = 1
-        pre_downloaded = self._metrics_collector.network_bytes
+
+        download_bytes_pre = self._metrics_collector.network_bytes
         fetch = self._fetch_page(page)
+        download_bytes_pos = self._metrics_collector.network_bytes - download_bytes_pre
+
+        total_pages = fetch.total_pages
+
         results = list(fetch.items)
         for item in fetch.items:
             strategy.handle(item)
-        total_pages = fetch.total_pages
 
         extra_info = {
-            "Download": self.byte_formatter.format_bytes(
-                self._metrics_collector.network_bytes - pre_downloaded
-            ),
-            "Total download": self.byte_formatter.format_bytes(
-                self.metrics_collector.network_bytes
-            ),
-        }
+            "Download": self.byte_formatter.format_bytes(download_bytes_pos),
+            "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
+            }
         self.logger.log(
             f"Page {page}/{total_pages}",
             level="info",
@@ -226,15 +233,13 @@ class CompanyExchangeScraper(CompanySourcePort):
             tasks = list(enumerate(range(2, total_pages + 1)))
 
             def processor(task: WorkerTaskDTO) -> PageResultDTO:
-                pre_downloaded = self._metrics_collector.network_bytes
+                download_bytes_pre = self._metrics_collector.network_bytes
                 fetch = self._fetch_page(task.data)
+                download_bytes_pos = self._metrics_collector.network_bytes - download_bytes_pre
+
                 extra_info = {
-                    "Download": self.byte_formatter.format_bytes(
-                        self._metrics_collector.network_bytes - pre_downloaded
-                    ),
-                    "Total download": self.byte_formatter.format_bytes(
-                        self.metrics_collector.network_bytes
-                    ),
+                    "Download": self.byte_formatter.format_bytes(download_bytes_pos),
+                    "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
                 }
                 self.logger.log(
                     f"Page {task.data}/{total_pages}",
@@ -324,18 +329,19 @@ class CompanyExchangeScraper(CompanySourcePort):
         Raises:
             - Does not raise exceptions; logs warnings instead.
         """
+        self.logger.log(
+            "Start CompanyExchangeScraper fetch_companies_details", level="info"
+        )
 
-        threshold = threshold or self.config.global_settings.threshold or 50
         skip_codes = skip_codes or set()
+        threshold = threshold or self.config.global_settings.threshold or 50
+        max_workers = max_workers or self.config.global_settings.max_workers or 1
+
         strategy: SaveStrategy[CompanyRawDTO] = SaveStrategy(
             save_callback, threshold, config=self.config
         )
         detail_exec: ExecutionResultDTO[Optional[CompanyRawDTO]] = ExecutionResultDTO(
             items=[], metrics=self.metrics_collector.get_metrics(0)
-        )
-
-        self.logger.log(
-            "Start CompanyExchangeScraper fetch_companies_details", level="info"
         )
 
         # Pair each company dict with its index for progress logging
@@ -349,8 +355,16 @@ class CompanyExchangeScraper(CompanySourcePort):
 
             code_cvm = entry.get("codeCVM")
             if code_cvm in skip_codes:
+                download_bytes_pre = self._metrics_collector.network_bytes
+                download_bytes_pos = self._metrics_collector.network_bytes - download_bytes_pre
+
                 # Log and skip already persisted companies
-                extra_info = {}
+                extra_info = {
+                "issuingCompany": entry["issuingCompany"],
+                "trading_name": entry["tradingName"],
+                "Download": self.byte_formatter.format_bytes(download_bytes_pos),
+                "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
+                    }
                 self.logger.log(
                     f"{code_cvm}",
                     level="info",
@@ -365,16 +379,16 @@ class CompanyExchangeScraper(CompanySourcePort):
 
                 return None
 
-            pre_downloaded = self._metrics_collector.network_bytes
+            download_bytes_pre = self._metrics_collector.network_bytes
             result = self.detail_processor.run(entry)
+            download_bytes_pos = self._metrics_collector.network_bytes - download_bytes_pre
+
             issuingCompany = entry.get("issuingCompany")
             tradingName = entry.get("tradingName")
             extra_info = {
                 "issuingCompany": issuingCompany,
                 "trading_name": tradingName,
-                "Download": self.byte_formatter.format_bytes(
-                    self._metrics_collector.network_bytes - pre_downloaded
-                ),
+                "Download": self.byte_formatter.format_bytes(download_bytes_pos),
                 "Total download": self.byte_formatter.format_bytes(
                     self.metrics_collector.network_bytes
                 ),
@@ -388,6 +402,7 @@ class CompanyExchangeScraper(CompanySourcePort):
                     "start_time": start_time,
                 },
                 extra=extra_info,
+                worker_id=worker_id,
             )
 
             return result

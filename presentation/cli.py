@@ -2,10 +2,10 @@
 
 from application import CompanyMapper
 from application.services.company_service import CompanyService
+from domain.ports import LoggerPort
 from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
 from infrastructure.helpers.metrics_collector import MetricsCollector
-from infrastructure.logging import Logger
 from infrastructure.repositories import SQLiteCompanyRepository
 from infrastructure.scrapers.company_exchange_scraper import CompanyExchangeScraper
 
@@ -13,12 +13,12 @@ from infrastructure.scrapers.company_exchange_scraper import CompanyExchangeScra
 class CLIController:
     """Controller that orchestrates FLY via the command line."""
 
-    def __init__(self, config: Config, logger: Logger, data_cleaner):
+    def __init__(self, config: Config, logger: LoggerPort, data_cleaner):
         """Store dependencies used by the CLI controller.
 
         Args:
             config: Loaded application configuration.
-            logger: Logger used to emit CLI progress messages.
+            logger: LoggerPort used to emit CLI progress messages.
             data_cleaner: Helper used by scrapers to sanitize raw data.
         """
 
@@ -36,13 +36,13 @@ class CLIController:
         self.logger.log("Start FLY CLI", level="info")
 
         # Run the company synchronization workflow.
-        self.run_company_sync()
-        self.run_nsd_sync()
+        self._run_company_sync()
+        self._run_nsd_sync()
 
         # Indicate the CLI finished executing.
         self.logger.log("Finish FLY CLI", level="info")
 
-    def run_company_sync(self):
+    def _run_company_sync(self):
         """Build and run the company synchronization workflow."""
 
         # Announce the workflow start.
@@ -78,7 +78,7 @@ class CLIController:
 
         # Log the end of the workflow
         self.logger.log("Finish Companies Sync Use Case", level="info")
-    def run_nsd_sync(self):
+    def _run_nsd_sync(self):
         """Build and run the NSD synchronization workflow."""
 
         # Announce the workflow start.

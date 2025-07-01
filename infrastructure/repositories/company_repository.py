@@ -5,9 +5,8 @@ from __future__ import annotations
 from typing import List, Set
 
 from domain.dto.company_dto import CompanyDTO
-from domain.ports import CompanyRepositoryPort
+from domain.ports import CompanyRepositoryPort, LoggerPort
 from infrastructure.config import Config
-from infrastructure.logging import Logger
 from infrastructure.models.company_model import CompanyModel
 from infrastructure.repositories.base_repository import BaseRepository
 
@@ -22,7 +21,7 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
         issues.
     """
 
-    def __init__(self, config: Config, logger: Logger):
+    def __init__(self, config: Config, logger: LoggerPort):
         super().__init__(config, logger)
 
     def save_all(self, items: List[CompanyDTO]) -> None:

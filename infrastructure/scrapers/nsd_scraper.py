@@ -9,11 +9,10 @@ from typing import Callable, Dict, List, Optional
 
 from bs4 import BeautifulSoup
 
-from domain.ports import MetricsCollectorPort
+from domain.ports import LoggerPort, MetricsCollectorPort
 from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.data_cleaner import DataCleaner
-from infrastructure.logging import Logger
 
 
 class NsdScraper:
@@ -22,7 +21,7 @@ class NsdScraper:
     def __init__(
         self,
         config: Config,
-        logger: Logger,
+        logger: LoggerPort,
         data_cleaner: DataCleaner,
         metrics_collector: MetricsCollectorPort,
     ):

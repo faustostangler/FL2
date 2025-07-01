@@ -60,8 +60,8 @@ class WorkerPool(WorkerPoolPort):
                     break
                 index, entry = item
                 task = WorkerTaskDTO(index=index, data=entry, worker_id=worker_id)
+                result = processor(task)
                 try:
-                    result = processor(task)
                     with lock:
                         results.append(result)
                         if callable(on_result):

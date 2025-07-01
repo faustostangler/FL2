@@ -8,15 +8,15 @@ from typing import Optional
 import certifi
 import requests
 
+from domain.ports import LoggerPort
 from infrastructure.config import Config
 from infrastructure.helpers.time_utils import TimeUtils
-from infrastructure.logging import Logger
 
 
 class FetchUtils:
     """Utility class for HTTP operations with retry and randomized headers."""
 
-    def __init__(self, config: Config, logger: Logger):
+    def __init__(self, config: Config, logger: LoggerPort):
         self.config = config
         self.logger = logger
 

@@ -3,9 +3,9 @@
 from datetime import datetime
 from typing import List, Optional
 
+from domain.ports import LoggerPort
 from domain.ports.data_cleaner_port import DataCleanerPort
 from infrastructure.config import Config
-from infrastructure.logging import Logger
 from infrastructure.utils.normalization import (
     clean_date as util_clean_date,
 )
@@ -26,7 +26,7 @@ class DataCleaner(DataCleanerPort):
     Requires external configuration (e.g. words to remove) and a logger.
     """
 
-    def __init__(self, config: Config, logger: Logger):
+    def __init__(self, config: Config, logger: LoggerPort):
         """Store configuration and logger."""
         self.config = config
         self.logger = logger
