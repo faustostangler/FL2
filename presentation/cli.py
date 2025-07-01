@@ -93,6 +93,7 @@ class CLIController:
             config=self.config,
             logger=self.logger,
             data_cleaner=self.data_cleaner,
+            executor=executor,
             metrics_collector=collector,
         )
 

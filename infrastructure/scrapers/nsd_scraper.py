@@ -9,7 +9,7 @@ from typing import Callable, Dict, List, Optional, Set
 
 from bs4 import BeautifulSoup
 
-from domain.dto import ExecutionResultDTO, NsdDTO
+from domain.dto import ExecutionResultDTO, NsdDTO, WorkerTaskDTO
 from domain.ports import (
     LoggerPort,
     MetricsCollectorPort,
@@ -32,12 +32,13 @@ class NsdScraper(NSDSourcePort):
         executor: WorkerPoolPort,
         metrics_collector: MetricsCollectorPort,
     ):
-        """Set up configuration, logger and helper utilities for the scraper."""
-
+        """Set up configuration, logger and helper utilities for the
+        scraper."""
         # Store configuration and logger for use throughout the scraper
         self.config = config
         self.logger = logger
         self.data_cleaner = data_cleaner
+        self.executor = executor
         self._metrics_collector = metrics_collector
 
         self.fetch_utils = FetchUtils(config, logger)
@@ -50,7 +51,6 @@ class NsdScraper(NSDSourcePort):
     @property
     def metrics_collector(self) -> MetricsCollectorPort:
         """Metrics collector used by the scraper."""
-
         return self._metrics_collector
 
     def fetch_all(
@@ -63,46 +63,37 @@ class NsdScraper(NSDSourcePort):
         max_nsd: Optional[int] = None,
         **kwargs,
     ) -> ExecutionResultDTO[NsdDTO]:
-        """Fetch and parse NSD pages.
-
-        Args:
-            start: First NSD number to fetch.
-            limit: Optional amount of sequential NSDs to process. ``None``
-                means fetch indefinitely until a page fails.
-
-        Returns:
-            List of dictionaries compatible with ``NsdDTO.from_dict``.
-        """
+        """Fetch and parse NSD pages using a worker queue."""
         skip_codes = skip_codes or set()
         skip_codes_int = {int(code) for code in skip_codes} if skip_codes else set()
         start = max(start, max(skip_codes_int, default=0) + 1)
 
         max_nsd = max_nsd or self._find_last_existing_nsd(start=start) or 50
         threshold = threshold or self.config.global_settings.threshold or 50
+        max_workers = max_workers or self.config.global_settings.max_workers or 1
 
         self.logger.log("Fetch NSD list", level="info")
 
-        nsd = start
-        index = 0
         strategy: SaveStrategy[NsdDTO] = SaveStrategy(
             save_callback, threshold, config=self.config
         )
-        results: List[Dict] = []
+
+        tasks = list(enumerate(range(start, max_nsd + 1)))
         start_time = time.perf_counter()
 
-        while nsd <= max_nsd:
-            if nsd in skip_codes:
-                nsd += 1
-                index += 1
-                continue
-
-            total = max_nsd - start + 1
-            completed = nsd - start + 1
+        def processor(task: WorkerTaskDTO) -> Optional[Dict]:
+            nsd = task.data
             progress = {
-                "index": (completed - 1),
-                "size": (total) or (nsd - 1),
+                "index": task.index,
+                "size": len(tasks),
                 "start_time": start_time,
             }
+
+            if nsd in skip_codes_int:
+                self.logger.log(
+                    f"{nsd}", level="info", progress=progress, worker_id=task.worker_id
+                )
+                return None
 
             url = self.nsd_endpoint.format(nsd=nsd)
 
@@ -115,36 +106,42 @@ class NsdScraper(NSDSourcePort):
                     f"Failed to fetch NSD {nsd}: {e}",
                     level="warning",
                     progress=progress,
+                    worker_id=task.worker_id,
                 )
-                break
+                return None
 
             if parsed:
-                results.append(parsed)
-                strategy.handle(parsed)
+                extra_info = [
+                    f"{parsed.get('nsd', nsd)}",
+                    parsed["quarter"].strftime("%Y-%m-%d")
+                    if parsed.get("quarter") is not None
+                    else "",
+                    parsed.get("company_name", ""),
+                    parsed.get("nsd_type", ""),
+                    parsed["sent_date"].strftime("%Y-%m-%d %H:%M:%S")
+                    if parsed.get("sent_date") is not None
+                    else "",
+                    str(len(response.content)),
+                ]
 
-            extra_info = [
-                f"{parsed.get('nsd', nsd)}",  # usa o valor original do loop como fallback
-                parsed["quarter"].strftime("%Y-%m-%d")
-                if parsed.get("quarter") is not None
-                else "",
-                parsed.get("company_name", ""),
-                parsed.get("nsd_type", ""),
-                parsed["sent_date"].strftime("%Y-%m-%d %H:%M:%S")
-                if parsed.get("sent_date") is not None
-                else "",
-                str(len(response.content)),
-            ]
+                self.logger.log(
+                    "NSD",
+                    level="info",
+                    progress={**progress, "extra_info": extra_info},
+                    worker_id=task.worker_id,
+                )
 
-            self.logger.log(
-                "NSD",
-                level="info",
-                progress={**progress, "extra_info": extra_info},
-            )
+            return parsed
 
-            # Flushing handled by strategy
+        def handle_batch(item: Optional[Dict]) -> None:
+            strategy.handle(item)
 
-            nsd += 1
-            index += 1
+        exec_result = self.executor.run(
+            tasks=tasks,
+            processor=processor,
+            logger=self.logger,
+            on_result=handle_batch,
+        )
 
         strategy.finalize()
 
@@ -152,11 +149,12 @@ class NsdScraper(NSDSourcePort):
             f"Downloaded {self.metrics_collector.network_bytes} bytes",
             level="info",
         )
-        return results
+
+        results = [item for item in exec_result.items if item is not None]
+        return ExecutionResultDTO(items=results, metrics=exec_result.metrics)
 
     def _parse_html(self, nsd: int, html: str) -> Dict:
         """Parse NSD HTML into a dictionary."""
-
         soup = BeautifulSoup(html, "html.parser")
 
         def text_of(selector: str) -> Optional[str]:
@@ -281,7 +279,6 @@ class NsdScraper(NSDSourcePort):
 
     def _try_nsd(self, nsd: int) -> Optional[dict]:
         """Attempt to fetch and parse a single NSD page."""
-
         try:
             # Request the NSD page and parse its HTML
             url = self.nsd_endpoint.format(nsd=nsd)
