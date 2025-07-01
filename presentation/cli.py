@@ -2,12 +2,14 @@
 
 from application import CompanyMapper
 from application.services.company_service import CompanyService
+from application.services.nsd_service import NsdService
 from domain.ports import LoggerPort
 from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
 from infrastructure.helpers.metrics_collector import MetricsCollector
-from infrastructure.repositories import SQLiteCompanyRepository
+from infrastructure.repositories import SQLiteCompanyRepository, SQLiteNSDRepository
 from infrastructure.scrapers.company_exchange_scraper import CompanyExchangeScraper
+from infrastructure.scrapers.nsd_scraper import NsdScraper
 
 
 class CLIController:
@@ -21,7 +23,6 @@ class CLIController:
             logger: LoggerPort used to emit CLI progress messages.
             data_cleaner: Helper used by scrapers to sanitize raw data.
         """
-
         # Persist the provided configuration for later use.
         self.config = config
         # Keep the logger so other methods can output information.
@@ -31,7 +32,6 @@ class CLIController:
 
     def run(self):
         """Execute the main CLI tasks sequentially."""
-
         # Announce the CLI startup for visibility.
         self.logger.log("Start FLY CLI", level="info")
 
@@ -44,7 +44,6 @@ class CLIController:
 
     def _run_company_sync(self):
         """Build and run the company synchronization workflow."""
-
         # Announce the workflow start.
         self.logger.log("Start Companies Sync Use Case", level="info")
 
@@ -78,29 +77,27 @@ class CLIController:
 
         # Log the end of the workflow
         self.logger.log("Finish Companies Sync Use Case", level="info")
+
     def _run_nsd_sync(self):
         """Build and run the NSD synchronization workflow."""
-
-        # Announce the workflow start.
         self.logger.log("Start NSD Sync Use Case", level="info")
 
-        # # Set up repository where NSD data will be persisted.
-        # nsd_repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
-        # # Collect metrics for the scraping tasks.
-        # collector = MetricsCollector()
-        # # Scraper fetches data from the NSD site.
-        # nsd_scraper = NsdScraper(
-        #     config=self.config,
-        #     logger=self.logger,
-        #     data_cleaner=self.data_cleaner,
-        #     metrics_collector=collector,
-        # )
-        # # Service coordinates NSD synchronization.
-        # nsd_service = NsdService(
-        #     logger=self.logger,
-        #     repository=nsd_repo,
-        #     scraper=nsd_scraper,
-        # )
+        nsd_repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
+        collector = MetricsCollector()
 
-        # # Trigger the actual NSD synchronization process.
-        # nsd_service.run()
+        nsd_scraper = NsdScraper(
+            config=self.config,
+            logger=self.logger,
+            data_cleaner=self.data_cleaner,
+            metrics_collector=collector,
+        )
+
+        nsd_service = NsdService(
+            logger=self.logger,
+            repository=nsd_repo,
+            scraper=nsd_scraper,
+        )
+
+        nsd_service.run()
+
+        self.logger.log("Finish NSD Sync Use Case", level="info")
