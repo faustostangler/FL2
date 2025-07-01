@@ -1,3 +1,5 @@
+"""Utility functions for cleaning and normalizing raw text."""
+
 from __future__ import annotations
 
 import re
@@ -6,6 +8,8 @@ from datetime import datetime
 from typing import Dict, List, Optional
 
 import unidecode
+
+from infrastructure.logging import Logger
 
 
 def clean_text(
