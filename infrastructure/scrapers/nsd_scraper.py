@@ -124,16 +124,13 @@ class NsdScraper(NSDSourcePort):
                     else "",
                     parsed.get("company_name", ""),
                     parsed.get("nsd_type", ""),
-                    parsed["sent_date"].strftime("%Y-%m-%d %H:%M:%S")
-                    if parsed.get("sent_date") is not None
-                    else "",
-                    str(len(response.content)),
+                    parsed["sent_date"].strftime("%Y-%m-%d %H:%M:%S") if parsed.get("sent_date") is not None else "", str(len(response.content)),
                 ]
             else:
                 extra_info = [ ]
 
             self.logger.log(
-                "NSD",
+                f"{nsd}",
                 level="info",
                 progress={**progress, "extra_info": extra_info},
                 worker_id=task.worker_id,
@@ -141,7 +138,7 @@ class NsdScraper(NSDSourcePort):
 
             return parsed
 
-        def handle_batch(item: Optional[Dict]) -> None:
+        def handle_batch(item: Optional[NsdDTO]) -> None:
             strategy.handle(item)
 
         exec_result = self.executor.run(
