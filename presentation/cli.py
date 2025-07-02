@@ -1,5 +1,9 @@
 """Command line interface that wires together the application services."""
 
+from dataclasses import asdict
+
+import pandas as pd
+
 from application import CompanyMapper
 from application.services.company_service import CompanyService
 from application.services.nsd_service import NsdService
