@@ -62,7 +62,7 @@ class SqlAlchemyStatementRepository(
     def get_all_primary_keys(self) -> set[str]:
         session = self.Session()
         try:
-            ids = session.query(StatementModel.id).distinct().all()
-            return {str(row[0]) for row in ids}
+            ids = session.query(StatementModel.batch_id).distinct().all()
+            return {str(row[0]) for row in ids if row[0] is not None}
         finally:
             session.close()
