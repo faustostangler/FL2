@@ -16,9 +16,9 @@ from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
 from infrastructure.helpers.metrics_collector import MetricsCollector
 from infrastructure.repositories import (
+    SqlAlchemyCompanyRepository,
+    SqlAlchemyNsdRepository,
     SqlAlchemyStatementRepository,
-    SQLiteCompanyRepository,
-    SQLiteNSDRepository,
 )
 from infrastructure.scrapers.company_exchange_scraper import CompanyExchangeScraper
 from infrastructure.scrapers.nsd_scraper import NsdScraper
@@ -64,7 +64,7 @@ class CLIController:
         self.logger.log("Start Companies Sync Use Case", level="info")
 
         # Create repository for persistent storage.
-        company_repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
+        company_repo = SqlAlchemyCompanyRepository(config=self.config, logger=self.logger)
         # Mapper transforms scraped data into DTOs.
         mapper = CompanyMapper(self.data_cleaner)
         # Collector gathers metrics for the worker pool.
@@ -99,7 +99,7 @@ class CLIController:
         self.logger.log("Start NSD Sync Use Case", level="info")
 
         # Create repository for persistent storage.
-        nsd_repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
+        nsd_repo = SqlAlchemyNsdRepository(config=self.config, logger=self.logger)
         # Collector gathers metrics for the worker pool.
         collector = MetricsCollector()
         # Worker pool executes scraping tasks concurrently.
@@ -129,16 +129,12 @@ class CLIController:
         self.logger.log("Start Statement Sync Use Case", level="info")
 
         repo = SqlAlchemyStatementRepository(config=self.config, logger=self.logger)
-        company_repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
-        nsd_repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
+        company_repo = SqlAlchemyCompanyRepository(config=self.config, logger=self.logger)
+        nsd_repo = SqlAlchemyNsdRepository(config=self.config, logger=self.logger)
 
-        endpoint = (
-            f"{self.config.exchange.company_endpoint['financial']}?batch={{batch}}"
-        )
         source = RequestsStatementSourceAdapter(
             config=self.config,
             logger=self.logger,
-            endpoint=endpoint,
         )
 
         fetch_uc = FetchStatementsUseCase(logger=self.logger, source=source)

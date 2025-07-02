@@ -33,7 +33,7 @@ class StatementProcessingService:
         nsd_repo: NSDRepositoryPort,
         statement_repo: StatementRepositoryPort,
         config: Config,
-        max_workers: int = 4,
+        max_workers: int = 1,
     ) -> None:
         """Initialize the service with its dependencies."""
         self.logger = logger
@@ -61,10 +61,10 @@ class StatementProcessingService:
 
         company_names = {c.company_name for c in companies if c.company_name}
         nsd_company_names = {n.company_name for n in nsd_records if n.company_name}
-        common_names = sorted(company_names.intersection(nsd_company_names))
-        target_names = set(common_names[:50])
+        common_company_names = sorted(company_names.intersection(nsd_company_names))
+        target_names = set(common_company_names[:50])
 
-        return {
+        results = {
             str(n.nsd)
             for n in nsd_records
             if (
@@ -73,6 +73,8 @@ class StatementProcessingService:
                 and str(n.nsd) not in processed
             )
         }
+
+        return results
 
     def process_all(self, batch_ids: Iterable[str]) -> None:
         """Fetch, parse, and persist statements for all batch IDs."""

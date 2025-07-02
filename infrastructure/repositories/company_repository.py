@@ -11,7 +11,7 @@ from infrastructure.models.company_model import CompanyModel
 from infrastructure.repositories import BaseRepository
 
 
-class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort):
+class SqlAlchemyCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort):
     """Concrete implementation of the repository using SQLite.
 
     Note:

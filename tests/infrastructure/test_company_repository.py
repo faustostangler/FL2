@@ -2,12 +2,12 @@ from sqlalchemy import text
 
 from domain.dto.company_dto import CompanyDTO
 from infrastructure.models.base_model import Base
-from infrastructure.repositories.company_repository import SQLiteCompanyRepository
+from infrastructure.repositories.company_repository import SqlAlchemyCompanyRepository
 from tests.conftest import DummyConfig, DummyLogger
 
 
 def test_save_all(SessionLocal, engine):
-    repo = SQLiteCompanyRepository(config=DummyConfig(), logger=DummyLogger())
+    repo = SqlAlchemyCompanyRepository(config=DummyConfig(), logger=DummyLogger())
     # use shared engine
     repo.engine = engine
     repo.Session = SessionLocal
@@ -25,7 +25,7 @@ def test_save_all(SessionLocal, engine):
 
 
 def test_save_all_json_string(SessionLocal, engine):
-    repo = SQLiteCompanyRepository(config=DummyConfig(), logger=DummyLogger())
+    repo = SqlAlchemyCompanyRepository(config=DummyConfig(), logger=DummyLogger())
     repo.engine = engine
     repo.Session = SessionLocal
     Base.metadata.drop_all(engine)
@@ -45,7 +45,7 @@ def test_save_all_json_string(SessionLocal, engine):
 
 
 def test_save_all_upserts(SessionLocal, engine):
-    repo = SQLiteCompanyRepository(config=DummyConfig(), logger=DummyLogger())
+    repo = SqlAlchemyCompanyRepository(config=DummyConfig(), logger=DummyLogger())
     repo.engine = engine
     repo.Session = SessionLocal
     Base.metadata.drop_all(engine)
