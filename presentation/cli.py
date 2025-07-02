@@ -1,9 +1,5 @@
 """Command line interface that wires together the application services."""
 
-from dataclasses import asdict
-
-import pandas as pd
-
 from application import CompanyMapper
 from application.services.company_service import CompanyService
 from application.services.nsd_service import NsdService
@@ -128,41 +124,13 @@ class CLIController:
 
         self.logger.log("Finish NSD Sync Use Case", level="info")
 
-    def _build_statement_targets(self) -> set[str]:
-        """Return NSD identifiers for statements that haven't been
-        processed."""
-        company_repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
-        nsd_repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
-        statement_repo = SqlAlchemyStatementRepository(
-            config=self.config,
-            logger=self.logger,
-        )
-
-        companies = company_repo.get_all()
-        nsd_records = nsd_repo.get_all()
-
-        if not companies or not nsd_records:
-            return set()
-
-        processed = statement_repo.get_all_primary_keys()
-        valid_types = set(self.config.domain.statements_types)
-        company_names = {c.company_name for c in companies if c.company_name}
-
-        return {
-            str(record.nsd)
-            for record in nsd_records
-            if (
-                record.nsd_type in valid_types
-                and record.company_name in company_names
-                and str(record.nsd) not in processed
-            )
-        }
-
     def _run_statement_sync(self) -> None:
         """Build and run the statement processing workflow."""
         self.logger.log("Start Statement Sync Use Case", level="info")
 
         repo = SqlAlchemyStatementRepository(config=self.config, logger=self.logger)
+        company_repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
+        nsd_repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
 
         endpoint = (
             f"{self.config.exchange.company_endpoint['financial']}?batch={{batch}}"
@@ -182,11 +150,13 @@ class CLIController:
             fetch_usecase=fetch_uc,
             parse_usecase=parse_uc,
             persist_usecase=persist_uc,
+            company_repo=company_repo,
+            nsd_repo=nsd_repo,
+            statement_repo=repo,
+            config=self.config,
             max_workers=self.config.global_settings.max_workers,
         )
 
-        batch_ids = self._build_statement_targets()
-
-        service.process_all(batch_ids)
+        service.run()
 
         self.logger.log("Finish Statement Sync Use Case", level="info")
