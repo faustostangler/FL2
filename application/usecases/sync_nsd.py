@@ -39,10 +39,7 @@ class SyncNSDUseCase:
             level="info",
         )
 
-    def _save_batch(self, buffer: list[dict]) -> None:
+    def _save_batch(self, buffer: list[NsdDTO]) -> None:
         """Persist a batch of raw data after converting to domain DTOs."""
-        # Convert raw dictionaries provided by the scraper to typed DTOs.
-        dtos = [NsdDTO.from_dict(d) for d in buffer]
-
         # Save the batch to the repository in a single call.
-        self.repository.save_all(dtos)
+        self.repository.save_all(buffer)
