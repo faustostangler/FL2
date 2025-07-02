@@ -3,13 +3,28 @@
 from application import CompanyMapper
 from application.services.company_service import CompanyService
 from application.services.nsd_service import NsdService
+from application.services.statement_processing_service import (
+    StatementProcessingService,
+)
+from application.usecases import (
+    FetchStatementsUseCase,
+    ParseAndClassifyStatementsUseCase,
+    PersistStatementsUseCase,
+)
 from domain.ports import LoggerPort
 from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
 from infrastructure.helpers.metrics_collector import MetricsCollector
-from infrastructure.repositories import SQLiteCompanyRepository, SQLiteNSDRepository
+from infrastructure.repositories import (
+    SqlAlchemyStatementRepository,
+    SQLiteCompanyRepository,
+    SQLiteNSDRepository,
+)
 from infrastructure.scrapers.company_exchange_scraper import CompanyExchangeScraper
 from infrastructure.scrapers.nsd_scraper import NsdScraper
+from infrastructure.scrapers.statements_source_adapter import (
+    RequestsStatementSourceAdapter,
+)
 
 
 class CLIController:
@@ -38,6 +53,7 @@ class CLIController:
         # Run the company synchronization workflow.
         # self._run_company_sync()
         self._run_nsd_sync()
+        self._run_statement_sync()
 
         # Indicate the CLI finished executing.
         self.logger.log("Finish FLY CLI", level="info")
@@ -107,3 +123,37 @@ class CLIController:
         nsd_service.run()
 
         self.logger.log("Finish NSD Sync Use Case", level="info")
+
+    def _run_statement_sync(self) -> None:
+        """Build and run the statement processing workflow."""
+        self.logger.log("Start Statement Sync Use Case", level="info")
+
+        repo = SqlAlchemyStatementRepository(config=self.config, logger=self.logger)
+
+        endpoint = (
+            f"{self.config.exchange.company_endpoint['financial']}?batch={{batch}}"
+        )
+        source = RequestsStatementSourceAdapter(
+            config=self.config,
+            logger=self.logger,
+            endpoint=endpoint,
+        )
+
+        fetch_uc = FetchStatementsUseCase(logger=self.logger, source=source)
+        parse_uc = ParseAndClassifyStatementsUseCase(logger=self.logger)
+        persist_uc = PersistStatementsUseCase(logger=self.logger, repository=repo)
+
+        service = StatementProcessingService(
+            logger=self.logger,
+            fetch_usecase=fetch_uc,
+            parse_usecase=parse_uc,
+            persist_usecase=persist_uc,
+            max_workers=self.config.global_settings.max_workers,
+        )
+
+        company_repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
+        batch_ids = company_repo.get_all_primary_keys()
+
+        service.process_all(batch_ids)
+
+        self.logger.log("Finish Statement Sync Use Case", level="info")

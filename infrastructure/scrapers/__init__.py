@@ -6,6 +6,7 @@ from .company_processors import (
     EntryCleaner,
 )
 from .nsd_scraper import NsdScraper
+from .statements_source_adapter import RequestsStatementSourceAdapter
 
 __all__ = [
     "CompanyExchangeScraper",
@@ -14,4 +15,5 @@ __all__ = [
     "DetailFetcher",
     "CompanyMerger",
     "CompanyDetailProcessor",
+    "RequestsStatementSourceAdapter",
 ]
