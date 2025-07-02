@@ -1,5 +1,9 @@
 """Command line interface that wires together the application services."""
 
+from dataclasses import asdict
+
+import pandas as pd
+
 from application import CompanyMapper
 from application.services.company_service import CompanyService
 from application.services.nsd_service import NsdService
@@ -124,6 +128,101 @@ class CLIController:
 
         self.logger.log("Finish NSD Sync Use Case", level="info")
 
+    def _build_statement_targets(self) -> set[str]:
+        """Generate NSD identifiers for statements to be processed."""
+        company_repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
+        nsd_repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
+        statement_repo = SqlAlchemyStatementRepository(
+            config=self.config, logger=self.logger
+        )
+
+        companies = pd.DataFrame([asdict(c) for c in company_repo.get_all()])
+        nsd_df = pd.DataFrame([asdict(n) for n in nsd_repo.get_all()])
+
+        if companies.empty or nsd_df.empty:
+            return set()
+
+        processed = statement_repo.get_all_primary_keys()
+
+        nsd_df = nsd_df[nsd_df["nsd_type"].isin(self.config.domain.statements_types)]
+        df_nsd_company = pd.merge(nsd_df, companies, on="company_name", how="inner")
+        df_companies = (
+            df_nsd_company[["company_name", "cvm_code", "ticker_codes", "trading_name"]]
+            .drop_duplicates()
+            .sort_values(by=["company_name"])
+            .reset_index(drop=True)
+        )
+
+        targets = []
+        for _, row in df_companies.iterrows():
+            name = row["company_name"]
+            company_df = companies[companies["company_name"] == name]
+            nsd_subset = nsd_df[nsd_df["company_name"] == name]
+            df_nsd_company = pd.merge(
+                nsd_subset, company_df, on="company_name", how="inner"
+            )
+            try:
+                target = df_nsd_company[
+                    ~df_nsd_company["nsd"].astype(str).isin(processed)
+                ]
+            except Exception:
+                target = df_nsd_company
+
+            if not target.empty:
+                last = "ZZZZZZZZZZ"
+                order = [
+                    "industry_sector",
+                    "industry_subsector",
+                    "industry_segment",
+                    "company_name",
+                    "quarter",
+                    "version",
+                ]
+
+                target.loc[target["industry_sector"].isna(), "industry_sector"] = last
+                target.loc[
+                    target["industry_subsector"].isna(), "industry_subsector"
+                ] = last
+                target.loc[target["industry_segment"].isna(), "industry_segment"] = last
+
+                target = target.sort_values(by=order, ascending=True)
+
+                target.loc[target["industry_sector"] == last, "industry_sector"] = None
+                target.loc[
+                    target["industry_subsector"] == last, "industry_subsector"
+                ] = None
+                target.loc[target["industry_segment"] == last, "industry_segment"] = (
+                    None
+                )
+
+                date_cols = [
+                    "quarter",
+                    "sent_date",
+                    "listing_date",
+                    "last_date",
+                    "date_quotation",
+                ]
+                for col in date_cols:
+                    if col in target.columns:
+                        mask_iso = target[col].astype(str).str.contains(
+                            "-", na=False
+                        ) & target[col].astype(str).str.contains("T", na=False)
+                        mask_br = ~mask_iso & target[col].notna()
+                        target.loc[mask_iso, col] = pd.to_datetime(
+                            target.loc[mask_iso, col], errors="coerce", dayfirst=False
+                        )
+                        target.loc[mask_br, col] = pd.to_datetime(
+                            target.loc[mask_br, col], errors="coerce", dayfirst=True
+                        )
+
+                targets.append(target)
+
+        if targets:
+            merged = pd.concat(targets, ignore_index=True)
+            return set(merged["nsd"].astype(str).unique())
+
+        return set()
+
     def _run_statement_sync(self) -> None:
         """Build and run the statement processing workflow."""
         self.logger.log("Start Statement Sync Use Case", level="info")
@@ -151,8 +250,7 @@ class CLIController:
             max_workers=self.config.global_settings.max_workers,
         )
 
-        company_repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
-        batch_ids = company_repo.get_all_primary_keys()
+        batch_ids = self._build_statement_targets()
 
         service.process_all(batch_ids)
 
