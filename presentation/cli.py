@@ -36,7 +36,7 @@ class CLIController:
         self.logger.log("Start FLY CLI", level="info")
 
         # Run the company synchronization workflow.
-        # self._run_company_sync()
+        self._run_company_sync()
         self._run_nsd_sync()
 
         # Indicate the CLI finished executing.
