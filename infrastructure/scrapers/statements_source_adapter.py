@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from datetime import datetime
 from urllib.parse import quote_plus, urlencode
 
 import pandas as pd
@@ -121,11 +122,19 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         nsd = row.get("nsd")
         cvm_code = row.get("cvm_code", "")
         empresa = row.get("company_name", "")
-        data_referencia = (
-            pd.to_datetime(row.get("quarter")).strftime("%Y-%m-%d")
-            if row.get("quarter")
-            else ""
-        )
+        quarter = row.get("quarter")
+        if quarter:
+            if hasattr(quarter, "strftime"):
+                data_referencia = quarter.strftime("%Y-%m-%d")
+            else:
+                try:
+                    data_referencia = datetime.fromisoformat(str(quarter)).strftime(
+                        "%Y-%m-%d"
+                    )
+                except ValueError:
+                    data_referencia = str(quarter)
+        else:
+            data_referencia = ""
         versao = row.get("version", "")
         nsd_type = row.get("nsd_type", "")
 
