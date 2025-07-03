@@ -6,7 +6,7 @@ import time
 from datetime import datetime
 from urllib.parse import quote_plus, urlencode
 
-import pandas as pd
+# import pandas as pd
 from bs4 import BeautifulSoup
 
 from domain.ports import LoggerPort, StatementSourcePort

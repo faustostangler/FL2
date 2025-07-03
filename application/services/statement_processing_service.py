@@ -50,19 +50,19 @@ class StatementProcessingService:
     def _build_targets(self) -> Set[str]:
         """Return NSD identifiers for statements that haven't been
         processed."""
-        companies = self.company_repo.get_all()
+        company_records = self.company_repo.get_all()
         nsd_records = self.nsd_repo.get_all()
 
-        if not companies or not nsd_records:
+        if not company_records or not nsd_records:
             return set()
 
         processed = self.statement_repo.get_all_primary_keys()
         valid_types = set(self.config.domain.statements_types)
 
-        company_names = {c.company_name for c in companies if c.company_name}
+        company_names = {c.company_name for c in company_records if c.company_name}
         nsd_company_names = {n.company_name for n in nsd_records if n.company_name}
         common_company_names = sorted(company_names.intersection(nsd_company_names))
-        target_names = set(common_company_names[:50])
+        target_names = sorted(set(common_company_names))
 
         results = {
             str(n.nsd)
@@ -76,13 +76,13 @@ class StatementProcessingService:
 
         return results
 
-    def process_all(self, batch_ids: Iterable[str]) -> None:
+    def process_all(self, batch_nsd: Iterable[str]) -> None:
         """Fetch, parse, and persist statements for all batch IDs."""
         with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
             # Stage 1: fetch html in parallel
             fetch_futures = {
                 executor.submit(self.fetch_usecase.source.fetch, bid): bid
-                for bid in batch_ids
+                for bid in batch_nsd
             }
             html_results: List[tuple[str, str]] = []
             for fut in fetch_futures:
@@ -109,8 +109,8 @@ class StatementProcessingService:
 
     def run(self) -> None:
         """Build targets and process all statements."""
-        batch_ids = self._build_targets()
-        if not batch_ids:
+        batch_nsd = self._build_targets()
+        if not batch_nsd:
             self.logger.log("No statements to process", level="info")
             return
-        self.process_all(batch_ids)
+        self.process_all(batch_nsd)
