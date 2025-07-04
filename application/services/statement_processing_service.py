@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from concurrent.futures import ThreadPoolExecutor
 from typing import Iterable, List, Set
 
 from application.usecases.fetch_statements import FetchStatementsUseCase
@@ -10,7 +9,7 @@ from application.usecases.parse_and_classify_statements import (
     ParseAndClassifyStatementsUseCase,
 )
 from application.usecases.persist_statements import PersistStatementsUseCase
-from domain.dto import StatementDTO
+from domain.dto import StatementDTO, WorkerTaskDTO
 from domain.ports import (
     CompanyRepositoryPort,
     LoggerPort,
@@ -18,6 +17,7 @@ from domain.ports import (
     StatementRepositoryPort,
 )
 from infrastructure.config import Config
+from infrastructure.helpers import MetricsCollector, WorkerPool
 
 
 class StatementProcessingService:
@@ -78,32 +78,65 @@ class StatementProcessingService:
 
     def process_all(self, batch_nsd: Iterable[str]) -> None:
         """Fetch, parse, and persist statements for all batch IDs."""
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
-            # Stage 1: fetch html in parallel
-            fetch_futures = {
-                executor.submit(self.fetch_usecase.source.fetch, bid): bid
-                for bid in batch_nsd
-            }
-            html_results: List[tuple[str, str]] = []
-            for fut in fetch_futures:
-                batch = fetch_futures[fut]
-                html_results.append((batch, fut.result()))
+        collector = MetricsCollector()
 
-            # Stage 2: parse and classify in parallel
-            parse_futures = {
-                executor.submit(self.parse_usecase.run, bid, html): bid
-                for bid, html in html_results
-            }
-            parsed: List[List[StatementDTO]] = []
-            for fut in parse_futures:
-                parsed.append(fut.result())
+        # Queue 1: fetch HTML content
+        fetch_pool = WorkerPool(
+            config=self.config,
+            metrics_collector=collector,
+            max_workers=self.max_workers,
+        )
 
-            # Stage 3: persist in parallel
-            persist_futures = [
-                executor.submit(self.persist_usecase.run, items) for items in parsed
-            ]
-            for fut in persist_futures:
-                fut.result()
+        fetch_tasks = list(enumerate(batch_nsd))
+
+        def fetch_processor(task: WorkerTaskDTO) -> tuple[str, str]:
+            bid = task.data
+            html = self.fetch_usecase.source.fetch(bid)
+            return (bid, html)
+
+        fetch_result = fetch_pool.run(
+            tasks=fetch_tasks,
+            processor=fetch_processor,
+            logger=self.logger,
+        )
+
+        # Queue 2: parse statements
+        parse_pool = WorkerPool(
+            config=self.config,
+            metrics_collector=collector,
+            max_workers=self.max_workers,
+        )
+
+        parse_tasks = list(enumerate(fetch_result.items))
+
+        def parse_processor(task: WorkerTaskDTO) -> List[StatementDTO]:
+            bid, html = task.data
+            return self.parse_usecase.run(bid, html)
+
+        parse_result = parse_pool.run(
+            tasks=parse_tasks,
+            processor=parse_processor,
+            logger=self.logger,
+        )
+
+        # Queue 3: persist statements
+        persist_pool = WorkerPool(
+            config=self.config,
+            metrics_collector=collector,
+            max_workers=self.max_workers,
+        )
+
+        persist_tasks = list(enumerate(parse_result.items))
+
+        def persist_processor(task: WorkerTaskDTO) -> None:
+            self.persist_usecase.run(task.data)
+            return None
+
+        persist_pool.run(
+            tasks=persist_tasks,
+            processor=persist_processor,
+            logger=self.logger,
+        )
 
         self.logger.log("Finished StatementProcessingService", level="info")
 
