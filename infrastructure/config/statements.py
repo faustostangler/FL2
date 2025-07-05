@@ -136,9 +136,15 @@ class StatementsConfig:
     statement_items: List[Dict[str, Optional[int | str]]] = field(
         default_factory=lambda: [item.copy() for item in STATEMENT_ITEMS]
     )
+
+    if isinstance(NSD_TYPE_MAP, dict):
+        NSD_TYPE_MAP = NSD_TYPE_MAP.copy()
+    else:
+        NSD_TYPE_MAP = dict(NSD_TYPE_MAP)
     nsd_type_map: Mapping[str, Tuple[str, int]] = field(
-        default_factory=lambda: NSD_TYPE_MAP.copy()
+        default_factory=lambda: NSD_TYPE_MAP
     )
+
     capital_items: List[Dict[str, str]] = field(
         default_factory=lambda: [item.copy() for item in CAPITAL_ITEMS]
     )

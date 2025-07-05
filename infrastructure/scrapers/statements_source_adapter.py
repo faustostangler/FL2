@@ -35,39 +35,34 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         self, soup: BeautifulSoup, group: str
     ) -> List[Dict[str, Any]]:
         """Return parsed rows from a statement ``soup``."""
-        results: List[Dict[str, Any]] = []
+        rows: List[Dict[str, Any]] = []
 
         # Default parsing for Capital Composition page
         if group == "Dados da Empresa":
             thousand = 1
-            thousand_element = soup.select_one("div#UltimaTabela table tr td")
-
-            if isinstance(thousand_element, Tag):
-                title = thousand_element.get_text(strip=True)
-                if "Mil" in title:
+            table = soup.find("div", id="UltimaTabela")
+            if isinstance(table, Tag):
+                text = table.get_text()
+                if "Mil" in text:
                     thousand = 1000
 
-
-            tables = soup.find("div", id="UltimaTabela")
-            table = tables.find("table") if tables else None
-
-            def v(elem_id: str) -> float:
-                el = soup.find(id=elem_id)
-                if el is None:
+            def value_from(elem_id: str) -> float:
+                element = soup.find(id=elem_id)
+                if element is None:
                     return 0.0
-                value = self.data_cleaner.clean_number(el.get_text())
+                value = self.data_cleaner.clean_number(element.get_text())
                 result = thousand * value
                 return result if result is not None else 0.0
 
             for item in self.statements_config.capital_items:
-                results.append(
+                rows.append(
                     {
                         "account": item["account"],
                         "description": item["description"],
-                        "value": v(item["elem_id"]),
+                        "value": value_from(item["elem_id"]),
                     }
                 )
-            return results
+            return rows
 
         # Default parsing for DFs pages
         thousand = 1
@@ -79,7 +74,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
         table = soup.find("table", id="ctl00_cphPopUp_tbDados")
         if not table:
-            return results
+            return rows
 
         if isinstance(table, Tag):
             for row in table.find_all("tr"):
@@ -87,7 +82,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 if len(cols) < 3:
                     continue
                 account, desc, val = cols[0], cols[1], cols[2]
-                results.append(
+                rows.append(
                     {
                         "account": account,
                         "description": desc,
@@ -95,7 +90,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     }
                 )
 
-        return results
+        return rows
 
     def _extract_hash(self, html: str) -> str:
         """Extract the hidden hash value from the HTML response."""
@@ -173,8 +168,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         hash_response = self.fetch_utils.fetch_with_retry(self.session, url)
         hash_value = self._extract_hash(hash_response.text)
 
-        items = self.config.statements.statement_items
-        row_urls = self._build_urls(row, items, hash_value)
+        statement_items = self.config.statements.statement_items
+        row_urls = self._build_urls(row, statement_items, hash_value)
 
         # Parse all statement pages using the legacy logic
         self.parsed_rows = []
