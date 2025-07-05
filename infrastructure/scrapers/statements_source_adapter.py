@@ -59,34 +59,14 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 result = thousand * value
                 return result if result is not None else 0.0
 
-            results.append(
-                {
-                    "account": "00.01.01",
-                    "description": "Ações ON Circulação",
-                    "value": v("QtdAordCapiItgz_1"),
-                }
-            )
-            results.append(
-                {
-                    "account": "00.01.02",
-                    "description": "Ações PN Circulação",
-                    "value": v("QtdAprfCapiItgz_1"),
-                }
-            )
-            results.append(
-                {
-                    "account": "00.02.01",
-                    "description": "Ações ON Tesouraria",
-                    "value": v("QtdAordTeso_1"),
-                }
-            )
-            results.append(
-                {
-                    "account": "00.02.02",
-                    "description": "Ações PN Tesouraria",
-                    "value": v("QtdAprfTeso_1"),
-                }
-            )
+            for item in self.statements_config.capital_items:
+                results.append(
+                    {
+                        "account": item["account"],
+                        "description": item["description"],
+                        "value": v(item["elem_id"]),
+                    }
+                )
             return results
 
         # Default parsing for DFs pages
