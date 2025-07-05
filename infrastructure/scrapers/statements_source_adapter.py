@@ -66,9 +66,9 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
         # Default parsing for DFs pages
         thousand = 1
-        title_el = soup.find(id="TituloTabelaSemBorda")
-        if isinstance(title_el, Tag):
-            title = title_el.get_text(strip=True)
+        title_element = soup.find(id="TituloTabelaSemBorda")
+        if isinstance(title_element, Tag):
+            title = title_element.get_text(strip=True)
             if "Mil" in title:
                 thousand = 1000
 
@@ -77,16 +77,20 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
             return rows
 
         if isinstance(table, Tag):
-            for row in table.find_all("tr"):
+            table_rows = table.find_all("tr")
+            for row in table_rows:
                 cols = [c.get_text(strip=True) for c in row.find_all("td")]
+                # ignora linhas cujo account não começa com dígito
                 if len(cols) < 3:
                     continue
-                account, desc, val = cols[0], cols[1], cols[2]
+                if not cols[0] or not cols[0][0].isdigit():
+                    continue
+                account, account_description, account_value = cols[0], cols[1], cols[2]
                 rows.append(
                     {
                         "account": account,
-                        "description": desc,
-                        "value": (self.data_cleaner.clean_number(val) or 0.0) * thousand,
+                        "description": account_description,
+                        "value": (self.data_cleaner.clean_number(account_value) or 0.0) * thousand,
                     }
                 )
 
@@ -160,8 +164,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
             print(e)
         return result
 
-    def fetch(self, row: NsdDTO) -> str:
-        """Fetch HTML for the given NSD and return the first statement page."""
+    def fetch(self, row: NsdDTO) -> list[dict[str, str]]:
+        """Fetch HTML for the given NSD and return the statement page."""
         url = self.endpoint.format(nsd=row.nsd)
         start = time.perf_counter()
 
@@ -169,13 +173,30 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         hash_value = self._extract_hash(hash_response.text)
 
         statement_items = self.config.statements.statement_items
-        row_urls = self._build_urls(row, statement_items, hash_value)
+        nsd_items = self._build_urls(row, statement_items, hash_value)
 
-        # Parse all statement pages using the legacy logic
+        # Parse all statement pages
         self.parsed_rows = []
-        for item in row_urls:
-            response = self.fetch_utils.fetch_with_retry(self.session, item["url"])
-            soup = BeautifulSoup(response.text, "html.parser")
+        for i, item in enumerate(nsd_items):
+            quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
+            counter = 0
+            total_wait = 1
+            while True:
+                response = self.fetch_utils.fetch_with_retry(self.session, item["url"])
+                soup = BeautifulSoup(response.text, "html.parser")
+                if "MensagemModal" in response.text or "acesse este conteúdo pela página principal dos documentos" in soup.get_text():
+                    hash_response_retry = self.fetch_utils.fetch_with_retry(scraper=None, url=url)
+                    hash_value_retry = self._extract_hash(hash_response.text)
+                    # time.sleep(1)
+                    # TimeUtils(self.config).sleep_dynamic()
+                    wait = 2**counter
+                    total_wait += wait
+                    time.sleep(wait)
+                    self.logger.log(f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} - Retry {counter+1} {total_wait}s', level="info")
+                    counter += 1
+                    continue
+                break
+            self.logger.log(f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]}', level="info")
             rows = self._parse_statement_page(soup, item["grupo"])
             for r in rows:
                 r.update(
@@ -184,20 +205,12 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                         "quadro": item["quadro"],
                         "company_name": row.company_name,
                         "nsd": row.nsd,
-                        "quarter": row.quarter.strftime("%Y-%m-%d")
-                        if row.quarter
-                        else None,
+                        "quarter": quarter,
                         "version": row.version,
                     }
                 )
             self.parsed_rows.extend(rows)
 
-        page_html = ""
-        if row_urls:
-            first_url = row_urls[0]["url"]
-            stmt_response = self.fetch_utils.fetch_with_retry(self.session, first_url)
-            page_html = stmt_response.text
-
         elapsed = time.perf_counter() - start
         self.logger.log(f"Fetched nsd {row.nsd} in {elapsed:.2f}s", level="info")
-        return page_html
+        return self.parsed_rows

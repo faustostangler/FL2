@@ -9,6 +9,6 @@ class StatementSourcePort(ABC):
     """Port for fetching raw statement HTML."""
 
     @abstractmethod
-    def fetch(self, row: NsdDTO) -> str:
+    def fetch(self, row: NsdDTO) -> list:
         """Return raw HTML for the given batch identifier."""
         raise NotImplementedError
