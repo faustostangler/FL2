@@ -30,10 +30,6 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         self.statements_config = self.config.statements
         self.parsed_rows: List[Dict[str, Any]] = []
 
-    # ------------------------------------------------------------------
-    # Utility helpers
-    # ------------------------------------------------------------------
-
     def _clean_number(self, text: str) -> float:
         """Sanitize ``text`` using ``clean_number`` from utils."""
         if not text:
@@ -113,9 +109,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
         return results
 
-    # ------------------------------------------------------------------
-
-    def _extract_hash(self, html: str) -> str:
+      def _extract_hash(self, html: str) -> str:
         """Extract the hidden hash value from the HTML response."""
         soup = BeautifulSoup(html, "html.parser")
         element = soup.select_one("#hdnHash")
@@ -192,7 +186,28 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         hash_value = self._extract_hash(hash_response.text)
 
         items = self.config.statements.statement_items
-        urls = self._build_urls(row, items, hash_value)
+        row_urls = self._build_urls(row, items, hash_value)
+
+        # Parse all statement pages using the legacy logic
+        self.parsed_rows = []
+        for item in row_urls:
+            response = self.fetch_utils.fetch_with_retry(self.session, item["url"])
+            soup = BeautifulSoup(response.text, "html.parser")
+            rows = self._parse_statement_page(soup, item["grupo"])
+            for r in rows:
+                r.update(
+                    {
+                        "grupo": item["grupo"],
+                        "quadro": item["quadro"],
+                        "company_name": row.company_name,
+                        "nsd": row.nsd,
+                        "quarter": row.quarter.strftime("%Y-%m-%d")
+                        if row.quarter
+                        else None,
+                        "version": row.version,
+                    }
+                )
+            self.parsed_rows.extend(rows)
 
         # Parse all statement pages using the legacy logic
         self.parsed_rows = []
