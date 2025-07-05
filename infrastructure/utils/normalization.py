@@ -42,17 +42,22 @@ def clean_text(
         return None
 
 
-def clean_number(text: str, logger: Optional[Logger] = None) -> Optional[float]:
+def clean_number(text: str, logger: Optional[Logger] = None) -> float:
     """Convert a stringified number to ``float``."""
     if not text:
-        return None
+        return float(0.00)
     try:
+        # Remove \r, \n, \t, multiple spaces, etc.
+        text = re.sub(r"[\s\r\n\t]+", "", text)
+
+        # Change to point-decimal
         text = text.replace(".", "").replace(",", ".")
+
         return float(text)
     except Exception as exc:  # noqa: BLE001
         if logger:
             logger.log(f"Failed to clean number: {exc}", level="warning")
-        return None
+        return float(0.00)
 
 
 def clean_date(

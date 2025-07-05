@@ -7,7 +7,7 @@ from typing import Any, Dict, List
 from urllib.parse import quote_plus
 
 # import pandas as pd
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup, Tag
 
 from domain.dto.nsd_dto import NsdDTO
 from domain.ports import LoggerPort, StatementSourcePort
@@ -37,16 +37,26 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         """Return parsed rows from a statement ``soup``."""
         results: List[Dict[str, Any]] = []
 
+        # Default parsing for Capital Composition page
         if group == "Dados da Empresa":
-            table = soup.find("div", id="UltimaTabela")
-            table = table.find("table") if table else None
-            thousand = 1000 if table and "Mil" in table.get_text() else 1
+            thousand = 1
+            thousand_element = soup.select_one("div#UltimaTabela table tr td")
+
+            if isinstance(thousand_element, Tag):
+                title = thousand_element.get_text(strip=True)
+                if "Mil" in title:
+                    thousand = 1000
+
+
+            tables = soup.find("div", id="UltimaTabela")
+            table = tables.find("table") if tables else None
 
             def v(elem_id: str) -> float:
                 el = soup.find(id=elem_id)
                 if el is None:
                     return 0.0
-                result = self.data_cleaner.clean_number(el.get_text())
+                value = self.data_cleaner.clean_number(el.get_text())
+                result = thousand * value
                 return result if result is not None else 0.0
 
             results.append(
@@ -80,24 +90,30 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
             return results
 
         # Default parsing for DFs pages
+        thousand = 1
         title_el = soup.find(id="TituloTabelaSemBorda")
-        thousand = 1000 if title_el and "Mil" in title_el.get_text() else 1
+        if isinstance(title_el, Tag):
+            title = title_el.get_text(strip=True)
+            if "Mil" in title:
+                thousand = 1000
+
         table = soup.find("table", id="ctl00_cphPopUp_tbDados")
         if not table:
             return results
 
-        for row in table.find_all("tr"):
-            cols = [c.get_text(strip=True) for c in row.find_all("td")]
-            if len(cols) < 3:
-                continue
-            account, desc, val = cols[0], cols[1], cols[2]
-            results.append(
-                {
-                    "account": account,
-                    "description": desc,
-                    "value": (self.data_cleaner.clean_number(val) or 0.0) * thousand,
-                }
-            )
+        if isinstance(table, Tag):
+            for row in table.find_all("tr"):
+                cols = [c.get_text(strip=True) for c in row.find_all("td")]
+                if len(cols) < 3:
+                    continue
+                account, desc, val = cols[0], cols[1], cols[2]
+                results.append(
+                    {
+                        "account": account,
+                        "description": desc,
+                        "value": (self.data_cleaner.clean_number(val) or 0.0) * thousand,
+                    }
+                )
 
         return results
 

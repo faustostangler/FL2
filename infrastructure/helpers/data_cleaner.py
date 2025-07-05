@@ -40,7 +40,7 @@ class DataCleaner(DataCleanerPort):
             text, words_to_remove=words_to_remove, logger=self.logger
         )
 
-    def clean_number(self, text: str) -> Optional[float]:
+    def clean_number(self, text: str) -> float:
         """Convert a stringified number using ``utils.clean_number``."""
         return util_clean_number(text, logger=self.logger)
 
