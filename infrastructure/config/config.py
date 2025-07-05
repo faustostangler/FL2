@@ -7,6 +7,7 @@ from .global_settings import GlobalSettingsConfig, load_global_settings_config
 from .logging import LoggingConfig, load_logging_config
 from .paths import PathConfig, load_paths
 from .scraping import ScrapingConfig, load_scraping_config
+from .statements import StatementsConfig, load_statements_config
 
 
 class Config:
@@ -17,19 +18,7 @@ class Config:
     """
 
     def __init__(self):
-        """Initializes the configuration class by loading various configuration
-        sections.
-
-        Attributes:
-            paths (PathConfig): Configuration for file and directory paths, loaded via `load_paths()`.
-            database (DatabaseConfig): Database connection and settings, loaded via `load_database_config()`.
-            exchange (ExchangeApiConfig): Stock exchange API configuration, loaded via ``load_exchange_api_config()``.
-            # scraping (ScrapingConfig): Scraping configuration, loaded via `load_scraping_config()` (currently commented out).
-
-        Note:
-            The scraping configuration is currently commented out and not loaded.
-        """
-
+        """Load all configuration sections."""
         # Load all configurations
         self.paths: PathConfig = load_paths()
         self.database: DatabaseConfig = load_database_config()
@@ -38,3 +27,4 @@ class Config:
         self.logging: LoggingConfig = load_logging_config()
         self.global_settings: GlobalSettingsConfig = load_global_settings_config()
         self.domain: DomainConfig = load_domain_config()
+        self.statements: StatementsConfig = load_statements_config()
