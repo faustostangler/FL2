@@ -6,6 +6,29 @@ from typing import Dict, List, Mapping, Optional, Tuple
 URL_DF = "https://www.rad.cvm.gov.br/ENET/frmDemonstracaoFinanceiraITR.aspx"
 URL_CAPITAL = "https://www.rad.cvm.gov.br/ENET/frmDadosComposicaoCapitalITR.aspx"
 
+CAPITAL_ITEMS: List[Dict[str, str]] = [
+    {
+        "elem_id": "QtdAordCapiItgz_1",
+        "account": "00.01.01",
+        "description": "Ações ON Circulação",
+    },
+    {
+        "elem_id": "QtdAprfCapiItgz_1",
+        "account": "00.01.02",
+        "description": "Ações PN Circulação",
+    },
+    {
+        "elem_id": "QtdAordTeso_1",
+        "account": "00.02.01",
+        "description": "Ações ON Tesouraria",
+    },
+    {
+        "elem_id": "QtdAprfTeso_1",
+        "account": "00.02.02",
+        "description": "Ações PN Tesouraria",
+    },
+]
+
 NSD_TYPE_MAP: Mapping[str, Tuple[str, int]] = {
     "INFORMACOES TRIMESTRAIS": ("ITR", 3),
     "DEMONSTRACOES FINANCEIRAS PADRONIZADAS": ("DFP", 4),
@@ -116,6 +139,9 @@ class StatementsConfig:
     nsd_type_map: Mapping[str, Tuple[str, int]] = field(
         default_factory=lambda: NSD_TYPE_MAP.copy()
     )
+    capital_items: List[Dict[str, str]] = field(
+        default_factory=lambda: [item.copy() for item in CAPITAL_ITEMS]
+    )
     url_df: str = field(default=URL_DF)
     url_capital: str = field(default=URL_CAPITAL)
 
@@ -125,6 +151,7 @@ def load_statements_config() -> StatementsConfig:
     return StatementsConfig(
         statement_items=[item.copy() for item in STATEMENT_ITEMS],
         nsd_type_map=NSD_TYPE_MAP.copy(),
+        capital_items=[item.copy() for item in CAPITAL_ITEMS],
         url_df=URL_DF,
         url_capital=URL_CAPITAL,
     )
