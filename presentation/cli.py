@@ -135,6 +135,7 @@ class CLIController:
         source = RequestsStatementSourceAdapter(
             config=self.config,
             logger=self.logger,
+            data_cleaner=self.data_cleaner
         )
 
         fetch_uc = FetchStatementsUseCase(logger=self.logger, source=source)

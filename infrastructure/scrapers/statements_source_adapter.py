@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup
 from domain.dto.nsd_dto import NsdDTO
 from domain.ports import LoggerPort, StatementSourcePort
 from infrastructure.config import Config
+from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.fetch_utils import FetchUtils
 from infrastructure.utils import clean_number
 
@@ -19,10 +20,11 @@ from infrastructure.utils import clean_number
 class RequestsStatementSourceAdapter(StatementSourcePort):
     """Fetch statement HTML using ``requests``."""
 
-    def __init__(self, config: Config, logger: LoggerPort):
+    def __init__(self, config: Config, logger: LoggerPort, data_cleaner: DataCleaner):
         """Create the adapter with its configuration and logger."""
         self.config = config
         self.logger = logger
+        self.data_cleaner: data_cleaner
         self.fetch_utils = FetchUtils(config, logger)
         self.session = self.fetch_utils.create_scraper()
         self.logger.log("Start RequestsStatementSourceAdapter", level="info")
@@ -109,7 +111,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
         return results
 
-      def _extract_hash(self, html: str) -> str:
+    def _extract_hash(self, html: str) -> str:
         """Extract the hidden hash value from the HTML response."""
         soup = BeautifulSoup(html, "html.parser")
         element = soup.select_one("#hdnHash")
@@ -191,27 +193,6 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         # Parse all statement pages using the legacy logic
         self.parsed_rows = []
         for item in row_urls:
-            response = self.fetch_utils.fetch_with_retry(self.session, item["url"])
-            soup = BeautifulSoup(response.text, "html.parser")
-            rows = self._parse_statement_page(soup, item["grupo"])
-            for r in rows:
-                r.update(
-                    {
-                        "grupo": item["grupo"],
-                        "quadro": item["quadro"],
-                        "company_name": row.company_name,
-                        "nsd": row.nsd,
-                        "quarter": row.quarter.strftime("%Y-%m-%d")
-                        if row.quarter
-                        else None,
-                        "version": row.version,
-                    }
-                )
-            self.parsed_rows.extend(rows)
-
-        # Parse all statement pages using the legacy logic
-        self.parsed_rows = []
-        for item in urls:
             response = self.fetch_utils.fetch_with_retry(self.session, item["url"])
             soup = BeautifulSoup(response.text, "html.parser")
             rows = self._parse_statement_page(soup, item["grupo"])
