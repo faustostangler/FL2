@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Iterable, List, Set
+from typing import Iterable, List, Set, Tuple
 
 from application.usecases.fetch_statements import FetchStatementsUseCase
 from application.usecases.parse_and_classify_statements import (
@@ -10,6 +10,7 @@ from application.usecases.parse_and_classify_statements import (
 )
 from application.usecases.persist_statements import PersistStatementsUseCase
 from domain.dto import StatementDTO, WorkerTaskDTO
+from domain.dto.nsd_dto import NsdDTO
 from domain.ports import (
     CompanyRepositoryPort,
     LoggerPort,
@@ -47,36 +48,38 @@ class StatementProcessingService:
         self.max_workers = max_workers
         self.logger.log("Start StatementProcessingService", level="info")
 
-    def _build_targets(self) -> Set[str]:
+    def _build_targets(self) -> List[NsdDTO]:
         """Return NSD identifiers for statements that haven't been
         processed."""
         company_records = self.company_repo.get_all()
         nsd_records = self.nsd_repo.get_all()
 
         if not company_records or not nsd_records:
-            return set()
+            return []
 
         processed = self.statement_repo.get_all_primary_keys()
         valid_types = set(self.config.domain.statements_types)
 
         company_names = {c.company_name for c in company_records if c.company_name}
         nsd_company_names = {n.company_name for n in nsd_records if n.company_name}
-        common_company_names = sorted(company_names.intersection(nsd_company_names))
-        target_names = sorted(set(common_company_names))
+        common_company_names = sorted(set(company_names.intersection(nsd_company_names)))
 
-        results = {
-            str(n.nsd)
-            for n in nsd_records
-            if (
-                n.nsd_type in valid_types
-                and n.company_name in target_names
-                and str(n.nsd) not in processed
-            )
-        }
+        results = [
+                n
+                for n in nsd_records
+                if (
+                    n.nsd_type in valid_types
+                    and n.company_name in common_company_names
+                    and str(n.nsd) not in processed
+                )
+            ]
 
-        return results
+        results_sorted = sorted(results, key=lambda n: (n.company_name, n.quarter, n.nsd))
 
-    def process_all(self, batch_nsd: Iterable[str]) -> None:
+        return results_sorted
+
+
+    def process_all(self, batch_nsd: List[NsdDTO]) -> None:
         """Fetch, parse, and persist statements for all batch IDs."""
         collector = MetricsCollector()
 

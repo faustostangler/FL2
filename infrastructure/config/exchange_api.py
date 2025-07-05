@@ -12,7 +12,7 @@ COMPANY_ENDPOINT = {
 }
 NSD_ENDPOINT = (
     "https://www.rad.cvm.gov.br/ENET/frmGerenciaPaginaFRE.aspx?"
-    "NumeroSequencialDocumento={batch}&CodigoTipoInstituicao=1"
+    "NumeroSequencialDocumento={nsd}&CodigoTipoInstituicao=1"
 )
 
 

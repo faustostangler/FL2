@@ -9,6 +9,7 @@ from urllib.parse import quote_plus, urlencode
 # import pandas as pd
 from bs4 import BeautifulSoup
 
+from domain.dto.nsd_dto import NsdDTO
 from domain.ports import LoggerPort, StatementSourcePort
 from infrastructure.config import Config
 from infrastructure.helpers.fetch_utils import FetchUtils
@@ -103,114 +104,202 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
     def _extract_hash(self, html: str) -> str:
         """Extract the hidden hash value from the HTML response."""
         soup = BeautifulSoup(html, "html.parser")
-        return soup.select_one("#hdnHash")["value"]
+        element = soup.select_one("#hdnHash")
+        if element is None:
+            raise ValueError("Element with selector '#hdnHash' not found")
+        value = element.get("value")
+        if isinstance(value, list):
+            value = value[0] if value else ""
+        if not isinstance(value, str):
+            raise ValueError("Expected a string value for 'value' attribute")
+        return value
 
-    def _build_urls(self, row: dict, hash_value: str) -> list[dict]:
+    def _build_urls(self, row: NsdDTO, items: list, hash_value: str) -> list[dict[str, str]]:
         """Construct statement URLs using ``row`` data and the given hash."""
-        urls: list[dict] = []
-
         nsd_type_map = {
             "INFORMACOES TRIMESTRAIS": ("ITR", 3),
             "DEMONSTRACOES FINANCEIRAS PADRONIZADAS": ("DFP", 4),
         }
 
-        nome_tipo_documento, cod_tipo_documento = nsd_type_map.get(
-            row.get("nsd_type", "INFORMACOES TRIMESTRAIS"),
-            ("ITR", 3),
+        doctype_name, doctype_code = nsd_type_map.get(
+            row.nsd_type or "INFORMACOES TRIMESTRAIS",
+            ("ITR", 3)
         )
 
-        nsd = row.get("nsd")
-        cvm_code = row.get("cvm_code", "")
-        empresa = row.get("company_name", "")
-        quarter = row.get("quarter")
-        if quarter:
-            if hasattr(quarter, "strftime"):
-                data_referencia = quarter.strftime("%Y-%m-%d")
-            else:
-                try:
-                    data_referencia = datetime.fromisoformat(str(quarter)).strftime(
-                        "%Y-%m-%d"
-                    )
-                except ValueError:
-                    data_referencia = str(quarter)
-        else:
-            data_referencia = ""
-        versao = row.get("version", "")
-        nsd_type = row.get("nsd_type", "")
+        url_df = "https://www.rad.cvm.gov.br/ENET/frmDemonstracaoFinanceiraITR.aspx"
+        url_capital = "https://www.rad.cvm.gov.br/ENET/frmDadosComposicaoCapitalITR.aspx"
 
-        for (grupo, quadro), params in self.endpoints_config.items():
-            if grupo == "Dados da Empresa":
-                base_url = (
-                    "https://www.rad.cvm.gov.br/ENET/frmDadosComposicaoCapitalITR.aspx"
-                )
-            else:
-                base_url = (
-                    "https://www.rad.cvm.gov.br/ENET/frmDemonstracaoFinanceiraITR.aspx"
-                )
+        result: list[dict[str, str]] = []
 
-            informacao = params["Informacao"]
-            demonstracao = params["Demonstracao"]
-            periodo = params["Periodo"]
+        try:
+            for item in items:
+                base_url = url_df if item["grupo"].startswith("DFs") else url_capital
 
-            query = {
-                "Grupo": grupo,
-                "Quadro": quadro,
-                "NomeTipoDocumento": nome_tipo_documento,
-                "Empresa": empresa,
-                "DataReferencia": data_referencia,
-                "Versao": versao,
-                "CodTipoDocumento": cod_tipo_documento,
-                "NumeroSequencialDocumento": nsd,
-                "NumeroSequencialRegistroCvm": cvm_code,
-                "CodigoTipoInstituicao": 1,
-                "Hash": hash_value,
-                **({"Informacao": informacao} if informacao is not None else {}),
-                **({"Demonstracao": demonstracao} if demonstracao is not None else {}),
-                **({"Periodo": periodo} if periodo is not None else {}),
-            }
-
-            final_url = base_url + "?" + urlencode(query, quote_via=quote_plus)
-
-            urls.append(
-                {
-                    "cvm_code": cvm_code,
-                    "company_name": empresa,
-                    "quarter": data_referencia,
-                    "version": versao,
-                    "nsd": nsd,
-                    "nsd_type": nsd_type,
-                    "grupo": grupo,
-                    "quadro": quadro,
-                    "nome_tipo_documento": nome_tipo_documento,
-                    "cod_tipo_documento": cod_tipo_documento,
-                    "url": final_url,
+                params = {
+                    "Grupo": item["grupo"],
+                    "Quadro": item["quadro"],
+                    "NomeTipoDocumento": doctype_name,
+                    "Empresa": row.company_name,
+                    "DataReferencia": row.quarter.strftime("%Y-%m-%d") if row.quarter is not None else "",
+                    "Versao": row.version,
+                    "CodTipoDocumento": str(doctype_code),
+                    "NumeroSequencialDocumento": str(row.nsd),
+                    "NumeroSequencialRegistroCvm": "", # hardcoded
+                    "CodigoTipoInstituicao": "1", # hardcoded
+                    "Hash": hash_value,
                 }
-            )
 
-        return urls
+                # Inclui os parâmetros extras (se presentes)
+                for campo in ["informacao", "demonstracao", "periodo"]:
+                    if item.get(campo) is not None:
+                        params[campo.capitalize()] = str(item[campo])
 
-    # @property
-    # def endpoint(self) -> str:  # pragma: no cover - simple accessor
-    #     return self._endpoint
+                query = "&".join(f"{k}={quote_plus(str(v))}" for k, v in params.items())
+                full_url = f"{base_url}?{query}"
+                result.append({
+                    "grupo": item["grupo"],
+                    "quadro": item["quadro"],
+                    "url": full_url,
+                })
+        except Exception as e:
+            print(e)
+        return result
 
-    def fetch(self, batch_id: str) -> str:
+
+
+    def fetch(self, row: NsdDTO) -> str:
         """Fetch HTML for the given NSD and return the first statement page."""
-        url = self.endpoint.format(batch=batch_id)
+        def _parse_html_table(table_tag):
+            rows = []
+            for tr in table_tag.find_all("tr"):
+                cols = [td.get_text(strip=True) for td in tr.find_all(["td", "th"])]
+                if cols:
+                    rows.append(cols)
+            return rows
+
+        url = self.endpoint.format(nsd=row.nsd)
         start = time.perf_counter()
 
-        response = self.fetch_utils.fetch_with_retry(self.session, url)
-        hash_value = self._extract_hash(response.text)
+        hash_response = self.fetch_utils.fetch_with_retry(self.session, url)
+        hash_value = self._extract_hash(hash_response.text)
 
-        dummy_row = {
-            "nsd": batch_id,
-            "cvm_code": "",
-            "company_name": "",
-            "quarter": "",
-            "version": "",
-            "nsd_type": "INFORMACOES TRIMESTRAIS",
-        }
+        items = [
+            {
+                "grupo": "Dados da Empresa",
+                "quadro": "Composição do Capital",
+                "informacao": None,
+                "demonstracao": None,
+                "periodo": 0,
+            },
+            {
+                "grupo": "DFs Individuais",
+                "quadro": "Balanço Patrimonial Ativo",
+                "informacao": 1,
+                "demonstracao": 2,
+                "periodo": 0,
+            },
+            {
+                "grupo": "DFs Individuais",
+                "quadro": "Balanço Patrimonial Passivo",
+                "informacao": 1,
+                "demonstracao": 3,
+                "periodo": 0,
+            },
+            {
+                "grupo": "DFs Individuais",
+                "quadro": "Demonstração do Resultado",
+                "informacao": 1,
+                "demonstracao": 4,
+                "periodo": 0,
+            },
+            {
+                "grupo": "DFs Individuais",
+                "quadro": "Demonstração do Resultado Abrangente",
+                "informacao": 1,
+                "demonstracao": 5,
+                "periodo": 0,
+            },
+            {
+                "grupo": "DFs Individuais",
+                "quadro": "Demonstração do Fluxo de Caixa",
+                "informacao": 1,
+                "demonstracao": 99,
+                "periodo": 0,
+            },
+            {
+                "grupo": "DFs Individuais",
+                "quadro": "Demonstração de Valor Adicionado",
+                "informacao": 1,
+                "demonstracao": 9,
+                "periodo": 0,
+            },
+            {
+                "grupo": "DFs Consolidadas",
+                "quadro": "Balanço Patrimonial Ativo",
+                "informacao": 2,
+                "demonstracao": 2,
+                "periodo": 0,
+            },
+            {
+                "grupo": "DFs Consolidadas",
+                "quadro": "Balanço Patrimonial Passivo",
+                "informacao": 2,
+                "demonstracao": 3,
+                "periodo": 0,
+            },
+            {
+                "grupo": "DFs Consolidadas",
+                "quadro": "Demonstração do Resultado",
+                "informacao": 2,
+                "demonstracao": 4,
+                "periodo": 0,
+            },
+            {
+                "grupo": "DFs Consolidadas",
+                "quadro": "Demonstração do Resultado Abrangente",
+                "informacao": 2,
+                "demonstracao": 5,
+                "periodo": 0,
+            },
+            {
+                "grupo": "DFs Consolidadas",
+                "quadro": "Demonstração do Fluxo de Caixa",
+                "informacao": 2,
+                "demonstracao": 99,
+                "periodo": 0,
+            },
+            {
+                "grupo": "DFs Consolidadas",
+                "quadro": "Demonstração de Valor Adicionado",
+                "informacao": 2,
+                "demonstracao": 9,
+                "periodo": 0,
+            },
+        ]
+        urls = self._build_urls(row, items, hash_value)
 
-        urls = self._build_urls(dummy_row, hash_value)
+
+        try:
+            data = {}
+            for i, url in enumerate(urls):
+                response = self.fetch_utils.fetch_with_retry(self.session, url["url"])
+                soup = BeautifulSoup(response.text, "html.parser")
+
+                if url["grupo"] == "Dados da Empresa":
+                    table = soup.find("div", id=div_id).find("table")
+                    rows = _parse_html_table(table)
+                    data[url["grupo"]] = {}
+                    data[url["grupo"]][url["quadro"]] = rows
+        except Exception as e:
+            self.logger(e)
+        df = pd.read_html(StringIO(str(table)))[0]
+        
+        thousand = 1000 if "Mil" in str(df.iloc[0, 0]) else 1
+
+
+        pass
+
+
         page_html = response.text
         if urls:
             first_url = urls[0]["url"]
