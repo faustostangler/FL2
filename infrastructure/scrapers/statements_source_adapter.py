@@ -51,14 +51,11 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
             ("ITR", 3),
         )
 
-        url_df = self.statements_config.url_df
-        url_capital = self.statements_config.url_capital
-
         result: list[dict[str, str]] = []
 
         try:
             for item in items:
-                base_url = url_df if item["grupo"].startswith("DFs") else url_capital
+                base_url = self.statements_config.url_df if item["grupo"].startswith("DFs") else self.statements_config.url_capital
 
                 params = {
                     "Grupo": item["grupo"],
