@@ -11,6 +11,7 @@ from .raw_company_dto import (
     CompanyListingDTO,
     CompanyRawDTO,
 )
+from .raw_statement_dto import RawStatementDTO
 from .statement_dto import StatementDTO
 from .sync_companies_result_dto import SyncCompaniesResultDTO
 from .worker_class_dto import WorkerTaskDTO
@@ -19,6 +20,7 @@ __all__ = [
     "CompanyDTO",
     "NsdDTO",
     "StatementDTO",
+    "RawStatementDTO",
     "CompanyRawDTO",
     "CompanyListingDTO",
     "CompanyDetailDTO",
