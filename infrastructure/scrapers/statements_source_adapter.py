@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import time
+from typing import Any, Dict, List
 from urllib.parse import quote_plus
 
 # import pandas as pd
@@ -26,6 +27,98 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         self.logger.log("Start RequestsStatementSourceAdapter", level="info")
         self.endpoint = f"{self.config.exchange.nsd_endpoint}"
         self.statements_config = self.config.statements
+        self.parsed_rows: List[Dict[str, Any]] = []
+
+    # ------------------------------------------------------------------
+    # Utility helpers
+    # ------------------------------------------------------------------
+
+    def _clean_number(self, text: str) -> float:
+        """Convert a Brazilian-formatted number to ``float``."""
+        if not text:
+            return 0.0
+
+        cleaned = (
+            text.strip()
+            .replace("\xa0", "")
+            .replace(".", "")
+            .replace(",", ".")
+            .replace("(", "-")
+            .replace(")", "")
+        )
+        try:
+            return float(cleaned)
+        except Exception:
+            return 0.0
+
+    def _parse_statement_page(
+        self, soup: BeautifulSoup, group: str
+    ) -> List[Dict[str, Any]]:
+        """Return parsed rows from a statement ``soup``."""
+        results: List[Dict[str, Any]] = []
+
+        if group == "Dados da Empresa":
+            table = soup.find("div", id="UltimaTabela")
+            table = table.find("table") if table else None
+            thousand = 1000 if table and "Mil" in table.get_text() else 1
+
+            def v(elem_id: str) -> float:
+                el = soup.find(id=elem_id)
+                return self._clean_number(el.get_text()) * thousand if el else 0.0
+
+            results.append(
+                {
+                    "account": "00.01.01",
+                    "description": "Ações ON Circulação",
+                    "value": v("QtdAordCapiItgz_1"),
+                }
+            )
+            results.append(
+                {
+                    "account": "00.01.02",
+                    "description": "Ações PN Circulação",
+                    "value": v("QtdAprfCapiItgz_1"),
+                }
+            )
+            results.append(
+                {
+                    "account": "00.02.01",
+                    "description": "Ações ON Tesouraria",
+                    "value": v("QtdAordTeso_1"),
+                }
+            )
+            results.append(
+                {
+                    "account": "00.02.02",
+                    "description": "Ações PN Tesouraria",
+                    "value": v("QtdAprfTeso_1"),
+                }
+            )
+            return results
+
+        # Default parsing for DFs pages
+        title_el = soup.find(id="TituloTabelaSemBorda")
+        thousand = 1000 if title_el and "Mil" in title_el.get_text() else 1
+        table = soup.find("table", id="ctl00_cphPopUp_tbDados")
+        if not table:
+            return results
+
+        for row in table.find_all("tr"):
+            cols = [c.get_text(strip=True) for c in row.find_all("td")]
+            if len(cols) < 3:
+                continue
+            account, desc, val = cols[0], cols[1], cols[2]
+            results.append(
+                {
+                    "account": account,
+                    "description": desc,
+                    "value": self._clean_number(val) * thousand,
+                }
+            )
+
+        return results
+
+    # ------------------------------------------------------------------
 
     def _extract_hash(self, html: str) -> str:
         """Extract the hidden hash value from the HTML response."""
@@ -55,7 +148,11 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
         try:
             for item in items:
-                base_url = self.statements_config.url_df if item["grupo"].startswith("DFs") else self.statements_config.url_capital
+                base_url = (
+                    self.statements_config.url_df
+                    if item["grupo"].startswith("DFs")
+                    else self.statements_config.url_capital
+                )
 
                 params = {
                     "Grupo": item["grupo"],
@@ -101,6 +198,27 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
         items = self.config.statements.statement_items
         urls = self._build_urls(row, items, hash_value)
+
+        # Parse all statement pages using the legacy logic
+        self.parsed_rows = []
+        for item in urls:
+            response = self.fetch_utils.fetch_with_retry(self.session, item["url"])
+            soup = BeautifulSoup(response.text, "html.parser")
+            rows = self._parse_statement_page(soup, item["grupo"])
+            for r in rows:
+                r.update(
+                    {
+                        "grupo": item["grupo"],
+                        "quadro": item["quadro"],
+                        "company_name": row.company_name,
+                        "nsd": row.nsd,
+                        "quarter": row.quarter.strftime("%Y-%m-%d")
+                        if row.quarter
+                        else None,
+                        "version": row.version,
+                    }
+                )
+            self.parsed_rows.extend(rows)
 
         page_html = ""
         if urls:
