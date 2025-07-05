@@ -14,6 +14,7 @@ from domain.ports import LoggerPort, StatementSourcePort
 from infrastructure.config import Config
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.fetch_utils import FetchUtils
+from infrastructure.helpers.time_utils import TimeUtils
 
 
 class RequestsStatementSourceAdapter(StatementSourcePort):
@@ -179,23 +180,31 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         self.parsed_rows = []
         for i, item in enumerate(nsd_items):
             quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
-            counter = 0
-            total_wait = 1
-            while True:
+            for attempt in range(self.config.scraping.max_attempts):
                 response = self.fetch_utils.fetch_with_retry(self.session, item["url"])
                 soup = BeautifulSoup(response.text, "html.parser")
+
                 if "MensagemModal" in response.text or "acesse este conteúdo pela página principal dos documentos" in soup.get_text():
+                    # Tenta regenerar hash, embora neste caso hash_value_retry não seja usado
                     hash_response_retry = self.fetch_utils.fetch_with_retry(scraper=None, url=url)
                     hash_value_retry = self._extract_hash(hash_response.text)
-                    # time.sleep(1)
-                    # TimeUtils(self.config).sleep_dynamic()
-                    wait = 2**counter
-                    total_wait += wait
-                    time.sleep(wait)
-                    self.logger.log(f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} - Retry {counter+1} {total_wait}s', level="info")
-                    counter += 1
-                    continue
-                break
+
+                    # self.logger.log(
+                    #     f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} - Retry {attempt+1}',
+                    #     level="warning"
+                    # )
+                    TimeUtils(self.config).sleep_dynamic()
+                else:
+                    break  # Sucesso
+            else:
+                # Se todas as tentativas falharem, aborta NSD
+                self.logger.log(
+                    f"{row.company_name} {quarter} {row.version} {row.nsd}... Aborted entire company quarter.",
+                    level="warning"
+                )
+                return []
+
+
             self.logger.log(f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]}', level="info")
             rows = self._parse_statement_page(soup, item["grupo"])
             for r in rows:
@@ -212,5 +221,6 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
             self.parsed_rows.extend(rows)
 
         elapsed = time.perf_counter() - start
-        self.logger.log(f"Fetched nsd {row.nsd} in {elapsed:.2f}s", level="info")
+        quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
+        self.logger.log(f'{row.company_name} {quarter} {row.version} {row.nsd} in {elapsed:.2f}s', level="info")
         return self.parsed_rows

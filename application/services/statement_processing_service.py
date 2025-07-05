@@ -92,10 +92,10 @@ class StatementProcessingService:
 
         fetch_tasks = list(enumerate(batch_nsd))
 
-        def fetch_processor(task: WorkerTaskDTO) -> tuple[str, str]:
-            bid = task.data
-            html = self.fetch_usecase.source.fetch(bid)
-            return (bid, html)
+        def fetch_processor(task: WorkerTaskDTO) -> tuple[NsdDTO, list[dict[str, str]]]:
+            nsd_dto = task.data
+            parsed_rows = self.fetch_usecase.source.fetch(nsd_dto)
+            return (nsd_dto, parsed_rows)
 
         fetch_result = fetch_pool.run(
             tasks=fetch_tasks,
