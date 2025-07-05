@@ -14,7 +14,6 @@ from domain.ports import LoggerPort, StatementSourcePort
 from infrastructure.config import Config
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.fetch_utils import FetchUtils
-from infrastructure.utils import clean_number
 
 
 class RequestsStatementSourceAdapter(StatementSourcePort):
@@ -24,25 +23,13 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         """Create the adapter with its configuration and logger."""
         self.config = config
         self.logger = logger
-        self.data_cleaner: data_cleaner
+        self.data_cleaner = data_cleaner
         self.fetch_utils = FetchUtils(config, logger)
         self.session = self.fetch_utils.create_scraper()
         self.logger.log("Start RequestsStatementSourceAdapter", level="info")
         self.endpoint = f"{self.config.exchange.nsd_endpoint}"
         self.statements_config = self.config.statements
         self.parsed_rows: List[Dict[str, Any]] = []
-
-    def _clean_number(self, text: str) -> float:
-        """Sanitize ``text`` using ``clean_number`` from utils."""
-        if not text:
-            return 0.0
-
-        cleaned = text.strip().replace("\xa0", "").replace("(", "-").replace(")", "")
-
-        result = clean_number(cleaned, logger=self.logger)
-        if result is None:
-            return 0.0
-        return result
 
     def _parse_statement_page(
         self, soup: BeautifulSoup, group: str
@@ -57,7 +44,10 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
             def v(elem_id: str) -> float:
                 el = soup.find(id=elem_id)
-                return self._clean_number(el.get_text()) * thousand if el else 0.0
+                if el is None:
+                    return 0.0
+                result = self.data_cleaner.clean_number(el.get_text())
+                return result if result is not None else 0.0
 
             results.append(
                 {
@@ -105,7 +95,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 {
                     "account": account,
                     "description": desc,
-                    "value": self._clean_number(val) * thousand,
+                    "value": (self.data_cleaner.clean_number(val) or 0.0) * thousand,
                 }
             )
 
@@ -212,8 +202,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
             self.parsed_rows.extend(rows)
 
         page_html = ""
-        if urls:
-            first_url = urls[0]["url"]
+        if row_urls:
+            first_url = row_urls[0]["url"]
             stmt_response = self.fetch_utils.fetch_with_retry(self.session, first_url)
             page_html = stmt_response.text
 
