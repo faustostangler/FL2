@@ -12,18 +12,20 @@ if __name__ == "__main__":
     logger = Logger(config)
     data_cleaner = create_data_cleaner(config, logger)
 
-    # Start CLI
-    logger.log(
-        "Start FLY",
-        level="info",
-    )
+    # Load CLI
+    logger.log("Run Project FLY", level="info",)
 
     # Entry point for the FLY CLI application.
+    logger.log("Start Class Controller", level="info")
     controller = CLIController(config=config, logger=logger, data_cleaner=data_cleaner)
+
+    # Run Controller
+    logger.log("Call Method Controller", level="info")
     controller.run()
+    logger.log("End Method Controller", level="info")
+
+
+    logger.log("Finish Class Controller", level="info")
 
     # Finaliza a execução com uma mensagem de confirmação
-    logger.log(
-        "Finish FLY",
-        level="info",
-    )
+    logger.log("Finish Project FLY", level="info",)

@@ -459,7 +459,7 @@ class StatementsProcessor(BaseProcessor):
     def main(self, thread=True):
         """Main method to process data."""
         try:
-            # Load data
+            # Run data
             company_info = self.load_data(table_name=self.tbl_company, db_filepath=self.db_filepath)
             existing_nsd = self.load_data(table_name=self.tbl_nsd, db_filepath=self.db_filepath)
 

@@ -47,7 +47,7 @@ def load_global_settings_config() -> GlobalSettingsConfig:
     2. Create and return a GlobalSettingsConfig instance with these values.
     """
 
-    # Load global settings using default constants
+    # Run global settings using default constants
     return GlobalSettingsConfig(
         app_name=APP_NAME,
         wait=WAIT,

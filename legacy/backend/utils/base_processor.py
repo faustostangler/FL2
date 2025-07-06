@@ -172,7 +172,7 @@ class BaseProcessor:
             cumulative = 0  # will keep track of the global start index for each batch
             items_per_batch = len(batches[0])
 
-            with ThreadPoolExecutor(max_workers=self.config.scraping["max_workers"]) as executor:
+            with ThreadPoolExecutor(max_workers=self.config.scraping["max_workers"]) as worker_pool_executor:
                 futures = []
                 for batch_index, batch in enumerate(batches):
                     time.sleep(self.dynamic_sleep() * 5)
@@ -189,7 +189,7 @@ class BaseProcessor:
                     cumulative += len(batch)  # add the length of this batch for the next iteration
 
                     # Submit task with progress
-                    futures.append(executor.submit(self.process_instance, batch, payload, verbose, progress))
+                    futures.append(worker_pool_executor.submit(self.process_instance, batch, payload, verbose, progress))
 
                 for future in as_completed(futures):
                     try:
@@ -1226,7 +1226,7 @@ class BaseProcessor:
             # Determine the company to process
             company_name = df['company_name'].iloc[0]
 
-            # Load raw statements for this company from the database
+            # Run raw statements for this company from the database
             raw_df = self.load_data(
                 query=f"SELECT * FROM {self.tbl_statements_raw} WHERE company_name = ?",
                 params=(company_name,),
@@ -1378,8 +1378,8 @@ class BaseProcessor:
                 process = psutil.Process()
                 initial_memory = process.memory_info().rss / (1024 * 1024)  # MB
 
-                with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as executor:
-                    future = executor.submit(function, *args, **kwargs)
+                with concurrent.futures.ThreadPoolExecutor(max_workers=workers) as worker_pool_executor:
+                    future = worker_pool_executor.submit(function, *args, **kwargs)
                     result = future.result()
 
                 end_time = time.time()
@@ -1782,9 +1782,9 @@ class BaseProcessor:
             offsets = range(0, total_rows, batch_size)
 
             start_time = time.time()
-            with ThreadPoolExecutor(max_workers=batch_threads) as executor:
+            with ThreadPoolExecutor(max_workers=batch_threads) as worker_pool_executor:
                 tasks = [
-                    executor.submit(
+                    worker_pool_executor.submit(
                         self._read_batch,
                         db_filepath,
                         table_name,
@@ -2022,8 +2022,8 @@ class BaseProcessor:
             # ---------- 4. Execução dos batches ----------
             if multi_thread:
                 # Modo original com ThreadPoolExecutor
-                with ThreadPoolExecutor(max_workers=batch_threads) as executor:
-                    futures = [executor.submit(read_batch, i) for i in range(batch_number)]
+                with ThreadPoolExecutor(max_workers=batch_threads) as worker_pool_executor:
+                    futures = [worker_pool_executor.submit(read_batch, i) for i in range(batch_number)]
                     with tqdm(total=total_rows, unit=" rows", desc=str(table_name or 'query'), leave=False) as pbar:
                         for fut in as_completed(futures):
                             part = fut.result()
@@ -2502,13 +2502,13 @@ class BaseProcessor:
                     # Runs a WAL checkpoint to reduce WAL file size
                     conn.execute("PRAGMA wal_checkpoint(FULL);")
 
-                    # Run ANALYZE to update statistics for query optimization
+                    # Start ANALYZE to update statistics for query optimization
                     cursor.execute("ANALYZE")
 
-                    # Run REINDEX to rebuild indexes for better performance
+                    # Start REINDEX to rebuild indexes for better performance
                     cursor.execute("REINDEX")
 
-                    # Run VACUUM to reduce file size and defragment the database
+                    # Start VACUUM to reduce file size and defragment the database
                     cursor.execute("VACUUM")
 
                     conn.commit()
@@ -2584,7 +2584,7 @@ class TemplateProcessor(BaseProcessor):
     def main(self, thread=True):
         """docstring."""
         try:
-            # Load existing information
+            # Run existing information
             table_name = ""
             db_filepath = ""
             data_1 = self.load_data(table_name=table_name, db_filepath="")

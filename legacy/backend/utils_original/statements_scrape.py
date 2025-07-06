@@ -22,7 +22,7 @@ class StatementsDataScraper:
         pass
 
     def load_nsd_list(self):
-        """Load NSD data from the nsd table in b3.db, filtered by
+        """Run NSD data from the nsd table in b3.db, filtered by
         settings.statements_types.
 
         Returns:
@@ -46,7 +46,7 @@ class StatementsDataScraper:
             return pd.DataFrame()
 
     def load_financial_statements(self):
-        """Load existing financial statements from all .db files in the
+        """Run existing financial statements from all .db files in the
         data_folder.
 
         Returns:
@@ -364,7 +364,7 @@ class StatementsDataScraper:
         scrape_order = ["sector", "subsector", "segment", "company_name", "quarter", "version"]
 
         try:
-            # Load the necessary datasets
+            # Run the necessary datasets
             nsd_list = self.load_nsd_list()
             company_info = self.load_company_info()
 
@@ -478,7 +478,7 @@ class StatementsDataScraper:
             return []  # Return an empty list to prevent the process from stopping
 
     def run_scraper(self, targets, batch_number=None):
-        """Run the entire scraping process for the identified NSD entries,
+        """Start the entire scraping process for the identified NSD entries,
         iterating over all financial data statements."""
         try:
             # Initialize the overall counter
@@ -544,12 +544,12 @@ class StatementsDataScraper:
 
     def main_thread(self, targets, total_items, batch_size):
         try:
-            with ThreadPoolExecutor(max_workers=settings.max_workers) as executor:
+            with ThreadPoolExecutor(max_workers=settings.max_workers) as worker_pool_executor:
                 futures = []
                 for batch_index, start in enumerate(range(0, total_items, batch_size)):
                     end = min(start + batch_size, total_items)
                     futures.append(
-                        executor.submit(
+                        worker_pool_executor.submit(
                             lambda targets=targets[start:end], index=batch_index + 0: (
                                 self.run_scraper_with_new_instance(targets, index)
                             )
@@ -592,10 +592,10 @@ class StatementsDataScraper:
 
         if not targets.empty:
             if thread:
-                # Run with threading
+                # Start with threading
                 self.main_thread(targets, total_items, batch_size)
             else:
-                # Run sequentially
+                # Start sequentially
                 self.main_sequential(targets)  # Pass only targets
 
         return True

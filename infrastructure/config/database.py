@@ -41,7 +41,7 @@ class DatabaseConfig:
 
 
 def load_database_config() -> DatabaseConfig:
-    """Load the database configuration using project paths."""
+    """Run the database configuration using project paths."""
 
     paths = load_paths()
 

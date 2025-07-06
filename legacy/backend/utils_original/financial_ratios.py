@@ -20,7 +20,7 @@ class FinancialRatios:
             system.log_error(f"Error initializing FinancialRatios: {e}")
 
     def load_data(self):
-        """Load financial data from the database and process it into
+        """Run financial data from the database and process it into
         DataFrames.
 
         Args:
@@ -36,7 +36,7 @@ class FinancialRatios:
             )
             specific_db_path = os.path.join(settings.data_folder, specific_name)
 
-            # Load db
+            # Run db
             conn = sqlite3.connect(specific_db_path)
             cursor = conn.cursor()
 
@@ -447,7 +447,7 @@ class FinancialRatios:
         return updated_df
 
     def main(self):
-        """Run the financial ratios calculation using the main thread."""
+        """Start the financial ratios calculation using the main thread."""
         dfs = {}
         try:
             dict_df = self.load_data()

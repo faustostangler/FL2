@@ -20,36 +20,34 @@ class SyncCompaniesUseCase:
     ):
         """Store dependencies and configure use case execution."""
         self.logger = logger
-        # Emit a log entry to signal the use case was created.
-        self.logger.log("Start SyncCompaniesUseCase", level="info")
-
-        # Keep references to infrastructure components.
         self.repository = repository
         self.scraper = scraper
         self.max_workers = max_workers
 
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
+
     def run(self) -> SyncCompaniesResultDTO:
-        """Run the full synchronization pipeline.
+        """Start the full synchronization pipeline.
 
         Steps:
             1. Fetch data from the scraper.
             2. Convert results into ``CompanyDTO`` objects.
             3. Persist them using the repository.
         """
-        self.logger.log("Start SyncCompaniesUseCase Run", level="info")
-
         # Mark the start time to calculate performance metrics later.
         start = time.perf_counter()
 
         # Retrieve primary keys already stored to avoid reprocessing them.
         existing_codes = self.repository.get_all_primary_keys()
 
+        self.logger.log("Method  Fetch All in Sync Companies Use Case in CompanyService", level="info")
         # Fetch all companies from the scraper and persist them batch-wise.
         results = self.scraper.fetch_all(
             skip_codes=existing_codes,
             save_callback=self._save_batch,
             max_workers=self.max_workers,
         )
+        self.logger.log("End Fetch All in Sync Companies Use Case in CompanyService", level="info")
 
         # Measure download time and network usage.
         elapsed = time.perf_counter() - start

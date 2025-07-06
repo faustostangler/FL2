@@ -16,8 +16,6 @@ class CompanyService:
         """Initialize dependencies for company synchronization."""
         self.logger = logger
         self.config = config
-        # Log startup so we know when the service begins.
-        self.logger.log("Start CompanyService", level="info")
 
         # Create the use case responsible for performing the sync operation.
         self.sync_companies_usecase = SyncCompaniesUseCase(
@@ -27,9 +25,12 @@ class CompanyService:
             max_workers=self.config.global_settings.max_workers,
         )
 
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
+
     def run(self):
         """Execute company synchronization using the injected use case."""
         # Delegate execution to the underlying use case and return the result.
+        self.logger.log("Start Sync Companies Use Case in CompanyService", level="info")
         result = self.sync_companies_usecase.run()
-        self.logger.log("Finish CompanyService", level="info")
+        self.logger.log("End Sync Companies Use Case in CompanyService", level="info")
         return result

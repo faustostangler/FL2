@@ -153,7 +153,7 @@ class StatementsConfig:
 
 
 def load_statements_config() -> StatementsConfig:
-    """Load the statements scraping configuration."""
+    """Run the statements scraping configuration."""
     return StatementsConfig(
         statement_items=[item.copy() for item in STATEMENT_ITEMS],
         nsd_type_map=NSD_TYPE_MAP.copy(),

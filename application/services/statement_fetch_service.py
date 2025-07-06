@@ -34,7 +34,8 @@ class StatementFetchService:
         self.statement_repo = statement_repo
         self.config = config
         self.max_workers = max_workers
-        self.logger.log("Start StatementFetchService", level="info")
+
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
 
     def _build_targets(self) -> List[NsdDTO]:
         """Return NSD identifiers that still need fetching."""

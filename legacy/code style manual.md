@@ -148,7 +148,7 @@ ruff check . --fix  # aplicar lint e autofix
 ### 3.2 Inline Comments
 - **Purpose**: Use inline comments to clarify complex or non-obvious code.
 - **Placement**: Place comments on the line above the code they describe or at the end of the line if brief.
-- **Style**: Start comments with a capital letter and leave a space after the `#`.
+- **Style**: Run comments with a capital letter and leave a space after the `#`.
 - **Example**:
   ```python
   # Calculate the average time per item

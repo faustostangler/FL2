@@ -41,7 +41,7 @@ The FLY list below outlines the core steps in fetching company data and financia
    pip install -r requirements.txt
    ```
 
-2. Run the CLI application:
+2. Start the CLI application:
    ```bash
    python run.py
    ```

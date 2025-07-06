@@ -20,7 +20,7 @@ class MathTransformation:
         self.db_lock = Lock()
 
     def load_data(self, files):
-        """Load financial data from the database.
+        """Run financial data from the database.
 
         Args:
             files (str): The name part of the database file to load.
@@ -29,7 +29,7 @@ class MathTransformation:
             dict: A dictionary where keys are sectors and values are DataFrames containing the NSD data for that sector.
         """
         try:
-            # Load db
+            # Run db
             specific_name = (
                 f"{settings.db_name.split('.')[0]} {settings.statements_file}.{settings.db_name.split('.')[-1]}"
             )
@@ -505,7 +505,7 @@ class MathTransformation:
                 if os.path.exists(specific_db_path):
                     shutil.copyfile(specific_db_path, backup_db_path)
 
-                # Load db
+                # Run db
                 with sqlite3.connect(specific_db_path) as conn:
                     cursor = conn.cursor()
                     print("saving...")
@@ -608,7 +608,7 @@ class MathTransformation:
         return dict_transformed
 
     def main_thread(self, dict_filtered, dict_math):
-        """Run the math transformations using multiple threads.
+        """Start the math transformations using multiple threads.
 
         Args:
             dict_filtered (dict): Dictionary containing filtered data to be processed.
@@ -617,13 +617,13 @@ class MathTransformation:
             total_lines = sum(len(df) for df in dict_filtered.values())
             batch_size = max(1, total_lines // settings.max_workers)
 
-            with ThreadPoolExecutor(max_workers=settings.max_workers) as executor:
+            with ThreadPoolExecutor(max_workers=settings.max_workers) as worker_pool_executor:
                 futures = []
                 dict_transformed = {}
                 for batch_index, start in enumerate(range(0, total_lines, batch_size)):
                     end = min(start + batch_size, total_lines)
                     batch_data = {k: dict_filtered[k] for k in list(dict_filtered.keys())[start:end]}
-                    futures.append(executor.submit(lambda data=batch_data: self.process(data, batch_index)))
+                    futures.append(worker_pool_executor.submit(lambda data=batch_data: self.process(data, batch_index)))
 
                 for future in as_completed(futures):
                     batch_index = future.result()  # Assuming process returns batch_index
@@ -635,7 +635,7 @@ class MathTransformation:
             system.log_error(f"Error during batch processing: {e}")
 
     def main_sequential(self, dict_filtered, dict_math):
-        """Run the math transformations on each sector's data sequentially and
+        """Start the math transformations on each sector's data sequentially and
         save the results.
 
         Args:

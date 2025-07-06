@@ -31,6 +31,8 @@ class DataCleaner(DataCleanerPort):
         self.config = config
         self.logger = logger
 
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
+
     def clean_text(
         self, text: Optional[str], words_to_remove: Optional[List[str]] = None
     ) -> Optional[str]:

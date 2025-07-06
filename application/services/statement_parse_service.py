@@ -29,7 +29,8 @@ class StatementParseService:
         self.persist_usecase = persist_usecase
         self.config = config
         self.max_workers = max_workers
-        self.logger.log("Start StatementParseService", level="info")
+
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
 
     def _parse_all(
         self, fetched: List[Tuple[NsdDTO, List[StatementRowsDTO]]]

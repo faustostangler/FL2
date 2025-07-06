@@ -12,7 +12,8 @@ class PersistStatementsUseCase:
     def __init__(self, logger: LoggerPort, repository: StatementRepositoryPort) -> None:
         self.logger = logger
         self.repository = repository
-        self.logger.log("Start PersistStatementsUseCase", level="info")
+
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
 
     def run(self, statements: List[StatementDTO]) -> None:
         if not statements:

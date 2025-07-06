@@ -30,7 +30,7 @@ class NsdScraper(NSDSourcePort):
         config: Config,
         logger: LoggerPort,
         data_cleaner: DataCleaner,
-        executor: WorkerPoolPort,
+        worker_pool_executor: WorkerPoolPort,
         metrics_collector: MetricsCollectorPort,
         repository: NSDRepositoryPort,
     ):
@@ -40,7 +40,7 @@ class NsdScraper(NSDSourcePort):
         self.config = config
         self.logger = logger
         self.data_cleaner = data_cleaner
-        self.executor = executor
+        self.worker_pool_executor = worker_pool_executor
         self._metrics_collector = metrics_collector
         self.repository = repository
 
@@ -49,7 +49,7 @@ class NsdScraper(NSDSourcePort):
 
         self.nsd_endpoint = self.config.exchange.nsd_endpoint
 
-        self.logger.log("Start NsdScraper", level="info")
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
 
     @property
     def metrics_collector(self) -> MetricsCollectorPort:
@@ -141,7 +141,7 @@ class NsdScraper(NSDSourcePort):
         def handle_batch(item: Optional[NsdDTO]) -> None:
             strategy.handle(item)
 
-        exec_result = self.executor.run(
+        exec_result = self.worker_pool_executor.run(
             tasks=tasks,
             processor=processor,
             logger=self.logger,

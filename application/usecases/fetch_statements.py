@@ -24,7 +24,8 @@ class FetchStatementsUseCase:
         self.source = source
         self.config = config
         self.max_workers = max_workers
-        self.logger.log("Start FetchStatementsUseCase", level="info")
+
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
 
     def fetch_all(
         self,

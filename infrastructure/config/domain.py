@@ -36,7 +36,7 @@ def load_domain_config() -> DomainConfig:
         GlobalSettingsConfig: An instance of GlobalSettingsConfig initialized with default constants for wait and threshold.
     """
 
-    # Load domain settings using default constants
+    # Run domain settings using default constants
     return DomainConfig(
         words_to_remove=WORDS_TO_REMOVE,
         statements_types=STATEMENTS_TYPES,

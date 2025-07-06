@@ -17,6 +17,8 @@ class SqlAlchemyNsdRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
     def __init__(self, config: Config, logger: LoggerPort):
         super().__init__(config, logger)
 
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
+
     def save_all(self, items: List[NsdDTO]) -> None:
         """Persist a list of ``CompanyDTO`` objects."""
         session = self.Session()

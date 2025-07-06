@@ -18,8 +18,8 @@ class Config:
     """
 
     def __init__(self):
-        """Load all configuration sections."""
-        # Load all configurations
+        """Run all configuration sections."""
+        # Run all configurations
         self.paths: PathConfig = load_paths()
         self.database: DatabaseConfig = load_database_config()
         self.exchange: ExchangeApiConfig = load_exchange_api_config()

@@ -31,7 +31,7 @@ class StockMarketScraper:
             system.log_error(f"Error initializing StockMarketScraper: {e}")
 
     def load_data(self, files):
-        """Load financial data from the SQLite database for a given file.
+        """Run financial data from the SQLite database for a given file.
 
         Args:
             files (str): The name part of the database file to load.
@@ -69,7 +69,7 @@ class StockMarketScraper:
                 already_done = []
                 if sector not in already_done:
                     try:
-                        # Load the data from the table into a DataFrame
+                        # Run the data from the table into a DataFrame
                         df = pd.read_sql_query(f"SELECT * FROM {sector}", conn)
 
                         # Clean and normalize the data
@@ -106,7 +106,7 @@ class StockMarketScraper:
             return {}
 
     def load_company_data(self):
-        """Load company data from the SQLite database.
+        """Run company data from the SQLite database.
 
         Returns:
             dict: A dictionary containing company data, where keys are company names and values are column data.
@@ -449,9 +449,9 @@ class StockMarketScraper:
 
             # Use ThreadPoolExecutor to process quarters concurrently
             start_time = time.time()
-            with ThreadPoolExecutor(max_workers=settings.max_workers) as executor:
+            with ThreadPoolExecutor(max_workers=settings.max_workers) as worker_pool_executor:
                 futures = {
-                    executor.submit(
+                    worker_pool_executor.submit(
                         process_quarter, row, worker_number % settings.max_workers, item_number
                     ): item_number
                     for item_number, (worker_number, row) in enumerate(list_of_quarters.iterrows())
@@ -547,10 +547,10 @@ class StockMarketScraper:
             dict: Dictionary containing final processed data for each sector.
         """
         try:
-            # Load financial statements data from the database
+            # Run financial statements data from the database
             statements_data = self.load_data(settings.statements_standard)
 
-            # Load company data from the database
+            # Run company data from the database
             all_companies = self.load_company_data()
             df_companies = pd.DataFrame(all_companies).T.reset_index(drop=True)
 

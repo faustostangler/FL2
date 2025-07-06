@@ -13,7 +13,7 @@ class FinancialDataPlotter:
     def __init__(self):
         """Initialize the FinancialDataPlotter with a DataFrame.
 
-        Load all tables from an SQLite database into a single DataFrame.
+        Run all tables from an SQLite database into a single DataFrame.
         """
         # Adjust base_dir to move up from "utils" to "backend"
         backend_dir = os.path.dirname(settings.base_dir)
@@ -37,7 +37,7 @@ class FinancialDataPlotter:
         cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
         tables = cursor.fetchall()
 
-        # Load each table into a DataFrame
+        # Run each table into a DataFrame
         df_list = []
         start_time = time.time()  # Initialize start time for progress tracking
         for i, table_name in enumerate(tables):

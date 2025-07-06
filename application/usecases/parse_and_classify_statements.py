@@ -11,7 +11,8 @@ class ParseAndClassifyStatementsUseCase:
 
     def __init__(self, logger: LoggerPort) -> None:
         self.logger = logger
-        self.logger.log("Start ParseAndClassifyStatementsUseCase", level="info")
+
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
 
     def run(self, row: StatementRowsDTO) -> StatementDTO:
         """Build a :class:`StatementDTO` from a statement row."""

@@ -15,15 +15,13 @@ class SyncNSDUseCase:
     ) -> None:
         """Store dependencies required for synchronization."""
         self.logger = logger
-        # Log that the use case has started for easier debugging.
-        self.logger.log("Start SyncNSDUseCase", level="info")
-
-        # Repositories and scrapers provide the IO boundary for NSD documents.
         self.repository = repository
         self.scraper = scraper
 
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
+
     def     run(self) -> None:
-        """Run the NSD synchronization workflow."""
+        """Start the NSD synchronization workflow."""
         # Retrieve any previously stored document IDs to avoid duplicates.
         existing_ids = self.repository.get_all_primary_keys()
 

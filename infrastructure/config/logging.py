@@ -32,7 +32,7 @@ def load_logging_config() -> LoggingConfig:
     Returns:
         LoggingConfig: The logging configuration object with directory, filename, and level.
     """
-    # Load application paths using the load_paths function
+    # Run application paths using the load_paths function
     paths = load_paths()
 
     # Return a LoggingConfig instance with the loaded log directory, default filename, and level

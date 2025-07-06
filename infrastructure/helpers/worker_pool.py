@@ -74,9 +74,9 @@ class WorkerPool(WorkerPoolPort):
                 finally:
                     queue.task_done()
 
-        with ThreadPoolExecutor(max_workers=self.max_workers) as executor:
+        with ThreadPoolExecutor(max_workers=self.max_workers) as worker_pool_executor:
             futures = [
-                executor.submit(worker, uuid.uuid4().hex[:8])
+                worker_pool_executor.submit(worker, uuid.uuid4().hex[:8])
                 for _ in range(self.max_workers)
             ]
 

@@ -40,7 +40,7 @@ class CompanyExchangeScraper(CompanySourcePort):
         logger: LoggerPort,
         data_cleaner: DataCleaner,
         mapper: CompanyMapper,
-        executor: WorkerPoolPort,
+        worker_pool_executor: WorkerPoolPort,
         metrics_collector: MetricsCollectorPort,
     ):
         """Set up configuration, logger and helper utilities for the scraper.
@@ -72,7 +72,7 @@ class CompanyExchangeScraper(CompanySourcePort):
         self.logger = logger
         self.data_cleaner = data_cleaner
         self.mapper = mapper
-        self.executor = executor
+        self.worker_pool_executor = worker_pool_executor
         self._metrics_collector = metrics_collector
 
         # Initialize FetchUtils for HTTP request utilities
@@ -109,7 +109,7 @@ class CompanyExchangeScraper(CompanySourcePort):
         )
 
         # Log the initialization of the scraper
-        self.logger.log("Start CompanyExchangeScraper", level="info")
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
 
     @property
     def metrics_collector(self) -> MetricsCollectorPort:
@@ -136,7 +136,7 @@ class CompanyExchangeScraper(CompanySourcePort):
         Returns:
             List of dictionaries representing raw company data.
         """
-        self.logger.log("Start fetch_all", level="info")
+        self.logger.log("Start Class fetch_all", level="info")
 
         # Ensure skip_codes is a set (to avoid None and allow fast lookup)
         skip_codes = skip_codes or set()
@@ -185,7 +185,7 @@ class CompanyExchangeScraper(CompanySourcePort):
         :return: Lista de empresas com código CVM e nome base.
         """
         self.logger.log(
-            "Start CompanyExchangeScraper fetch_companies_listing", level="info"
+            "Run CompanyExchangeScraper fetch_companies_listing", level="info"
             )
 
         skip_codes = skip_codes or set()
@@ -255,7 +255,7 @@ class CompanyExchangeScraper(CompanySourcePort):
                 )
                 return fetch
 
-            page_exec = self.executor.run(
+            page_exec = self.worker_pool_executor.run(
                 tasks=tasks,
                 processor=processor,
                 logger=self.logger,
@@ -331,7 +331,7 @@ class CompanyExchangeScraper(CompanySourcePort):
             - Does not raise exceptions; logs warnings instead.
         """
         self.logger.log(
-            "Start CompanyExchangeScraper fetch_companies_details", level="info"
+            "Run CompanyExchangeScraper fetch_companies_details", level="info"
         )
 
         skip_codes = skip_codes or set()
@@ -412,7 +412,7 @@ class CompanyExchangeScraper(CompanySourcePort):
             # Buffer each parsed company and flush when threshold is hit
             strategy.handle(item)
 
-        detail_exec = self.executor.run(
+        detail_exec = self.worker_pool_executor.run(
             tasks=tasks,
             processor=processor,
             logger=self.logger,

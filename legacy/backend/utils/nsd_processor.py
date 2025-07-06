@@ -273,7 +273,7 @@ class NsdProcessor(BaseProcessor):
             batch_processor.shared_total_bytes = shared_bytes
             batch_processor.shared_lock = shared_lock
 
-            # Load existing NSD data
+            # Run existing NSD data
             existing_nsd = self.load_data(table_name=self.table_name, db_filepath=self.db_filepath)
 
             if not existing_nsd.empty:
@@ -290,7 +290,7 @@ class NsdProcessor(BaseProcessor):
                 self.db_optimize(self.config.databases["raw"]["filepath"])
                 return True
 
-            # Run processing (threaded or sequential)
+            # Start processing (threaded or sequential)
             result = self.run(
                 targets, thread=thread, module_name=self.inspect.getmodule(self.inspect.currentframe()).__name__
             )

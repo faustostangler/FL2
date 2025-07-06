@@ -28,9 +28,10 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         self.data_cleaner = data_cleaner
         self.fetch_utils = FetchUtils(config, logger)
         self.session = self.fetch_utils.create_scraper()
-        self.logger.log("Start RequestsStatementSourceAdapter", level="info")
         self.endpoint = f"{self.config.exchange.nsd_endpoint}"
         self.statements_config = self.config.statements
+
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
 
     def _parse_statement_page(
         self, soup: BeautifulSoup, group: str

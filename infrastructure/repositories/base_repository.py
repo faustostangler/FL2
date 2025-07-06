@@ -23,7 +23,6 @@ class BaseRepository(BaseRepositoryPort[T], ABC):
         exist."""
         self.config = config
         self.logger = logger
-        self.logger.log(f"Start {self.__class__.__name__}", level="info")
 
         self.engine = create_engine(
             config.database.connection_string,
@@ -37,6 +36,8 @@ class BaseRepository(BaseRepositoryPort[T], ABC):
             bind=self.engine, autoflush=True, expire_on_commit=True
         )
         BaseModel.metadata.create_all(self.engine)
+
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
 
     @abstractmethod
     def save_all(self, items: List[T]) -> None:

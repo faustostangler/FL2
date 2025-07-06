@@ -1,4 +1,4 @@
-"""Run the FLY CLI in background for debugging purposes."""
+"""Start the FLY CLI in background for debugging purposes."""
 
 from infrastructure.config import Config
 from infrastructure.factories import create_data_cleaner
@@ -12,12 +12,12 @@ if __name__ == "__main__":
     logger = Logger(config)
     data_cleaner = create_data_cleaner(config, logger)
 
-    # Start CLI
-    logger.log("Start FLY", level="info")
+    # Run CLI
+    logger.log("Run Project FLY", level="info")
 
     # Entry point for the FLY CLI application.
     controller = CLIController(config, logger, data_cleaner)
     controller.run()
 
-# Log the completion of the background execution
-logger.log("done", level="info")
+    # Log the completion of the background execution
+    logger.log("done", level="info")

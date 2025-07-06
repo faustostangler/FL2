@@ -61,7 +61,7 @@ pip install -r requirements.txt
 ```
 
 ## How to Use
-### **Run the Full System**
+### **Start the Full System**
 To run everything at once and process all available data:
 ```sh
 python b3.py

@@ -335,7 +335,7 @@ def timed_input(prompt, timeout=5, default="YES"):
 
     print(f"{prompt} (default: {default}) [You have {timeout} seconds to answer]: ", end="", flush=True)
 
-    # Start a thread to run the input() call, which will block until the user provides input
+    # Run a thread to run the input() call, which will block until the user provides input
     input_thread = threading.Thread(target=lambda: input())
     input_thread.start()
 
@@ -396,13 +396,13 @@ def db_optimize(db_filepath=settings.db_filepath):
         conn = sqlite3.connect(db_filepath)
         cursor = conn.cursor()
 
-        # Run VACUUM to reduce file size and defragment the database
+        # Start VACUUM to reduce file size and defragment the database
         cursor.execute("VACUUM")
 
-        # Run ANALYZE to update statistics for query optimization
+        # Start ANALYZE to update statistics for query optimization
         cursor.execute("ANALYZE")
 
-        # Run REINDEX to rebuild indexes for better performance
+        # Start REINDEX to rebuild indexes for better performance
         cursor.execute("REINDEX")
 
         # Commit the changes and close the connection

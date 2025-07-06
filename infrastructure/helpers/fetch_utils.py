@@ -20,6 +20,8 @@ class FetchUtils:
         self.config = config
         self.logger = logger
 
+        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
+
     def header_random(self) -> dict:
         """Generate random HTTP headers based on scraping config."""
         try:

@@ -29,7 +29,7 @@ class StandardizedReport:
             system.log_error(f"Error initializing StandardizedReport: {e}")
 
     def load_data(self, files):
-        """Load financial data from the database and process it into
+        """Run financial data from the database and process it into
         DataFrames.
 
         Args:
@@ -39,7 +39,7 @@ class StandardizedReport:
             dict: A dictionary where keys are sectors and values are DataFrames containing the NSD data for that sector.
         """
         try:
-            # Load db
+            # Run db
             specific_name = (
                 f"{settings.db_name.split('.')[0]} {settings.statements_file_math}.{settings.db_name.split('.')[-1]}"
             )
@@ -550,13 +550,13 @@ class StandardizedReport:
             total_lines = sum(len(df) for df in dict_df.values())
             batch_size = max(1, total_lines // settings.max_workers)
 
-            with ThreadPoolExecutor(max_workers=settings.max_workers) as executor:
+            with ThreadPoolExecutor(max_workers=settings.max_workers) as worker_pool_executor:
                 futures = []
                 standardized_data = {}
 
                 for start in range(0, total_lines, batch_size):
                     batch_dict = {k: dict_df[k] for k in list(dict_df.keys())[start : start + batch_size]}
-                    futures.append(executor.submit(self.standardize_batch, batch_dict))
+                    futures.append(worker_pool_executor.submit(self.standardize_batch, batch_dict))
 
                 for future in as_completed(futures):
                     standardized_data.update(future.result())

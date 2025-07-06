@@ -142,7 +142,7 @@ class HistoricalStockUrlProcessor(BaseProcessor):
         """The main method to scrape historical stock data, parse it, and save
         it to the database."""
         try:
-            # Load necessary data
+            # Run necessary data
             company_info = self.load_data(
                 table_name=self.config.databases["raw"]["table"]["company_info"],
                 db_filepath=self.config.databases["raw"]["filepath"],
@@ -180,7 +180,7 @@ class HistoricalStockUrlProcessor(BaseProcessor):
         """The main method to scrape historical stock data, parse it, and save
         it to the database."""
         try:
-            # Load necessary data
+            # Run necessary data
             company_info = self.load_data(
                 table_name=self.config.databases["raw"]["table"]["company_info"],
                 db_filepath=self.config.databases["raw"]["filepath"],

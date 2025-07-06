@@ -2074,7 +2074,7 @@ class Multiplication(Formula):
 
     def __call__(self, df):
         try:
-            # Start with an initial value of 1 for multiplication
+            # Run with an initial value of 1 for multiplication
             result = np.ones(len(df))
             # Multiply each multiplicand
             for acc in self.multiplicands:

@@ -416,7 +416,7 @@ class StockProcessor(BaseProcessor):
             all_results = []  # To collect results from all futures
             sub_batch_counter = 0  # Initialize thread counter
 
-            with ThreadPoolExecutor(max_workers=self.config.scraping["max_workers"]) as executor:
+            with ThreadPoolExecutor(max_workers=self.config.scraping["max_workers"]) as worker_pool_executor:
                 sub_batch_size = max(1, len(batch) // self.config.scraping["max_workers"])
                 futures = []
 
@@ -430,7 +430,7 @@ class StockProcessor(BaseProcessor):
 
                     sub_batch_counter += 1  # Increment thread counter
 
-                    future = executor.submit(self.process_instance, sub_batch, sub_batch_progress)
+                    future = worker_pool_executor.submit(self.process_instance, sub_batch, sub_batch_progress)
                     futures.append(future)
                     time.sleep(1)
 
@@ -549,10 +549,10 @@ class StockProcessor(BaseProcessor):
                 batch = targets.iloc[batch_start : batch_start + progress["batch_size"]]
 
                 if thread:
-                    # Run with threading
+                    # Start with threading
                     processed_batch = self.main_thread(batch, progress)
                 else:
-                    # Run sequentially
+                    # Start sequentially
                     processed_batch = self.main_sequential(batch, progress)
 
                 if not processed_batch.empty:
@@ -575,7 +575,7 @@ class StockProcessor(BaseProcessor):
             # # Initialize the WebDriver
             # self.driver, self.driver_wait = self._initialize_driver()
 
-            # Load necessary data
+            # Run necessary data
             company_info = self.load_data(
                 table_name=self.config.databases["raw"]["table"]["company_info"],
                 db_filepath=self.config.databases["raw"]["filepath"],

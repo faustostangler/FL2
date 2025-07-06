@@ -94,7 +94,7 @@ class CompanyProcessor(BaseProcessor):
             # Initialize an empty list to accumulate the results
             all_data = []
 
-            # Start the timer to measure processing time
+            # Run the timer to measure processing time
             start_time = time.time()
 
             # download control
@@ -314,7 +314,7 @@ class CompanyProcessor(BaseProcessor):
             # Container for all companies data
             all_companies = []
 
-            # Start timing the process
+            # Run timing the process
             start_time = time.time()
 
             # First request: page 1
@@ -397,7 +397,7 @@ class CompanyProcessor(BaseProcessor):
             batch_processor.shared_total_bytes = shared_bytes
             batch_processor.shared_lock = shared_lock
 
-            # Load existing and new companies
+            # Run existing and new companies
             local_companies = self.load_data(table_name=self.table_name, db_filepath=self.db_filepath)
             web_companies = self.get_web_companies()
 
@@ -409,7 +409,7 @@ class CompanyProcessor(BaseProcessor):
                 self.db_optimize(self.config.databases["raw"]["filepath"])
                 return True
 
-            # Run batch processing
+            # Start batch processing
             result = self.run(
                 targets, thread=thread, module_name=self.inspect.getmodule(self.inspect.currentframe()).__name__
             )

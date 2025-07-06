@@ -403,7 +403,7 @@ class IntelProcessor(BaseProcessor):
 
         df = df.reset_index(drop=True)  # Reset index to prevent alignment errors
 
-        # Start with a base mask (True for all rows) or refine from parent
+        # Run with a base mask (True for all rows) or refine from parent
         mask = parent_mask.copy() if parent_mask is not None else pd.Series(True, index=df.index)
 
         # Optimize: Merge multiple filters on same column (e.g., multiple contains_any)
@@ -561,7 +561,7 @@ class IntelProcessor(BaseProcessor):
         df = df.reset_index(drop=True)  # Ensure consistent indexing
         account_str = df["account"].astype(str)  # Cache for reuse
 
-        # Start with all rows or inherited parent mask
+        # Run with all rows or inherited parent mask
         mask = parent_mask.copy() if parent_mask is not None else pd.Series(True, index=df.index)
 
         # Merge filters efficiently when possible
@@ -953,7 +953,7 @@ class IntelProcessor(BaseProcessor):
             pd.DataFrame: A DataFrame with rows to process, or an empty DataFrame if no work is needed.
         """
         try:
-            # Load retry configuration from fallback values or system config
+            # Run retry configuration from fallback values or system config
             max_retries = max_retries or self.config.selenium["max_retries"]
             wait_time = wait_time or self.dynamic_sleep()
 
@@ -1011,7 +1011,7 @@ class IntelProcessor(BaseProcessor):
                             if total_rows == 0:
                                 return pd.DataFrame()  # No rows to process
 
-                            # Load rows in chunks with progress bar
+                            # Run rows in chunks with progress bar
                             with tqdm(total=total_rows, unit="rows", desc="") as pbar:
                                 for chunk in pd.read_sql_query(query, conn, chunksize=chunk_size):
                                     df_list.append(chunk)
