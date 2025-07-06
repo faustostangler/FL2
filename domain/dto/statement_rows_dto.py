@@ -21,25 +21,33 @@ class StatementRowsDTO:
     @staticmethod
     def from_tuple(values: Tuple) -> "StatementRowsDTO":
         """Create a ``StatementRowsDTO`` from an ordered tuple."""
-        (
-            account,
-            description,
-            value,
-            grupo,
-            quadro,
-            company_name,
-            nsd,
-            quarter,
-            version,
-        ) = values
-        return StatementRowsDTO(
-            account=str(account),
-            description=str(description),
-            value=float(value),
-            grupo=str(grupo),
-            quadro=str(quadro),
-            company_name=str(company_name) if company_name is not None else None,
-            nsd=int(nsd),
-            quarter=str(quarter) if quarter is not None else None,
-            version=str(version) if version is not None else None,
+        keys = [
+            "account",
+            "description",
+            "value",
+            "grupo",
+            "quadro",
+            "company_name",
+            "nsd",
+            "quarter",
+            "version",
+        ]
+
+        mapping = dict(zip(keys, values))
+
+        mapping["account"] = str(mapping.get("account"))
+        mapping["description"] = str(mapping.get("description"))
+        mapping["value"] = float(mapping.get("value"))
+        mapping["grupo"] = str(mapping.get("grupo"))
+        mapping["quadro"] = str(mapping.get("quadro"))
+        company_name = mapping.get("company_name")
+        mapping["company_name"] = (
+            str(company_name) if company_name is not None else None
         )
+        mapping["nsd"] = int(mapping.get("nsd"))
+        quarter = mapping.get("quarter")
+        mapping["quarter"] = str(quarter) if quarter is not None else None
+        version = mapping.get("version")
+        mapping["version"] = str(version) if version is not None else None
+
+        return StatementRowsDTO(**mapping)
