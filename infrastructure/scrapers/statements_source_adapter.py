@@ -192,9 +192,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     in soup.get_text()
                 ):
                     # Tenta regenerar hash, embora neste caso hash_value_retry não seja usado
-                    hash_response_retry = self.fetch_utils.fetch_with_retry(
-                        scraper=None, url=url
-                    )
+                    self.fetch_utils.fetch_with_retry(scraper=None, url=url)
                     # hash_value_retry = self._extract_hash(hash_response.text)
 
                     # self.logger.log(
@@ -230,7 +228,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     quadro=item["quadro"],
                     account=r["account"],
                     description=r["description"],
-                    value=r["value"]
+                    value=r["value"],
                 )
                 parsed_rows.append(dto)
 
