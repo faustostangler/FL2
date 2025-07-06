@@ -5,7 +5,6 @@ from typing import List, Tuple
 from application.usecases.parse_and_classify_statements import (
     ParseAndClassifyStatementsUseCase,
 )
-from application.usecases.persist_statements import PersistStatementsUseCase
 from domain.dto import NsdDTO, StatementDTO, StatementRowsDTO, WorkerTaskDTO
 from domain.ports import LoggerPort
 from infrastructure.config import Config
@@ -13,20 +12,18 @@ from infrastructure.helpers import MetricsCollector, WorkerPool
 
 
 class StatementParseService:
-    """Parse raw statement rows and persist cleaned records."""
+    """Parse raw statement rows."""
 
     def __init__(
         self,
         logger: LoggerPort,
         parse_usecase: ParseAndClassifyStatementsUseCase,
-        persist_usecase: PersistStatementsUseCase,
         config: Config,
         max_workers: int = 1,
     ) -> None:
         """Store dependencies for the service."""
         self.logger = logger
         self.parse_usecase = parse_usecase
-        self.persist_usecase = persist_usecase
         self.config = config
         self.max_workers = max_workers
 
@@ -51,23 +48,8 @@ class StatementParseService:
         result = parse_pool.run(tasks=tasks, processor=processor, logger=self.logger)
         return result.items
 
-    def _persist_all(self, statements: List[List[StatementDTO]]) -> None:
-        collector = MetricsCollector()
-        persist_pool = WorkerPool(
-            config=self.config,
-            metrics_collector=collector,
-            max_workers=self.max_workers,
-        )
-
-        tasks = list(enumerate(statements))
-
-        def processor(task: WorkerTaskDTO) -> None:
-            self.persist_usecase.run(task.data)
-
-        persist_pool.run(tasks=tasks, processor=processor, logger=self.logger)
-
     def run(self, fetched: List[Tuple[NsdDTO, List[StatementRowsDTO]]]) -> None:
-        """Parse and persist statements from ``fetched`` rows."""
+        """Parse statements from ``fetched`` rows."""
         self.logger.log("Run  Method statement_parse_service.run()", level="info")
 
         if not fetched:
@@ -77,17 +59,10 @@ class StatementParseService:
         self.logger.log(
             "Call Method statement_parse_service._parse_all()", level="info"
         )
-        parsed = self._parse_all(fetched)
+
+        _ = self._parse_all(fetched)
         self.logger.log(
             "End  Method statement_parse_service._parse_all()", level="info"
-        )
-
-        self.logger.log(
-            "Call Method statement_parse_service._persist_all()", level="info"
-        )
-        self._persist_all(parsed)
-        self.logger.log(
-            "End  Method statement_parse_service._persist_all()", level="info"
         )
 
         self.logger.log("End  Method statement_parse_service.run()", level="info")

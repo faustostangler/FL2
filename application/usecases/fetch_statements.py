@@ -2,25 +2,31 @@ from __future__ import annotations
 
 from typing import Callable, Iterable, List, Optional, Tuple
 
+from application.usecases.base_statements_use_case import BaseStatementsUseCase
 from domain.dto.nsd_dto import NsdDTO
 from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.dto.worker_class_dto import WorkerTaskDTO
-from domain.ports import LoggerPort, StatementSourcePort
+from domain.ports import (
+    LoggerPort,
+    StatementRepositoryPort,
+    StatementSourcePort,
+)
 from infrastructure.config import Config
 from infrastructure.helpers import MetricsCollector, SaveStrategy, WorkerPool
 
 
-class FetchStatementsUseCase:
+class FetchStatementsUseCase(BaseStatementsUseCase):
     """Retrieve raw HTML statements from the source port."""
 
     def __init__(
         self,
         logger: LoggerPort,
         source: StatementSourcePort,
+        repository: StatementRepositoryPort,
         config: Config,
         max_workers: int = 1,
     ) -> None:
-        self.logger = logger
+        super().__init__(repository=repository, logger=logger)
         self.source = source
         self.config = config
         self.max_workers = max_workers
@@ -71,36 +77,22 @@ class FetchStatementsUseCase:
                 "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()",
                 level="info",
             )
-# <<<<<<< codex/double-check-result-handling-in-strategy-and-save-method
             fetched = self.source.fetch(task.data)
-# =======
-#             results = self.source.fetch(task.data)
-# >>>>>>> 2025-07-03-Statements-Round-1
             self.logger.log(
                 "End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()",
                 level="info",
             )
 
-# <<<<<<< codex/double-check-result-handling-in-strategy-and-save-method
             return fetched["nsd"], fetched["statements"]
 
         def handle_batch(item: Tuple[NsdDTO, List[StatementRowsDTO]]) -> None:
             if item[1]:
-# =======
-#             return results
-
-#         def handle_batch(item: Tuple[NsdDTO, List[StatementRowsDTO]]) -> None:
-#             if item["statements"]:
-# >>>>>>> 2025-07-03-Statements-Round-1
                 self.logger.log(
                     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
                     level="info",
                 )
-# <<<<<<< codex/double-check-result-handling-in-strategy-and-save-method
                 strategy.handle(item)
-# =======
-#                 strategy.handle(item["statements"])
-# >>>>>>> 2025-07-03-Statements-Round-1
+                self._persistir_lote(item[1])
                 self.logger.log(
                     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
                     level="info",
