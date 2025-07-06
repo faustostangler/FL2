@@ -9,6 +9,8 @@ from domain.ports import (
     LoggerPort,
     NSDRepositoryPort,
     StatementRepositoryPort,
+    StatementRowsRepositoryPort,
+    StatementSourcePort,
 )
 from infrastructure.config import Config
 
@@ -19,7 +21,8 @@ class StatementFetchService:
     def __init__(
         self,
         logger: LoggerPort,
-        fetch_usecase: FetchStatementsUseCase,
+        source: StatementSourcePort,
+        rows_repository: StatementRowsRepositoryPort,
         company_repo: CompanyRepositoryPort,
         nsd_repo: NSDRepositoryPort,
         statement_repo: StatementRepositoryPort,
@@ -28,12 +31,19 @@ class StatementFetchService:
     ) -> None:
         """Store dependencies for the service."""
         self.logger = logger
-        self.fetch_usecase = fetch_usecase
         self.company_repo = company_repo
         self.nsd_repo = nsd_repo
         self.statement_repo = statement_repo
         self.config = config
         self.max_workers = max_workers
+
+        self.fetch_usecase = FetchStatementsUseCase(
+            logger=self.logger,
+            source=source,
+            repository=rows_repository,
+            config=self.config,
+            max_workers=self.max_workers,
+        )
 
         self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
