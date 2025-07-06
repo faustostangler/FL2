@@ -5,11 +5,7 @@ from application.services.company_service import CompanyService
 from application.services.nsd_service import NsdService
 from application.services.statement_fetch_service import StatementFetchService
 from application.services.statement_parse_service import StatementParseService
-from application.usecases import (
-    FetchStatementsUseCase,
-    ParseAndClassifyStatementsUseCase,
-    PersistStatementsUseCase,
-)
+from application.usecases import ParseAndClassifyStatementsUseCase
 from domain.ports import LoggerPort
 from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
@@ -226,33 +222,18 @@ class CLIController:
         )
         self.logger.log("End Instance source", level="info")
 
-        self.logger.log("Instantiate fetch_uc (source)", level="info")
-        fetch_uc = FetchStatementsUseCase(
-            logger=self.logger,
-            source=source,
-            config=self.config,
-            max_workers=self.config.global_settings.max_workers,
-        )
-        self.logger.log("End Instance fetch_uc (source)", level="info")
-
         self.logger.log("Instantiate parse_uc", level="info")
         parse_uc = ParseAndClassifyStatementsUseCase(logger=self.logger)
         self.logger.log("End Instance parse_uc", level="info")
 
-        self.logger.log("Instantiate persist_uc", level="info")
-        persist_uc = PersistStatementsUseCase(
-            logger=self.logger, repository=statement_repo
-        )
-        self.logger.log("End Instance persist_uc", level="info")
-
         # UseCase 1: Fetch
         self.logger.log(
-            "Instantiate statements_fetch_service (fetch_uc, company_repo, nsd_repo, statement_repo)",
+            "Instantiate statements_fetch_service (source, company_repo, nsd_repo, statement_repo)",
             level="info",
         )
         statements_fetch_service = StatementFetchService(
             logger=self.logger,
-            fetch_usecase=fetch_uc,
+            source=source,
             company_repo=company_repo,
             nsd_repo=nsd_repo,
             statement_repo=statement_repo,
@@ -270,18 +251,16 @@ class CLIController:
         )
 
         self.logger.log(
-            "End Instance statements_fetch_service (fetch_uc, company_repo, nsd_repo, statement_repo)",
+            "End Instance statements_fetch_service (source, company_repo, nsd_repo, statement_repo)",
             level="info",
         )
 
         # UseCase 2: Parse
-        self.logger.log(
-            "Instantiate parse_service (parce_uc, persist_uc)", level="info"
-        )
+        self.logger.log("Instantiate parse_service (parse_uc)", level="info")
         parse_service = StatementParseService(
             logger=self.logger,
             parse_usecase=parse_uc,
-            persist_usecase=persist_uc,
+            statement_repo=statement_repo,
             config=self.config,
             max_workers=self.config.global_settings.max_workers,
         )
@@ -296,9 +275,7 @@ class CLIController:
             level="info",
         )
 
-        self.logger.log(
-            "End Instance parse_service (parce_uc, persist_uc)", level="info"
-        )
+        self.logger.log("End Instance parse_service (parse_uc)", level="info")
 
         self.logger.log(
             "End  Method controller.run()._statement_service()", level="info"

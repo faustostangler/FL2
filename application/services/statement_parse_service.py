@@ -7,7 +7,7 @@ from application.usecases.parse_and_classify_statements import (
 )
 from application.usecases.persist_statements import PersistStatementsUseCase
 from domain.dto import NsdDTO, StatementDTO, StatementRowsDTO, WorkerTaskDTO
-from domain.ports import LoggerPort
+from domain.ports import LoggerPort, StatementRepositoryPort
 from infrastructure.config import Config
 from infrastructure.helpers import MetricsCollector, WorkerPool
 
@@ -19,14 +19,16 @@ class StatementParseService:
         self,
         logger: LoggerPort,
         parse_usecase: ParseAndClassifyStatementsUseCase,
-        persist_usecase: PersistStatementsUseCase,
+        statement_repo: StatementRepositoryPort,
         config: Config,
         max_workers: int = 1,
     ) -> None:
         """Store dependencies for the service."""
         self.logger = logger
         self.parse_usecase = parse_usecase
-        self.persist_usecase = persist_usecase
+        self.persist_usecase = PersistStatementsUseCase(
+            logger=self.logger, repository=statement_repo
+        )
         self.config = config
         self.max_workers = max_workers
 
