@@ -44,7 +44,7 @@ class WorkerPool(WorkerPoolPort):
         """Process ``tasks`` concurrently using ``processor``."""
 
         # Inform about the worker pool startup
-        logger.log("Worker pool start", level="info")
+        logger.log("Run  Method worker_pool_executor().run()", level="info")
 
         results: List[R] = []
         queue: Queue = Queue(self.config.global_settings.queue_size)
@@ -53,14 +53,16 @@ class WorkerPool(WorkerPoolPort):
         start_time = time.perf_counter()
 
         def worker(worker_id: str) -> None:
+            logger.log("Run  Method worker_pool_executor().worker()", level="info")
             while True:
                 item = queue.get()
                 if item is sentinel:
                     queue.task_done()
+                    logger.log("End  Method worker_pool_executor().worker()", level="info")
                     break
                 index, entry = item
                 task = WorkerTaskDTO(index=index, data=entry, worker_id=worker_id)
-                logger.log(f"{task.data.nsd}", level="info")
+                logger.log(f"task: {task}", level="info")
                 result = processor(task)
                 try:
                     with lock:
@@ -101,5 +103,5 @@ class WorkerPool(WorkerPoolPort):
             logger.log("Callable found", level="info")
             post_callback(results)
 
-        logger.log("Worker pool finished", level="info")
+        logger.log("End  Method worker_pool_executor().run()", level="info")
         return ExecutionResultDTO(items=results, metrics=metrics)

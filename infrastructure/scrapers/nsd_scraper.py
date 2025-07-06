@@ -49,7 +49,7 @@ class NsdScraper(NSDSourcePort):
 
         self.nsd_endpoint = self.config.exchange.nsd_endpoint
 
-        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
+        self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     @property
     def metrics_collector(self) -> MetricsCollectorPort:
@@ -67,6 +67,9 @@ class NsdScraper(NSDSourcePort):
         **kwargs,
     ) -> ExecutionResultDTO[NsdDTO]:
         """Fetch and parse NSD pages using a worker queue."""
+
+        self.logger.log("Run  Method controller.run()._nsd_service().run().sync_nsd_usecase.run().fetch_all()", level="info")
+
         skip_codes = skip_codes or set()
         skip_codes_int = {int(code) for code in skip_codes} if skip_codes else set()
         start = max(start, max(skip_codes_int, default=0) + 1)
@@ -88,6 +91,7 @@ class NsdScraper(NSDSourcePort):
         start_time = time.perf_counter()
 
         def processor(task: WorkerTaskDTO) -> Optional[NsdDTO]:
+            self.logger.log("Run  Method controller.run()._nsd_service().run().sync_nsd_usecase.run().processor()", level="info")
             nsd = task.data
             progress = {
                 "index": task.index,
@@ -106,7 +110,10 @@ class NsdScraper(NSDSourcePort):
             try:
                 response, self.session = self.fetch_utils.fetch_with_retry(self.session, url)
                 self.metrics_collector.record_network_bytes(len(response.content))
+
+                self.logger.log("Call Method controller.run()._nsd_service().run().sync_nsd_usecase.run().processor()_parse_html()", level="info")
                 parsed = self._parse_html(nsd, response.text)
+                self.logger.log("End  Method controller.run()._nsd_service().run().sync_nsd_usecase.run().processor()._parse_html()", level="info")
             except Exception as e:
                 self.logger.log(
                     f"Failed to fetch NSD {nsd}: {e}",
@@ -136,17 +143,21 @@ class NsdScraper(NSDSourcePort):
                 worker_id=task.worker_id,
             )
 
+            self.logger.log("End  Method controller.run()._nsd_service().run().sync_nsd_usecase.run().processor()", level="info")
+
             return NsdDTO.from_dict(parsed) if parsed else None
 
         def handle_batch(item: Optional[NsdDTO]) -> None:
             strategy.handle(item)
 
+        self.logger.log("Call Method controller.run()._nsd_service().run().sync_nsd_usecase.run().worker_pool_executor.run()", level="info")
         exec_result = self.worker_pool_executor.run(
             tasks=tasks,
             processor=processor,
             logger=self.logger,
             on_result=handle_batch,
         )
+        self.logger.log("End  Method controller.run()._nsd_service().run().sync_nsd_usecase.run().worker_pool_executor.()", level="info")
 
         strategy.finalize()
 
@@ -156,6 +167,9 @@ class NsdScraper(NSDSourcePort):
         )
 
         results = [item for item in exec_result.items if item is not None]
+
+        self.logger.log("End  Method controller.run()._nsd_service().run().sync_nsd_usecase.run().fetch_all()", level="info")
+
         return ExecutionResultDTO(items=results, metrics=exec_result.metrics)
 
     def _parse_html(self, nsd: int, html: str) -> Dict:

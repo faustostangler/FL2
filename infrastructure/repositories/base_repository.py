@@ -37,7 +37,7 @@ class BaseRepository(BaseRepositoryPort[T], ABC):
         )
         BaseModel.metadata.create_all(self.engine)
 
-        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
+        self.logger.log(f"Create Instance Base Class {self.__class__.__name__}", level="info")
 
     @abstractmethod
     def save_all(self, items: List[T]) -> None:

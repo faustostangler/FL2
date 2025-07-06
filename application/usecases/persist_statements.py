@@ -13,7 +13,7 @@ class PersistStatementsUseCase:
         self.logger = logger
         self.repository = repository
 
-        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
+        self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def run(self, statements: List[StatementDTO]) -> None:
         if not statements:

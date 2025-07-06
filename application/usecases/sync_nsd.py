@@ -18,24 +18,31 @@ class SyncNSDUseCase:
         self.repository = repository
         self.scraper = scraper
 
-        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
+        self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def     run(self) -> None:
         """Start the NSD synchronization workflow."""
+
+        self.logger.log("Run  Method controller.run()._nsd_service().run().sync_nsd_usecase.run()", level="info")
+
         # Retrieve any previously stored document IDs to avoid duplicates.
         existing_ids = self.repository.get_all_primary_keys()
 
         # Fetch all documents from the scraper, persisting them in batches.
+        self.logger.log("Call Method controller.run()._nsd_service().run().sync_nsd_usecase.run().fetch_all()", level="info")
         self.scraper.fetch_all(
             skip_codes=existing_ids,
             save_callback=self._save_batch,
         )
+        self.logger.log("Call Method controller.run()._nsd_service().run().sync_nsd_usecase.run().fetch_all()", level="info")
 
         # Record metrics about the synchronization process.
         self.logger.log(
             f"Downloaded {self.scraper.metrics_collector.network_bytes} bytes",
             level="info",
         )
+
+        self.logger.log("End  Method controller.run()._nsd_service().run().sync_nsd_usecase.run()", level="info")
 
     def _save_batch(self, buffer: list[NsdDTO]) -> None:
         """Persist a batch of raw data after converting to domain DTOs."""

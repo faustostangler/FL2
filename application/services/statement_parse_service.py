@@ -30,7 +30,7 @@ class StatementParseService:
         self.config = config
         self.max_workers = max_workers
 
-        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
+        self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def _parse_all(
         self, fetched: List[Tuple[NsdDTO, List[StatementRowsDTO]]]

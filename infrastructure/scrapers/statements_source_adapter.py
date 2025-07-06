@@ -31,7 +31,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         self.endpoint = f"{self.config.exchange.nsd_endpoint}"
         self.statements_config = self.config.statements
 
-        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
+        self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def _parse_statement_page(
         self, soup: BeautifulSoup, group: str
@@ -169,6 +169,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
     def fetch(self, row: NsdDTO) -> dict[str, Any]:
         """Fetch statement pages for the given NSD and return parsed rows."""
+        self.logger.log("Run  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()", level="info")
+
         url = self.endpoint.format(nsd=row.nsd)
         start = time.perf_counter()
 
@@ -201,12 +203,12 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     #     level="warning"
                     # )
                     TimeUtils(self.config).sleep_dynamic()
-                else:
+                else:  # Sucesso
                     self.logger.log(
                         f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']}",
                         level="info",
                     )
-                    break  # Sucesso
+                    break
             else:
                 # Se todas as tentativas falharem, aborta NSD
                 self.logger.log(
@@ -242,4 +244,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
             level="info",
         )
         result = {"nsd": row, "statements": statements_rows_dto}
+
+        self.logger.log("End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()", level="info")
+
         return result

@@ -25,12 +25,12 @@ class CompanyService:
             max_workers=self.config.global_settings.max_workers,
         )
 
-        self.logger.log(f"Start Class {self.__class__.__name__}", level="info")
+        self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def run(self):
         """Execute company synchronization using the injected use case."""
         # Delegate execution to the underlying use case and return the result.
-        self.logger.log("Start Sync Companies Use Case in CompanyService", level="info")
+        self.logger.log("Call Method sync_companies_usecase.run()", level="info")
         result = self.sync_companies_usecase.run()
-        self.logger.log("End Sync Companies Use Case in CompanyService", level="info")
+        self.logger.log("End  Method sync_companies_usecase.run()", level="info")
         return result
