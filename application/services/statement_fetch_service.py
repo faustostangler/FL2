@@ -80,8 +80,8 @@ class StatementFetchService:
         tasks = list(enumerate(targets))
 
         def processor(task: WorkerTaskDTO) -> Tuple[NsdDTO, List[StatementRowsDTO]]:
-            results = self.fetch_usecase.source.fetch(task.data)
-            return results
+            result = self.fetch_usecase.source.fetch(task.data)
+            return result
 
         result = pool.run(tasks=tasks, processor=processor, logger=self.logger)
         return result.items
