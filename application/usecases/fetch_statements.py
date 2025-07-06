@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Iterable, List
 
+from domain.dto.nsd_dto import NsdDTO
+from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.ports import LoggerPort, StatementSourcePort
 
 
@@ -13,9 +15,11 @@ class FetchStatementsUseCase:
         self.source = source
         self.logger.log("Start FetchStatementsUseCase", level="info")
 
-    def run(self, batch_ids: Iterable[str]) -> List[str]:
-        html_chunks: List[str] = []
-        for batch_id in batch_ids:
-            self.logger.log(f"Fetch {batch_id}", level="info")
-            html_chunks.append(self.source.fetch(batch_id))
-        return html_chunks
+    def run(
+        self, batch_rows: Iterable[NsdDTO]
+    ) -> List[tuple[NsdDTO, list[StatementRowsDTO]]]:
+        results: List[tuple[NsdDTO, list[StatementRowsDTO]]] = []
+        for row in batch_rows:
+            self.logger.log(f"Fetch {row.nsd}", level="info")
+            results.append(self.source.fetch(row))
+        return results
