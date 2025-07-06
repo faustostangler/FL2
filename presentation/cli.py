@@ -143,7 +143,7 @@ class CLIController:
         parse_uc = ParseAndClassifyStatementsUseCase(logger=self.logger)
         persist_uc = PersistStatementsUseCase(logger=self.logger, repository=statement_repo)
 
-        fetch_service = StatementFetchService(
+        statements_fetch_service = StatementFetchService(
             logger=self.logger,
             fetch_usecase=fetch_uc,
             company_repo=company_repo,
@@ -153,7 +153,7 @@ class CLIController:
             max_workers=self.config.global_settings.max_workers,
         )
 
-        raw_rows = fetch_service.run()
+        raw_rows = statements_fetch_service.run()
 
         parse_service = StatementParseService(
             logger=self.logger,

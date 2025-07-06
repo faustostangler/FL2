@@ -19,12 +19,12 @@ class NsdService:
         self.logger.log("Start NsdService", level="info")
 
         # Set up the underlying use case that performs the synchronization.
-        self.sync_usecase = SyncNSDUseCase(
+        self.sync_nsd_usecase = SyncNSDUseCase(
             logger=self.logger, repository=repository, scraper=scraper
         )
 
     def run(self) -> None:
         """Run the NSD synchronization workflow."""
         # Delegate the work to the injected use case.
-        self.sync_usecase.run()
+        self.sync_nsd_usecase.run()
         self.logger.log("Finish NsdService", level="info")
