@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from typing import Iterable, List, Set, Tuple
+from typing import List
 
 from application.usecases.fetch_statements import FetchStatementsUseCase
 from application.usecases.parse_and_classify_statements import (
     ParseAndClassifyStatementsUseCase,
 )
 from application.usecases.persist_statements import PersistStatementsUseCase
-from domain.dto import StatementDTO, WorkerTaskDTO
+from domain.dto import StatementDTO, StatementRowsDTO, WorkerTaskDTO
 from domain.dto.nsd_dto import NsdDTO
 from domain.ports import (
     CompanyRepositoryPort,
@@ -62,22 +62,25 @@ class StatementProcessingService:
 
         company_names = {c.company_name for c in company_records if c.company_name}
         nsd_company_names = {n.company_name for n in nsd_records if n.company_name}
-        common_company_names = sorted(set(company_names.intersection(nsd_company_names)))
+        common_company_names = sorted(
+            set(company_names.intersection(nsd_company_names))
+        )
 
         results = [
-                n
-                for n in nsd_records
-                if (
-                    n.nsd_type in valid_types
-                    and n.company_name in common_company_names
-                    and str(n.nsd) not in processed
-                )
-            ]
+            n
+            for n in nsd_records
+            if (
+                n.nsd_type in valid_types
+                and n.company_name in common_company_names
+                and str(n.nsd) not in processed
+            )
+        ]
 
-        results_sorted = sorted(results, key=lambda n: (n.company_name, n.quarter, n.nsd))
+        results_sorted = sorted(
+            results, key=lambda n: (n.company_name, n.quarter, n.nsd)
+        )
 
         return results_sorted
-
 
     def process_all(self, batch_nsd: List[NsdDTO]) -> None:
         """Fetch, parse, and persist statements for all batch IDs."""
@@ -92,10 +95,9 @@ class StatementProcessingService:
 
         fetch_tasks = list(enumerate(batch_nsd))
 
-        def fetch_processor(task: WorkerTaskDTO) -> tuple[NsdDTO, list[dict[str, str]]]:
+        def fetch_processor(task: WorkerTaskDTO) -> StatementRowsDTO:
             nsd_dto = task.data
-            parsed_rows = self.fetch_usecase.source.fetch(nsd_dto)
-            return (nsd_dto, parsed_rows)
+            return self.fetch_usecase.source.fetch(nsd_dto)
 
         fetch_result = fetch_pool.run(
             tasks=fetch_tasks,
@@ -113,8 +115,8 @@ class StatementProcessingService:
         parse_tasks = list(enumerate(fetch_result.items))
 
         def parse_processor(task: WorkerTaskDTO) -> List[StatementDTO]:
-            bid, html = task.data
-            return self.parse_usecase.run(bid, html)
+            dto = task.data
+            return self.parse_usecase.run(dto)
 
         parse_result = parse_pool.run(
             tasks=parse_tasks,

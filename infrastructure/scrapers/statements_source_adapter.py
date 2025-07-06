@@ -10,6 +10,7 @@ from urllib.parse import quote_plus
 from bs4 import BeautifulSoup, Tag
 
 from domain.dto.nsd_dto import NsdDTO
+from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.ports import LoggerPort, StatementSourcePort
 from infrastructure.config import Config
 from infrastructure.helpers.data_cleaner import DataCleaner
@@ -91,7 +92,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     {
                         "account": account,
                         "description": account_description,
-                        "value": (self.data_cleaner.clean_number(account_value) or 0.0) * thousand,
+                        "value": (self.data_cleaner.clean_number(account_value) or 0.0)
+                        * thousand,
                     }
                 )
 
@@ -165,8 +167,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
             print(e)
         return result
 
-    def fetch(self, row: NsdDTO) -> list[dict[str, str]]:
-        """Fetch HTML for the given NSD and return the statement page."""
+    def fetch(self, row: NsdDTO) -> StatementRowsDTO:
+        """Fetch and parse statements for the given NSD."""
         url = self.endpoint.format(nsd=row.nsd)
         start = time.perf_counter()
 
@@ -184,10 +186,16 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 response = self.fetch_utils.fetch_with_retry(self.session, item["url"])
                 soup = BeautifulSoup(response.text, "html.parser")
 
-                if "MensagemModal" in response.text or "acesse este conteúdo pela página principal dos documentos" in soup.get_text():
+                if (
+                    "MensagemModal" in response.text
+                    or "acesse este conteúdo pela página principal dos documentos"
+                    in soup.get_text()
+                ):
                     # Tenta regenerar hash, embora neste caso hash_value_retry não seja usado
-                    hash_response_retry = self.fetch_utils.fetch_with_retry(scraper=None, url=url)
-                    hash_value_retry = self._extract_hash(hash_response.text)
+                    hash_response_retry = self.fetch_utils.fetch_with_retry(
+                        scraper=None, url=url
+                    )
+                    self._extract_hash(hash_response_retry.text)
 
                     # self.logger.log(
                     #     f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} - Retry {attempt+1}',
@@ -200,12 +208,14 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 # Se todas as tentativas falharem, aborta NSD
                 self.logger.log(
                     f"{row.company_name} {quarter} {row.version} {row.nsd}... Aborted entire company quarter.",
-                    level="warning"
+                    level="warning",
                 )
-                return []
+                return StatementRowsDTO(nsd=row, rows=[])
 
-
-            self.logger.log(f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]}', level="info")
+            self.logger.log(
+                f"{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item['grupo']} {item['quadro']}",
+                level="info",
+            )
             rows = self._parse_statement_page(soup, item["grupo"])
             for r in rows:
                 r.update(
@@ -222,5 +232,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
         elapsed = time.perf_counter() - start
         quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
-        self.logger.log(f'{row.company_name} {quarter} {row.version} {row.nsd} in {elapsed:.2f}s', level="info")
-        return self.parsed_rows
+        self.logger.log(
+            f"{row.company_name} {quarter} {row.version} {row.nsd} in {elapsed:.2f}s",
+            level="info",
+        )
+        return StatementRowsDTO(nsd=row, rows=self.parsed_rows)

@@ -1,34 +1,34 @@
+"""Use case for converting raw statement rows into ``StatementDTO`` objects."""
+
 from __future__ import annotations
 
 from typing import List
 
-from bs4 import BeautifulSoup
-
-from domain.dto import StatementDTO
+from domain.dto import StatementDTO, StatementRowsDTO
 from domain.ports import LoggerPort
 from domain.utils.statement_processing import classify_section, normalize_value
 
 
 class ParseAndClassifyStatementsUseCase:
-    """Parse raw HTML and build :class:`StatementDTO` objects."""
+    """Convert parsed statement rows into :class:`StatementDTO` objects."""
 
     def __init__(self, logger: LoggerPort) -> None:
+        """Initialize with a logger instance."""
         self.logger = logger
         self.logger.log("Start ParseAndClassifyStatementsUseCase", level="info")
 
-    def run(self, batch_id: str, html: str) -> List[StatementDTO]:
-        soup = BeautifulSoup(html, "html.parser")
+    def run(self, dto: StatementRowsDTO) -> List[StatementDTO]:
+        """Build ``StatementDTO`` objects from parsed rows."""
         dtos: List[StatementDTO] = []
-        for row in soup.select("tr"):
-            cells = [c.get_text(strip=True) for c in row.find_all("td")]
-            if len(cells) < 2:
-                continue
-            account, value_raw = cells[0], cells[1]
-            dto = StatementDTO(
+        batch_id = str(dto.nsd.nsd)
+        for row in dto.rows:
+            account = str(row.get("account", ""))
+            value_raw = str(row.get("value", 0))
+            statement = StatementDTO(
                 batch_id=batch_id,
                 account=account,
                 section=classify_section(account),
                 value=normalize_value(value_raw),
             )
-            dtos.append(dto)
+            dtos.append(statement)
         return dtos
