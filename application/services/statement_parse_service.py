@@ -6,7 +6,7 @@ from application.usecases.parse_and_classify_statements import (
     ParseAndClassifyStatementsUseCase,
 )
 from domain.dto import NsdDTO, StatementDTO, StatementRowsDTO, WorkerTaskDTO
-from domain.ports import LoggerPort
+from domain.ports import LoggerPort, StatementRepositoryPort
 from infrastructure.config import Config
 from infrastructure.helpers import MetricsCollector, WorkerPool
 
@@ -17,15 +17,20 @@ class StatementParseService:
     def __init__(
         self,
         logger: LoggerPort,
-        parse_usecase: ParseAndClassifyStatementsUseCase,
+        repository: StatementRepositoryPort,
         config: Config,
         max_workers: int = 1,
     ) -> None:
         """Store dependencies for the service."""
         self.logger = logger
-        self.parse_usecase = parse_usecase
         self.config = config
         self.max_workers = max_workers
+
+        self.parse_usecase = ParseAndClassifyStatementsUseCase(
+            logger=self.logger,
+            repository=repository,
+            config=self.config,
+        )
 
         self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
