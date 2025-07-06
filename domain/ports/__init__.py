@@ -10,6 +10,7 @@ from .metrics_collector_port import MetricsCollectorPort
 from .nsd_repository_port import NSDRepositoryPort
 from .nsd_source_port import NSDSourcePort
 from .statement_repository_port import StatementRepositoryPort
+from .statement_rows_repository_port import StatementRowsRepositoryPort
 from .statement_source_port import StatementSourcePort
 from .worker_pool_port import WorkerPoolPort
 
@@ -26,4 +27,5 @@ __all__ = [
     "NSDSourcePort",
     "StatementSourcePort",
     "StatementRepositoryPort",
+    "StatementRowsRepositoryPort",
 ]
