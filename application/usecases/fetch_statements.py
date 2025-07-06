@@ -5,23 +5,31 @@ from typing import Callable, Iterable, List, Optional, Tuple
 from domain.dto.nsd_dto import NsdDTO
 from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.dto.worker_class_dto import WorkerTaskDTO
-from domain.ports import LoggerPort, StatementSourcePort
+from domain.ports import (
+    LoggerPort,
+    StatementRowsRepositoryPort,
+    StatementSourcePort,
+)
 from infrastructure.config import Config
 from infrastructure.helpers import MetricsCollector, SaveStrategy, WorkerPool
 
 
 class FetchStatementsUseCase:
-    """Retrieve raw HTML statements from the source port."""
+    """Retrieve raw statement rows and persist them for later parsing."""
 
     def __init__(
         self,
         logger: LoggerPort,
         source: StatementSourcePort,
+        repository: StatementRowsRepositoryPort,
         config: Config,
         max_workers: int = 1,
     ) -> None:
+        """Store dependencies for fetching and saving raw rows."""
+
         self.logger = logger
         self.source = source
+        self.repository = repository
         self.config = config
         self.max_workers = max_workers
 
@@ -30,9 +38,7 @@ class FetchStatementsUseCase:
     def fetch_all(
         self,
         targets: List[NsdDTO],
-        save_callback: Optional[
-            Callable[[List[Tuple[NsdDTO, List[StatementRowsDTO]]]], None]
-        ] = None,
+        save_callback: Optional[Callable[[List[StatementRowsDTO]], None]] = None,
         threshold: Optional[int] = None,
     ) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
         """Fetch statements for ``targets`` concurrently."""
@@ -58,8 +64,10 @@ class FetchStatementsUseCase:
 
         # Initialize the saving strategy that buffers results.
         self.logger.log("Instantiate strategy", level="info")
-        strategy: SaveStrategy[Tuple[NsdDTO, List[StatementRowsDTO]]] = SaveStrategy(
-            save_callback, threshold, config=self.config
+        strategy: SaveStrategy[StatementRowsDTO] = SaveStrategy(
+            save_callback or self.repository.save_all,
+            threshold,
+            config=self.config,
         )
         self.logger.log("End Instance strategy", level="info")
 
@@ -85,7 +93,8 @@ class FetchStatementsUseCase:
                     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
                     level="info",
                 )
-                strategy.handle(item)
+                for row in item[1]:
+                    strategy.handle(row)
                 self.logger.log(
                     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
                     level="info",
@@ -118,9 +127,7 @@ class FetchStatementsUseCase:
     def run(
         self,
         batch_rows: Iterable[NsdDTO],
-        save_callback: Optional[
-            Callable[[List[Tuple[NsdDTO, List[StatementRowsDTO]]]], None]
-        ] = None,
+        save_callback: Optional[Callable[[List[StatementRowsDTO]], None]] = None,
         threshold: Optional[int] = None,
     ) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
         """Execute the use case for ``batch_rows``."""
