@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Tuple
+from typing import Callable, List, Optional, Tuple
 
 from application.usecases.fetch_statements import FetchStatementsUseCase
 from domain.dto import NsdDTO, StatementRowsDTO, WorkerTaskDTO
@@ -11,7 +11,7 @@ from domain.ports import (
     StatementRepositoryPort,
 )
 from infrastructure.config import Config
-from infrastructure.helpers import MetricsCollector, WorkerPool
+from infrastructure.helpers import MetricsCollector, SaveStrategy, WorkerPool
 
 
 class StatementFetchService:
@@ -67,14 +67,33 @@ class StatementFetchService:
         return sorted(results, key=lambda n: (n.company_name, n.quarter, n.nsd))
 
     def fetch_all(
-        self, targets: List[NsdDTO]
+        self,
+        targets: List[NsdDTO],
+        save_callback: Optional[
+            Callable[[List[Tuple[NsdDTO, List[StatementRowsDTO]]]], None]
+        ] = None,
+        threshold: Optional[int] = None,
     ) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
-        """Fetch statements for ``targets`` concurrently."""
+        """Fetch statements for ``targets`` concurrently.
+
+        Parameters
+        ----------
+        targets:
+            The NSD entries to fetch.
+        save_callback:
+            Optional function to persist buffered results.
+        threshold:
+            Number of items to collect before invoking ``save_callback``.
+        """
         collector = MetricsCollector()
         pool = WorkerPool(
             config=self.config,
             metrics_collector=collector,
             max_workers=self.max_workers,
+        )
+
+        strategy: SaveStrategy[Tuple[NsdDTO, List[StatementRowsDTO]]] = SaveStrategy(
+            save_callback, threshold, config=self.config
         )
 
         tasks = list(enumerate(targets))
@@ -83,16 +102,41 @@ class StatementFetchService:
             results = self.fetch_usecase.source.fetch(task.data)
             return results
 
-        result = pool.run(tasks=tasks, processor=processor, logger=self.logger)
+        def handle_batch(item: Tuple[NsdDTO, List[StatementRowsDTO]]) -> None:
+            strategy.handle(item)
+
+        result = pool.run(
+            tasks=tasks,
+            processor=processor,
+            logger=self.logger,
+            on_result=handle_batch,
+        )
+
+        strategy.finalize()
+
         return result.items
 
-    def run(self) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
-        """Execute the fetch workflow and return raw rows."""
+    def run(
+        self,
+        save_callback: Optional[
+            Callable[[List[Tuple[NsdDTO, List[StatementRowsDTO]]]], None]
+        ] = None,
+        threshold: Optional[int] = None,
+    ) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
+        """Execute the fetch workflow and return raw rows.
+
+        Parameters
+        ----------
+        save_callback:
+            Optional function to persist buffered results.
+        threshold:
+            Number of items to collect before invoking ``save_callback``.
+        """
         targets = self._build_targets()
         if not targets:
             self.logger.log("No statements to fetch", level="info")
             return []
 
-        rows = self.fetch_all(targets)
+        rows = self.fetch_all(targets, save_callback=save_callback, threshold=threshold)
         self.logger.log("Finished StatementFetchService", level="info")
         return rows
