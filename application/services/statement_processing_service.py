@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import List
+from typing import Any, List
 
 from application.usecases.fetch_statements import FetchStatementsUseCase
 from application.usecases.parse_and_classify_statements import (
@@ -11,7 +11,6 @@ from application.usecases.parse_and_classify_statements import (
 from application.usecases.persist_statements import PersistStatementsUseCase
 from domain.dto import StatementDTO, WorkerTaskDTO
 from domain.dto.nsd_dto import NsdDTO
-from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.ports import (
     CompanyRepositoryPort,
     LoggerPort,
@@ -98,8 +97,9 @@ class StatementProcessingService:
 
         def fetch_processor(
             task: WorkerTaskDTO,
-        ) -> tuple[NsdDTO, list[StatementRowsDTO]]:
-            return self.fetch_usecase.source.fetch(task.data)
+        ) -> dict[str, Any]:
+            result = self.fetch_usecase.source.fetch(task.data)
+            return result
 
         fetch_result = fetch_pool.run(
             tasks=fetch_tasks,

@@ -8,38 +8,38 @@ from typing import Optional, Tuple
 class StatementRowsDTO:
     """Immutable DTO for parsed statement rows."""
 
+    nsd: int
+    company_name: Optional[str]
+    quarter: Optional[str]
+    version: Optional[str]
+    grupo: str
+    quadro: str
     account: str
     description: str
     value: float
-    grupo: str
-    quadro: str
-    company_name: Optional[str]
-    nsd: int
-    quarter: Optional[str]
-    version: Optional[str]
 
     @staticmethod
     def from_tuple(values: Tuple) -> "StatementRowsDTO":
         """Create a ``StatementRowsDTO`` from an ordered tuple."""
         (
-            account,
-            description,
-            value,
-            grupo,
-            quadro,
-            company_name,
             nsd,
+            company_name,
             quarter,
             version,
+            grupo,
+            quadro,
+            description,
+            account,
+            value,
         ) = values
         return StatementRowsDTO(
-            account=str(account),
-            description=str(description),
-            value=float(value),
+            nsd=int(nsd),
+            company_name=str(company_name) if company_name is not None else None,
+            version=str(version) if version is not None else None,
+            quarter=str(quarter) if quarter is not None else None,
             grupo=str(grupo),
             quadro=str(quadro),
-            company_name=str(company_name) if company_name is not None else None,
-            nsd=int(nsd),
-            quarter=str(quarter) if quarter is not None else None,
-            version=str(version) if version is not None else None,
+            description=str(description),
+            account=str(account),
+            value=float(value),
         )

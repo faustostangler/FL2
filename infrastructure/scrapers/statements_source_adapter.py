@@ -31,7 +31,6 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         self.logger.log("Start RequestsStatementSourceAdapter", level="info")
         self.endpoint = f"{self.config.exchange.nsd_endpoint}"
         self.statements_config = self.config.statements
-        self.parsed_rows: List[StatementRowsDTO] = []
 
     def _parse_statement_page(
         self, soup: BeautifulSoup, group: str
@@ -167,7 +166,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
             print(e)
         return result
 
-    def fetch(self, row: NsdDTO) -> tuple[NsdDTO, list[StatementRowsDTO]]:
+    def fetch(self, row: NsdDTO) -> dict[str, Any]:
         """Fetch statement pages for the given NSD and return parsed rows."""
         url = self.endpoint.format(nsd=row.nsd)
         start = time.perf_counter()
@@ -179,7 +178,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         nsd_items = self._build_urls(row, statement_items, hash_value)
 
         # Parse all statement pages
-        self.parsed_rows = []
+        statements_rows_dto: List[StatementRowsDTO] = []
+
         for i, item in enumerate(nsd_items):
             quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
             for attempt in range(self.config.scraping.max_attempts):
@@ -195,7 +195,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     hash_response_retry = self.fetch_utils.fetch_with_retry(
                         scraper=None, url=url
                     )
-                    hash_value_retry = self._extract_hash(hash_response.text)
+                    # hash_value_retry = self._extract_hash(hash_response.text)
 
                     # self.logger.log(
                     #     f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} - Retry {attempt+1}',
@@ -207,33 +207,40 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
             else:
                 # Se todas as tentativas falharem, aborta NSD
                 self.logger.log(
-                    f"{row.company_name} {quarter} {row.version} {row.nsd}... Aborted entire company quarter.",
+                    f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire company quarter.",
                     level="warning",
                 )
-                return row, []
+                result: dict[str, Any] = {"nsd": row, "statements": []}
+                return result
 
             self.logger.log(
-                f"{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item['grupo']} {item['quadro']}",
+                f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']}",
                 level="info",
             )
             rows = self._parse_statement_page(soup, item["grupo"])
+            parsed_rows = []
+
             for r in rows:
-                r.update(
-                    {
-                        "grupo": item["grupo"],
-                        "quadro": item["quadro"],
-                        "company_name": row.company_name,
-                        "nsd": row.nsd,
-                        "quarter": quarter,
-                        "version": row.version,
-                    }
+                dto = StatementRowsDTO(
+                    nsd=row.nsd,
+                    company_name=row.company_name,
+                    version=row.version,
+                    quarter=quarter,
+                    grupo=item["grupo"],
+                    quadro=item["quadro"],
+                    account=r["account"],
+                    description=r["description"],
+                    value=r["value"]
                 )
-            self.parsed_rows.extend([StatementRowsDTO(**r) for r in rows])
+                parsed_rows.append(dto)
+
+            statements_rows_dto.extend(parsed_rows)
 
         elapsed = time.perf_counter() - start
         quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
         self.logger.log(
-            f"{row.company_name} {quarter} {row.version} {row.nsd} in {elapsed:.2f}s",
+            f"{row.nsd} {row.company_name} {quarter} {row.version} in {elapsed:.2f}s",
             level="info",
         )
-        return row, self.parsed_rows
+        result = {"nsd": row, "statements": statements_rows_dto}
+        return result
