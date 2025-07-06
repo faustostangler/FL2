@@ -93,7 +93,7 @@ class FetchUtils:
         url: str,
         timeout: Optional[int] = None,
         insecure: bool = False,
-    ) -> requests.Response:
+    ) -> tuple[requests.Response, requests.Session]:
         """Fetch a URL, recreating the scraper when blocked."""
 
         timeout = timeout or self.config.scraping.timeout or 5
@@ -114,7 +114,7 @@ class FetchUtils:
                         #     f"Dodging server block: {_:.2f}s",
                         #     level="warning",
                         # )
-                    return response
+                    return response, scraper
             except Exception:  # noqa: BLE001
                 # Ignore network errors and retry with a new scraper
                 pass

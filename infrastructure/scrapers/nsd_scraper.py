@@ -104,7 +104,7 @@ class NsdScraper(NSDSourcePort):
             url = self.nsd_endpoint.format(nsd=nsd)
 
             try:
-                response = self.fetch_utils.fetch_with_retry(self.session, url)
+                response, self.session = self.fetch_utils.fetch_with_retry(self.session, url)
                 self.metrics_collector.record_network_bytes(len(response.content))
                 parsed = self._parse_html(nsd, response.text)
             except Exception as e:
@@ -287,7 +287,7 @@ class NsdScraper(NSDSourcePort):
         try:
             # Request the NSD page and parse its HTML
             url = self.nsd_endpoint.format(nsd=nsd)
-            response = self.fetch_utils.fetch_with_retry(self.session, url)
+            response, self.session = self.fetch_utils.fetch_with_retry(self.session, url)
             parsed = self._parse_html(nsd, response.text)
 
             # Only return results if the page contains a "sent_date" field

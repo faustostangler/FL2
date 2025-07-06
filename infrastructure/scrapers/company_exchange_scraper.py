@@ -291,7 +291,7 @@ class CompanyExchangeScraper(CompanySourcePort):
         }
         token = self._encode_payload(payload)
         url = self.endpoint_companies_list + token
-        response = self.fetch_utils.fetch_with_retry(self.session, url)
+        response, self.session = self.fetch_utils.fetch_with_retry(self.session, url)
         bytes_downloaded = len(response.content if response else b"")
         self.metrics_collector.record_network_bytes(bytes_downloaded)
         data = response.json()

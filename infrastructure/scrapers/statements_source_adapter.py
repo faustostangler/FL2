@@ -171,8 +171,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         url = self.endpoint.format(nsd=row.nsd)
         start = time.perf_counter()
 
-        hash_response = self.fetch_utils.fetch_with_retry(self.session, url)
-        hash_value = self._extract_hash(hash_response.text)
+        response, self.session = self.fetch_utils.fetch_with_retry(self.session, url)
+        hash_value = self._extract_hash(response.text)
 
         statement_items = self.config.statements.statement_items
         nsd_items = self._build_urls(row, statement_items, hash_value)
@@ -183,7 +183,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         for i, item in enumerate(nsd_items):
             quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
             for attempt in range(self.config.scraping.max_attempts):
-                response = self.fetch_utils.fetch_with_retry(self.session, item["url"])
+                response, self.session = self.fetch_utils.fetch_with_retry(self.session, item["url"])
                 soup = BeautifulSoup(response.text, "html.parser")
 
                 if (
@@ -192,7 +192,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     in soup.get_text()
                 ):
                     # Tenta regenerar hash, embora neste caso hash_value_retry não seja usado
-                    self.fetch_utils.fetch_with_retry(scraper=None, url=url)
+                    response, self.session = self.fetch_utils.fetch_with_retry(scraper=None, url=url)
                     # hash_value_retry = self._extract_hash(hash_response.text)
 
                     # self.logger.log(
@@ -201,6 +201,10 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     # )
                     TimeUtils(self.config).sleep_dynamic()
                 else:
+                    self.logger.log(
+                        f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']}",
+                        level="info",
+                    )
                     break  # Sucesso
             else:
                 # Se todas as tentativas falharem, aborta NSD
@@ -211,10 +215,6 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 result: dict[str, Any] = {"nsd": row, "statements": []}
                 return result
 
-            self.logger.log(
-                f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']}",
-                level="info",
-            )
             rows = self._parse_statement_page(soup, item["grupo"])
             parsed_rows = []
 
@@ -222,8 +222,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 dto = StatementRowsDTO(
                     nsd=row.nsd,
                     company_name=row.company_name,
-                    version=row.version,
                     quarter=quarter,
+                    version=row.version,
                     grupo=item["grupo"],
                     quadro=item["quadro"],
                     account=r["account"],

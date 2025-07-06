@@ -22,24 +22,24 @@ class StatementRowsDTO:
     def from_tuple(values: Tuple) -> "StatementRowsDTO":
         """Create a ``StatementRowsDTO`` from an ordered tuple."""
         (
+            nsd,
+            company_name,
+            quarter,
+            version,
+            grupo,
+            quadro,
             account,
             description,
             value,
-            grupo,
-            quadro,
-            company_name,
-            nsd,
-            quarter,
-            version,
         ) = values
         return StatementRowsDTO(
             nsd=int(nsd),
             company_name=str(company_name) if company_name is not None else None,
-            version=str(version) if version is not None else None,
             quarter=str(quarter) if quarter is not None else None,
+            version=str(version) if version is not None else None,
             grupo=str(grupo),
             quadro=str(quadro),
-            description=str(description),
             account=str(account),
+            description=str(description),
             value=float(value),
         )
