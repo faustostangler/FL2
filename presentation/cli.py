@@ -3,9 +3,8 @@
 from application import CompanyMapper
 from application.services.company_service import CompanyService
 from application.services.nsd_service import NsdService
-from application.services.statement_processing_service import (
-    StatementProcessingService,
-)
+from application.services.statement_fetch_service import StatementFetchService
+from application.services.statement_parse_service import StatementParseService
 from application.usecases import (
     FetchStatementsUseCase,
     ParseAndClassifyStatementsUseCase,
@@ -64,7 +63,9 @@ class CLIController:
         self.logger.log("Start Companies Sync Use Case", level="info")
 
         # Create repository for persistent storage.
-        company_repo = SqlAlchemyCompanyRepository(config=self.config, logger=self.logger)
+        company_repo = SqlAlchemyCompanyRepository(
+            config=self.config, logger=self.logger
+        )
         # Mapper transforms scraped data into DTOs.
         mapper = CompanyMapper(self.data_cleaner)
         # Collector gathers metrics for the worker pool.
@@ -129,24 +130,22 @@ class CLIController:
         self.logger.log("Start Statement Sync Use Case", level="info")
 
         repo = SqlAlchemyStatementRepository(config=self.config, logger=self.logger)
-        company_repo = SqlAlchemyCompanyRepository(config=self.config, logger=self.logger)
+        company_repo = SqlAlchemyCompanyRepository(
+            config=self.config, logger=self.logger
+        )
         nsd_repo = SqlAlchemyNsdRepository(config=self.config, logger=self.logger)
 
         source = RequestsStatementSourceAdapter(
-            config=self.config,
-            logger=self.logger,
-            data_cleaner=self.data_cleaner
+            config=self.config, logger=self.logger, data_cleaner=self.data_cleaner
         )
 
         fetch_uc = FetchStatementsUseCase(logger=self.logger, source=source)
         parse_uc = ParseAndClassifyStatementsUseCase(logger=self.logger)
         persist_uc = PersistStatementsUseCase(logger=self.logger, repository=repo)
 
-        service = StatementProcessingService(
+        fetch_service = StatementFetchService(
             logger=self.logger,
             fetch_usecase=fetch_uc,
-            parse_usecase=parse_uc,
-            persist_usecase=persist_uc,
             company_repo=company_repo,
             nsd_repo=nsd_repo,
             statement_repo=repo,
@@ -154,6 +153,16 @@ class CLIController:
             max_workers=self.config.global_settings.max_workers,
         )
 
-        service.run()
+        raw_rows = fetch_service.run()
+
+        parse_service = StatementParseService(
+            logger=self.logger,
+            parse_usecase=parse_uc,
+            persist_usecase=persist_uc,
+            config=self.config,
+            max_workers=self.config.global_settings.max_workers,
+        )
+
+        parse_service.run(raw_rows)
 
         self.logger.log("Finish Statement Sync Use Case", level="info")

@@ -22,15 +22,15 @@ class StatementRowsDTO:
     def from_tuple(values: Tuple) -> "StatementRowsDTO":
         """Create a ``StatementRowsDTO`` from an ordered tuple."""
         (
-            nsd,
-            company_name,
-            quarter,
-            version,
+            account,
+            description,
+            value,
             grupo,
             quadro,
-            description,
-            account,
-            value,
+            company_name,
+            nsd,
+            quarter,
+            version,
         ) = values
         return StatementRowsDTO(
             nsd=int(nsd),
