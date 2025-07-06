@@ -17,18 +17,18 @@ def test_nsd_dto_invalid_nsd():
         NsdDTO.from_dict({"nsd": "not_a_number"})
 
 
-def test_statement_rows_dto_from_tuple():
-    tpl = (
-        "00.01.01",
-        "A\u00e7\u00f5es ON Circulacao",
-        113548407.0,
-        "Dados da Empresa",
-        "Composi\u00e7\u00e3o do Capital",
-        "2W ECOBANK SA",
-        102395,
-        "2020-12-31",
-        "V1",
-    )
-    dto = StatementRowsDTO.from_tuple(tpl)
+def test_statement_rows_dto_from_dict():
+    raw = {
+        "account": "00.01.01",
+        "description": "A\u00e7\u00f5es ON Circulacao",
+        "value": 113548407.0,
+        "grupo": "Dados da Empresa",
+        "quadro": "Composi\u00e7\u00e3o do Capital",
+        "company_name": "2W ECOBANK SA",
+        "nsd": 102395,
+        "quarter": "2020-12-31",
+        "version": "V1",
+    }
+    dto = StatementRowsDTO.from_dict(raw)
     assert dto.account == "00.01.01"
     assert dto.nsd == 102395
