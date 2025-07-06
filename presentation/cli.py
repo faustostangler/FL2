@@ -129,7 +129,9 @@ class CLIController:
         """Build and run the statement processing workflow."""
         self.logger.log("Start Statement Sync Use Case", level="info")
 
-        statement_repo = SqlAlchemyStatementRepository(config=self.config, logger=self.logger)
+        statement_repo = SqlAlchemyStatementRepository(
+            config=self.config, logger=self.logger
+        )
         company_repo = SqlAlchemyCompanyRepository(
             config=self.config, logger=self.logger
         )
@@ -139,9 +141,16 @@ class CLIController:
             config=self.config, logger=self.logger, data_cleaner=self.data_cleaner
         )
 
-        fetch_uc = FetchStatementsUseCase(logger=self.logger, source=source)
+        fetch_uc = FetchStatementsUseCase(
+            logger=self.logger,
+            source=source,
+            config=self.config,
+            max_workers=self.config.global_settings.max_workers,
+        )
         parse_uc = ParseAndClassifyStatementsUseCase(logger=self.logger)
-        persist_uc = PersistStatementsUseCase(logger=self.logger, repository=statement_repo)
+        persist_uc = PersistStatementsUseCase(
+            logger=self.logger, repository=statement_repo
+        )
 
         statements_fetch_service = StatementFetchService(
             logger=self.logger,
