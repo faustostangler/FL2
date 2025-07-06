@@ -42,11 +42,13 @@ class FetchStatementsUseCase:
             level="info",
         )
 
-        self.logger.log("Instanciate collector", level="info")
+        # Set up a metrics collector to track progress.
+        self.logger.log("Instantiate collector", level="info")
         collector = MetricsCollector()
         self.logger.log("End Instance collector", level="info")
 
-        self.logger.log("Instanciate worker_pool", level="info")
+        # Create the worker pool responsible for parallel fetching.
+        self.logger.log("Instantiate worker_pool", level="info")
         worker_pool = WorkerPool(
             config=self.config,
             metrics_collector=collector,
@@ -54,12 +56,14 @@ class FetchStatementsUseCase:
         )
         self.logger.log("End Instance worker_pool", level="info")
 
-        self.logger.log("Instanciate strategy", level="info")
+        # Initialize the saving strategy that buffers results.
+        self.logger.log("Instantiate strategy", level="info")
         strategy: SaveStrategy[Tuple[NsdDTO, List[StatementRowsDTO]]] = SaveStrategy(
             save_callback, threshold, config=self.config
         )
         self.logger.log("End Instance strategy", level="info")
 
+        # Pair each target with its index for worker pool processing.
         tasks = list(enumerate(targets))
 
         def processor(task: WorkerTaskDTO) -> Tuple[NsdDTO, List[StatementRowsDTO]]:
@@ -67,21 +71,36 @@ class FetchStatementsUseCase:
                 "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()",
                 level="info",
             )
+# <<<<<<< codex/double-check-result-handling-in-strategy-and-save-method
             fetched = self.source.fetch(task.data)
+# =======
+#             results = self.source.fetch(task.data)
+# >>>>>>> 2025-07-03-Statements-Round-1
             self.logger.log(
                 "End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()",
                 level="info",
             )
 
+# <<<<<<< codex/double-check-result-handling-in-strategy-and-save-method
             return fetched["nsd"], fetched["statements"]
 
         def handle_batch(item: Tuple[NsdDTO, List[StatementRowsDTO]]) -> None:
             if item[1]:
+# =======
+#             return results
+
+#         def handle_batch(item: Tuple[NsdDTO, List[StatementRowsDTO]]) -> None:
+#             if item["statements"]:
+# >>>>>>> 2025-07-03-Statements-Round-1
                 self.logger.log(
                     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
                     level="info",
                 )
+# <<<<<<< codex/double-check-result-handling-in-strategy-and-save-method
                 strategy.handle(item)
+# =======
+#                 strategy.handle(item["statements"])
+# >>>>>>> 2025-07-03-Statements-Round-1
                 self.logger.log(
                     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
                     level="info",

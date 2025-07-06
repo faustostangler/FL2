@@ -68,10 +68,26 @@ class StatementParseService:
 
     def run(self, fetched: List[Tuple[NsdDTO, List[StatementRowsDTO]]]) -> None:
         """Parse and persist statements from ``fetched`` rows."""
+        self.logger.log("Run  Method statement_parse_service.run()", level="info")
+
         if not fetched:
             self.logger.log("No statements to parse", level="info")
             return
 
+        self.logger.log(
+            "Call Method statement_parse_service._parse_all()", level="info"
+        )
         parsed = self._parse_all(fetched)
+        self.logger.log(
+            "End  Method statement_parse_service._parse_all()", level="info"
+        )
+
+        self.logger.log(
+            "Call Method statement_parse_service._persist_all()", level="info"
+        )
         self._persist_all(parsed)
-        self.logger.log("Finished StatementParseService", level="info")
+        self.logger.log(
+            "End  Method statement_parse_service._persist_all()", level="info"
+        )
+
+        self.logger.log("End  Method statement_parse_service.run()", level="info")
