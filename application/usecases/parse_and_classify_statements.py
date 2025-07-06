@@ -1,12 +1,9 @@
 from __future__ import annotations
 
-from typing import List
-
-from bs4 import BeautifulSoup
-
 from domain.dto import StatementDTO
+from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.ports import LoggerPort
-from domain.utils.statement_processing import classify_section, normalize_value
+from domain.utils.statement_processing import classify_section
 
 
 class ParseAndClassifyStatementsUseCase:
@@ -16,19 +13,13 @@ class ParseAndClassifyStatementsUseCase:
         self.logger = logger
         self.logger.log("Start ParseAndClassifyStatementsUseCase", level="info")
 
-    def run(self, batch_id: str, html: str) -> List[StatementDTO]:
-        soup = BeautifulSoup(html, "html.parser")
-        dtos: List[StatementDTO] = []
-        for row in soup.select("tr"):
-            cells = [c.get_text(strip=True) for c in row.find_all("td")]
-            if len(cells) < 2:
-                continue
-            account, value_raw = cells[0], cells[1]
-            dto = StatementDTO(
-                batch_id=batch_id,
-                account=account,
-                section=classify_section(account),
-                value=normalize_value(value_raw),
-            )
-            dtos.append(dto)
-        return dtos
+    def run(self, row: StatementRowsDTO) -> StatementDTO:
+        """Build a :class:`StatementDTO` from a statement row."""
+        return StatementDTO(
+            batch_id=str(row.nsd),
+            account=row.account,
+            section=classify_section(row.account),
+            value=float(row.value),
+            company=row.company_name,
+            period=row.quarter,
+        )
