@@ -56,6 +56,7 @@ The CLI invokes the application services to synchronize companies and NSD record
 - `sync_nsd` – Download sequential document information.
 - `fetch_statements` – Retrieve raw statement pages.
 - `parse_statements` – Convert stored pages into structured records.
+- See `STATEMENTS_PIPELINE.md` for a high level overview of this flow.
 
 Services are started from `presentation/cli.py` when you execute `run.py`.
 

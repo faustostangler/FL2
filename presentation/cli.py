@@ -18,6 +18,7 @@ from infrastructure.repositories import (
     SqlAlchemyCompanyRepository,
     SqlAlchemyNsdRepository,
     SqlAlchemyStatementRepository,
+    SqlAlchemyStatementRowsRepository,
 )
 from infrastructure.scrapers.company_exchange_scraper import CompanyExchangeScraper
 from infrastructure.scrapers.nsd_scraper import NsdScraper
@@ -220,6 +221,12 @@ class CLIController:
         )
         self.logger.log("End Instance statement_repo", level="info")
 
+        self.logger.log("Instantiate statement_raw_repo", level="info")
+        statement_raw_repo = SqlAlchemyStatementRowsRepository(
+            config=self.config, logger=self.logger
+        )
+        self.logger.log("End Instance statement_raw_repo", level="info")
+
         self.logger.log("Instantiate source", level="info")
         source = RequestsStatementSourceAdapter(
             config=self.config, logger=self.logger, data_cleaner=self.data_cleaner
@@ -230,6 +237,7 @@ class CLIController:
         fetch_uc = FetchStatementsUseCase(
             logger=self.logger,
             source=source,
+            repository=statement_raw_repo,
             config=self.config,
             max_workers=self.config.global_settings.max_workers,
         )
