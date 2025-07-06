@@ -71,21 +71,36 @@ class FetchStatementsUseCase:
                 "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()",
                 level="info",
             )
-            results = self.source.fetch(task.data)
+# <<<<<<< codex/double-check-result-handling-in-strategy-and-save-method
+            fetched = self.source.fetch(task.data)
+# =======
+#             results = self.source.fetch(task.data)
+# >>>>>>> 2025-07-03-Statements-Round-1
             self.logger.log(
                 "End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()",
                 level="info",
             )
 
-            return results
+# <<<<<<< codex/double-check-result-handling-in-strategy-and-save-method
+            return fetched["nsd"], fetched["statements"]
 
         def handle_batch(item: Tuple[NsdDTO, List[StatementRowsDTO]]) -> None:
-            if item["statements"]:
+            if item[1]:
+# =======
+#             return results
+
+#         def handle_batch(item: Tuple[NsdDTO, List[StatementRowsDTO]]) -> None:
+#             if item["statements"]:
+# >>>>>>> 2025-07-03-Statements-Round-1
                 self.logger.log(
                     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
                     level="info",
                 )
-                strategy.handle(item["statements"])
+# <<<<<<< codex/double-check-result-handling-in-strategy-and-save-method
+                strategy.handle(item)
+# =======
+#                 strategy.handle(item["statements"])
+# >>>>>>> 2025-07-03-Statements-Round-1
                 self.logger.log(
                     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
                     level="info",
