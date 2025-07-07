@@ -53,7 +53,7 @@ class SqlAlchemyStatementRowsRepository(
         session = self.Session()
         try:
             return (
-                session.query(StatementRowsModel).filter_by(id=int(identifier)).first()
+                session.query(StatementRowsModel).filter_by(nsd=int(identifier)).first()
                 is not None
             )
         finally:
@@ -62,7 +62,7 @@ class SqlAlchemyStatementRowsRepository(
     def get_by_id(self, id: str) -> StatementRowsDTO:
         session = self.Session()
         try:
-            obj = session.query(StatementRowsModel).filter_by(id=int(id)).first()
+            obj = session.query(StatementRowsModel).filter_by(nsd=int(id)).first()
             if not obj:
                 raise ValueError(f"Raw statement not found: {id}")
             return obj.to_dto()
@@ -72,7 +72,7 @@ class SqlAlchemyStatementRowsRepository(
     def get_all_primary_keys(self) -> set[str]:
         session = self.Session()
         try:
-            ids = session.query(StatementRowsModel.id).distinct().all()
+            ids = session.query(StatementRowsModel.nsd).distinct().all()
             return {str(row[0]) for row in ids if row[0] is not None}
         finally:
             session.close()

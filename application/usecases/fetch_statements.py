@@ -141,12 +141,17 @@ class FetchStatementsUseCase:
         if not targets:
             return []
 
+        existing = self.repository.get_all_primary_keys()
+        to_fetch = [t for t in targets if str(t.nsd) not in existing]
+        if not to_fetch:
+            return []
+
         self.logger.log(
             "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all(save_callback, threshold)",
             level="info",
         )
         results = self.fetch_all(
-            targets=targets,
+            targets=to_fetch,
             save_callback=save_callback,
             threshold=threshold,
         )
