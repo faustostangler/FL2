@@ -25,7 +25,7 @@ class StatementRowsModel(BaseModel):
         ),
     )
 
-    nsd: Mapped[int] = mapped_column(primary_key=True)
+    nsd: Mapped[str] = mapped_column(primary_key=True)
     company_name: Mapped[str | None] = mapped_column(primary_key=True)
     quarter: Mapped[str | None] = mapped_column(primary_key=True)
     version: Mapped[str | None] = mapped_column(primary_key=True)

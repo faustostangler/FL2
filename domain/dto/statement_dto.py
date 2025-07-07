@@ -8,21 +8,27 @@ from typing import Optional
 class StatementDTO:
     """Immutable representation of a financial statement row."""
 
-    batch_id: str
+    nsd: str
+    company_name: Optional[str]
+    quarter: Optional[str]
+    version: Optional[str]
+    grupo: str
+    quadro: str
     account: str
-    section: str
+    description: str
     value: float
-    company: Optional[str] = None
-    period: Optional[str] = None
 
     @staticmethod
     def from_dict(raw: dict) -> "StatementDTO":
         """Create ``StatementDTO`` from a raw dictionary."""
         return StatementDTO(
-            batch_id=str(raw.get("batch_id", "")),
+            nsd=str(raw.get("nsd", 0)),
+            company_name=raw.get("company_name"),
+            quarter=raw.get("quarter"),
+            version=raw.get("version"),
+            grupo=str(raw.get("grupo", "")),
+            quadro=str(raw.get("quadro", "")),
             account=str(raw.get("account", "")),
-            section=str(raw.get("section", "")),
+            description=str(raw.get("description", "")),
             value=float(raw.get("value", 0.0)),
-            company=raw.get("company"),
-            period=raw.get("period"),
         )

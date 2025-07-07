@@ -11,7 +11,7 @@ from typing import Optional
 class NsdDTO:
     """Structured NSD data extracted from the exchange."""
 
-    nsd: int
+    nsd: str
     company_name: Optional[str]
     quarter: Optional[datetime]
     version: Optional[str]
@@ -29,7 +29,7 @@ class NsdDTO:
         """
         # Map raw keys directly to the immutable dataclass fields
         return NsdDTO(
-            nsd=int(raw.get("nsd", 0)),
+            nsd=str(raw.get("nsd", 0)),
             company_name=raw.get("company_name"),
             quarter=raw.get("quarter"),
             version=raw.get("version"),

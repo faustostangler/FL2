@@ -31,7 +31,7 @@ class BaseRepositoryPort(ABC, Generic[T]):
         """Retrieve an item by its identifier."""
         raise NotImplementedError
 
-    @abstractmethod
-    def get_all_primary_keys(self) -> Set[str]:
-        """Return all stored CVM codes."""
-        raise NotImplementedError
+    # @abstractmethod
+    # def get_all_primary_keys(self) -> Set[str]:
+    #     """Return all stored CVM codes."""
+    #     raise NotImplementedError

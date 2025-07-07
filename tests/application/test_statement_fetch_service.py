@@ -33,7 +33,7 @@ def test_run_calls_usecase(monkeypatch):
     service = StatementFetchService(
         logger=DummyLogger(),
         source=source,
-        rows_repository=rows_repo,
+        statements_rows_repository=rows_repo,
         company_repo=company_repo,
         nsd_repo=nsd_repo,
         statement_repo=stmt_repo,

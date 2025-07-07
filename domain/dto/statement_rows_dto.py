@@ -8,7 +8,7 @@ from typing import Optional
 class StatementRowsDTO:
     """Immutable DTO for parsed statement rows."""
 
-    nsd: int
+    nsd: str
     company_name: Optional[str]
     quarter: Optional[str]
     version: Optional[str]
@@ -21,9 +21,8 @@ class StatementRowsDTO:
     @staticmethod
     def from_dict(raw: dict) -> "StatementRowsDTO":
         """Create a ``StatementRowsDTO`` from a raw dictionary."""
-
         return StatementRowsDTO(
-            nsd=int(raw.get("nsd", 0)),
+            nsd=str(raw.get("nsd", "0")),
             company_name=raw.get("company_name"),
             quarter=raw.get("quarter"),
             version=raw.get("version"),

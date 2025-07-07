@@ -16,7 +16,7 @@ class NSDModel(BaseModel):
 
     __tablename__ = "tbl_nsd"
 
-    nsd: Mapped[int] = mapped_column(primary_key=True)
+    nsd: Mapped[str] = mapped_column(primary_key=True)
     company_name: Mapped[Optional[str]] = mapped_column()
     quarter: Mapped[Optional[datetime]] = mapped_column(DateTime)
     version: Mapped[Optional[str]] = mapped_column()

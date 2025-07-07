@@ -22,7 +22,7 @@ class FetchStatementsUseCase:
         self,
         logger: LoggerPort,
         source: StatementSourcePort,
-        repository: StatementRowsRepositoryPort,
+        statements_rows_repository: StatementRowsRepositoryPort,
         statement_repository: StatementRepositoryPort,
         config: Config,
         max_workers: int = 1,
@@ -31,7 +31,7 @@ class FetchStatementsUseCase:
 
         self.logger = logger
         self.source = source
-        self.repository = repository
+        self.statements_rows_repository = statements_rows_repository
         self.statement_repository = statement_repository
         self.config = config
         self.max_workers = max_workers
@@ -68,7 +68,7 @@ class FetchStatementsUseCase:
         # Initialize the saving strategy that buffers results.
         self.logger.log("Instantiate strategy", level="info")
         strategy: SaveStrategy[StatementRowsDTO] = SaveStrategy(
-            save_callback or self.repository.save_all,
+            save_callback or self.statements_rows_repository.save_all,
             threshold,
             config=self.config,
         )
@@ -144,17 +144,12 @@ class FetchStatementsUseCase:
         if not targets:
             return []
 
-        existing = self.statement_repository.get_all_primary_keys()
-        to_fetch = [t for t in targets if str(t.nsd) not in existing]
-        if not to_fetch:
-            return []
-
         self.logger.log(
             "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all(save_callback, threshold)",
             level="info",
         )
         results = self.fetch_all(
-            targets=to_fetch,
+            targets=targets,
             save_callback=save_callback,
             threshold=threshold,
         )

@@ -237,7 +237,7 @@ class CLIController:
         statements_fetch_service = StatementFetchService(
             logger=self.logger,
             source=source,
-            rows_repository=raw_rows_repo,
+            statements_rows_repository=raw_rows_repo,
             company_repo=company_repo,
             nsd_repo=nsd_repo,
             statement_repo=statement_repo,

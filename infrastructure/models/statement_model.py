@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from domain.dto.statement_dto import StatementDTO
@@ -11,32 +12,52 @@ class StatementModel(BaseModel):
     """ORM model for financial statements."""
 
     __tablename__ = "tbl_statements"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "nsd",
+            "company_name",
+            "quarter",
+            "version",
+            "grupo",
+            "quadro",
+            "account",
+            name="pk_raw_statements",
+        ),
+    )
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    batch_id: Mapped[str] = mapped_column()
-    account: Mapped[str] = mapped_column()
-    section: Mapped[str] = mapped_column()
+    nsd: Mapped[str] = mapped_column(primary_key=True)
+    company_name: Mapped[str | None] = mapped_column(primary_key=True)
+    quarter: Mapped[str | None] = mapped_column(primary_key=True)
+    version: Mapped[str | None] = mapped_column(primary_key=True)
+    grupo: Mapped[str] = mapped_column(primary_key=True)
+    quadro: Mapped[str] = mapped_column(primary_key=True)
+    account: Mapped[str] = mapped_column(primary_key=True)
+    description: Mapped[str] = mapped_column()
     value: Mapped[float] = mapped_column()
-    company: Mapped[str | None] = mapped_column()
-    period: Mapped[str | None] = mapped_column()
 
     @staticmethod
     def from_dto(dto: StatementDTO) -> "StatementModel":
         return StatementModel(
-            batch_id=dto.batch_id,
+            nsd=dto.nsd,
+            company_name=dto.company_name,
+            quarter=dto.quarter,
+            version=dto.version,
+            grupo=dto.grupo,
+            quadro=dto.quadro,
             account=dto.account,
-            section=dto.section,
+            description=dto.description,
             value=dto.value,
-            company=dto.company,
-            period=dto.period,
         )
 
     def to_dto(self) -> StatementDTO:
         return StatementDTO(
-            batch_id=self.batch_id,
+            nsd=self.nsd,
+            company_name=self.company_name,
+            quarter=self.quarter,
+            version=self.version,
+            grupo=self.grupo,
+            quadro=self.quadro,
             account=self.account,
-            section=self.section,
+            description=self.description,
             value=self.value,
-            company=self.company,
-            period=self.period,
         )

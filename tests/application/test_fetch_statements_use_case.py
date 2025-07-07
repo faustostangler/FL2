@@ -10,7 +10,7 @@ from domain.ports import (
 from tests.conftest import DummyConfig, DummyLogger
 
 
-def _make_nsd(nsd: int) -> NsdDTO:
+def _make_nsd(nsd: str) -> NsdDTO:
     return NsdDTO(
         nsd=nsd,
         company_name=None,

@@ -22,7 +22,7 @@ class StatementFetchService:
         self,
         logger: LoggerPort,
         source: StatementSourcePort,
-        rows_repository: StatementRowsRepositoryPort,
+        statements_rows_repository: StatementRowsRepositoryPort,
         company_repo: CompanyRepositoryPort,
         nsd_repo: NSDRepositoryPort,
         statement_repo: StatementRepositoryPort,
@@ -31,7 +31,7 @@ class StatementFetchService:
     ) -> None:
         """Store dependencies for the service."""
         self.logger = logger
-        self.rows_repository = rows_repository
+        self.statements_rows_repository = statements_rows_repository
         self.company_repo = company_repo
         self.nsd_repo = nsd_repo
         self.statement_repo = statement_repo
@@ -41,7 +41,7 @@ class StatementFetchService:
         self.fetch_usecase = FetchStatementsUseCase(
             logger=self.logger,
             source=source,
-            repository=rows_repository,
+            statements_rows_repository=statements_rows_repository,
             statement_repository=statement_repo,
             config=self.config,
             max_workers=self.max_workers,
@@ -61,7 +61,7 @@ class StatementFetchService:
         if not company_records or not nsd_records:
             return []
 
-        processed = self.statement_repo.get_all_primary_keys()
+        processed = self.statements_rows_repository.get_existing_by_column(column_name='nsd')
         valid_types = set(self.config.domain.statements_types)
 
         company_names = {c.company_name for c in company_records if c.company_name}
@@ -80,6 +80,15 @@ class StatementFetchService:
             )
         ]
 
+        full_results = [
+            n
+            for n in nsd_records
+            if (
+                n.nsd_type in valid_types
+                and n.company_name in common_company_names
+            )
+        ]
+        self.logger.log(f"results: {len(results)} full_results: {len(full_results)}")
         self.logger.log(
             "End  Method controller.run()._statement_service().statements_fetch_service.run()._build_targets()",
             level="info",
@@ -128,7 +137,7 @@ class StatementFetchService:
             level="info",
         )
         rows = self.fetch_usecase.run(
-            targets,
+            batch_rows=targets,
             save_callback=save_callback,
             threshold=threshold,
         )

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List
+from typing import Any, List, Set
 
 from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.ports import LoggerPort, StatementRowsRepositoryPort
@@ -72,7 +72,67 @@ class SqlAlchemyStatementRowsRepository(
     def get_all_primary_keys(self) -> set[str]:
         session = self.Session()
         try:
-            ids = session.query(StatementRowsModel.id).distinct().all()
-            return {str(row[0]) for row in ids if row[0] is not None}
+            rows = session.query(StatementRowsModel.nsd).distinct().all()
+            results = {row[0] for row in rows if row[0] is not None}
+            return results
+        finally:
+            session.close()
+
+    def get_by_key(
+        self,
+        nsd: str,
+        company_name: str,
+        quarter: str,
+        version: str,
+        grupo: str,
+        quadro: str,
+        account: str,
+    ) -> StatementRowsDTO:
+        """
+        Return exactly one raw row matching the full composite key.
+        Raises if not found.
+        """
+        session = self.Session()
+        try:
+            model = session.query(StatementRowsModel).get({
+                "nsd": nsd,
+                "company_name": company_name,
+                "quarter": quarter,
+                "version": version,
+                "grupo": grupo,
+                "quadro": quadro,
+                "account": account,
+            })
+            if model is None:
+                raise ValueError(f"No raw statement for key {nsd}, {company_name}, …")
+            return model.to_dto()
+        finally:
+            session.close()
+
+    def get_by_column(self, column_name: str, value: Any) -> List[StatementRowsDTO]:
+        """
+        Return all raw rows where `column_name == value`.
+        """
+        session = self.Session()
+        try:
+            # Dynamically get the column attribute from the model
+            column_attr = getattr(StatementRowsModel, column_name)
+            models = session.query(StatementRowsModel).filter(column_attr == value).all()
+            return [m.to_dto() for m in models]
+        finally:
+            session.close()
+
+    def get_existing_by_column(self, column_name: str) -> Set[Any]:
+        """
+        Return the distinct values for the given column in tbl_raw_statements.
+        e.g. repo.get_existing_by_column("nsd") -> {94790, 12345, …}
+        """
+        session = self.Session()
+        try:
+            # dynamically access the ORM attribute
+            column_attr = getattr(StatementRowsModel, column_name)
+            rows = session.query(column_attr).distinct().all()
+            results = {row[0] for row in rows if row[0] is not None}
+            return results
         finally:
             session.close()

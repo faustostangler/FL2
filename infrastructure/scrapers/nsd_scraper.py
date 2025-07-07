@@ -201,7 +201,7 @@ class NsdScraper(NSDSourcePort):
 
         return ExecutionResultDTO(items=results, metrics=exec_result.metrics)
 
-    def _parse_html(self, nsd: int, html: str) -> Dict:
+    def _parse_html(self, nsd: str, html: str) -> Dict:
         """Parse NSD HTML into a dictionary."""
         soup = BeautifulSoup(html, "html.parser")
 
@@ -325,7 +325,7 @@ class NsdScraper(NSDSourcePort):
 
         return nsd_low
 
-    def _try_nsd(self, nsd: int) -> Optional[dict]:
+    def _try_nsd(self, nsd: str) -> Optional[dict]:
         """Attempt to fetch and parse a single NSD page."""
         try:
             # Request the NSD page and parse its HTML
