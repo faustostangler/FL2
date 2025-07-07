@@ -19,8 +19,17 @@ class SqlAlchemyStatementRowsRepository(
         self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def save_all(self, items: List[StatementRowsDTO]) -> None:
+        def _flatten(seq):
+            for elem in seq:
+                if isinstance(elem, list):
+                    yield from _flatten(elem)
+                else:
+                    yield elem
+
         session = self.Session()
+
         try:
+            items = list(_flatten(items))
             for dto in items:
                 session.merge(StatementRowsModel.from_dto(dto))
             session.commit()

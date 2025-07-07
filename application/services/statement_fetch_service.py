@@ -31,6 +31,7 @@ class StatementFetchService:
     ) -> None:
         """Store dependencies for the service."""
         self.logger = logger
+        self.rows_repository = rows_repository
         self.company_repo = company_repo
         self.nsd_repo = nsd_repo
         self.statement_repo = statement_repo
@@ -120,6 +121,7 @@ class StatementFetchService:
         if not targets:
             self.logger.log("No statements to fetch", level="info")
             return []
+
 
         self.logger.log(
             "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",

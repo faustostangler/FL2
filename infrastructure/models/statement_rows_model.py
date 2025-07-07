@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from sqlalchemy import PrimaryKeyConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from domain.dto.statement_rows_dto import StatementRowsDTO
@@ -11,15 +12,26 @@ class StatementRowsModel(BaseModel):
     """ORM model for raw statement rows."""
 
     __tablename__ = "tbl_raw_statements"
+    __table_args__ = (
+        PrimaryKeyConstraint(
+            "nsd",
+            "company_name",
+            "quarter",
+            "version",
+            "grupo",
+            "quadro",
+            "account",
+            name="pk_raw_statements",
+        ),
+    )
 
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    nsd: Mapped[int] = mapped_column()
-    company_name: Mapped[str | None] = mapped_column()
-    quarter: Mapped[str | None] = mapped_column()
-    version: Mapped[str | None] = mapped_column()
-    grupo: Mapped[str] = mapped_column()
-    quadro: Mapped[str] = mapped_column()
-    account: Mapped[str] = mapped_column()
+    nsd: Mapped[int] = mapped_column(primary_key=True)
+    company_name: Mapped[str | None] = mapped_column(primary_key=True)
+    quarter: Mapped[str | None] = mapped_column(primary_key=True)
+    version: Mapped[str | None] = mapped_column(primary_key=True)
+    grupo: Mapped[str] = mapped_column(primary_key=True)
+    quadro: Mapped[str] = mapped_column(primary_key=True)
+    account: Mapped[str] = mapped_column(primary_key=True)
     description: Mapped[str] = mapped_column()
     value: Mapped[float] = mapped_column()
 
