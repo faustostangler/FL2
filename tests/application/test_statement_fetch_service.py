@@ -45,6 +45,7 @@ def test_run_calls_usecase(monkeypatch):
         logger=service.logger,
         source=source,
         repository=rows_repo,
+        statement_repository=stmt_repo,
         config=dummy_config,
         max_workers=3,
     )
