@@ -7,6 +7,7 @@ from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.dto.worker_class_dto import WorkerTaskDTO
 from domain.ports import (
     LoggerPort,
+    StatementRepositoryPort,
     StatementRowsRepositoryPort,
     StatementSourcePort,
 )
@@ -22,6 +23,7 @@ class FetchStatementsUseCase:
         logger: LoggerPort,
         source: StatementSourcePort,
         repository: StatementRowsRepositoryPort,
+        statement_repository: StatementRepositoryPort,
         config: Config,
         max_workers: int = 1,
     ) -> None:
@@ -30,6 +32,7 @@ class FetchStatementsUseCase:
         self.logger = logger
         self.source = source
         self.repository = repository
+        self.statement_repository = statement_repository
         self.config = config
         self.max_workers = max_workers
 
@@ -141,12 +144,17 @@ class FetchStatementsUseCase:
         if not targets:
             return []
 
+        existing = self.statement_repository.get_all_primary_keys()
+        to_fetch = [t for t in targets if str(t.nsd) not in existing]
+        if not to_fetch:
+            return []
+
         self.logger.log(
             "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all(save_callback, threshold)",
             level="info",
         )
         results = self.fetch_all(
-            targets=targets,
+            targets=to_fetch,
             save_callback=save_callback,
             threshold=threshold,
         )

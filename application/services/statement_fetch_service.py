@@ -42,6 +42,7 @@ class StatementFetchService:
             logger=self.logger,
             source=source,
             repository=rows_repository,
+            statement_repository=statement_repo,
             config=self.config,
             max_workers=self.max_workers,
         )
@@ -121,7 +122,6 @@ class StatementFetchService:
         if not targets:
             self.logger.log("No statements to fetch", level="info")
             return []
-
 
         self.logger.log(
             "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",
