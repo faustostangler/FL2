@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import PrimaryKeyConstraint
+from sqlalchemy import Integer, PrimaryKeyConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from domain.dto.statement_rows_dto import StatementRowsDTO
@@ -25,7 +25,7 @@ class StatementRowsModel(BaseModel):
         ),
     )
 
-    nsd: Mapped[str] = mapped_column(primary_key=True)
+    nsd: Mapped[int] = mapped_column(Integer, primary_key=True)
     company_name: Mapped[str | None] = mapped_column(primary_key=True)
     quarter: Mapped[str | None] = mapped_column(primary_key=True)
     version: Mapped[str | None] = mapped_column(primary_key=True)

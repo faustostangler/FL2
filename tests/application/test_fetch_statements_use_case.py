@@ -10,7 +10,7 @@ from domain.ports import (
 from tests.conftest import DummyConfig, DummyLogger
 
 
-def _make_nsd(nsd: str) -> NsdDTO:
+def _make_nsd(nsd: int) -> NsdDTO:
     return NsdDTO(
         nsd=nsd,
         company_name=None,
@@ -30,12 +30,12 @@ def test_run_skips_existing(monkeypatch):
     source = MagicMock(spec=StatementSourcePort)
     rows_repo = MagicMock(spec=StatementRowsRepositoryPort)
     stmt_repo = MagicMock(spec=StatementRepositoryPort)
-    stmt_repo.get_all_primary_keys.return_value = {"1"}
+    stmt_repo.get_all_primary_keys = MagicMock(return_value={1})
 
     usecase = FetchStatementsUseCase(
         logger=DummyLogger(),
         source=source,
-        repository=rows_repo,
+        statements_rows_repository=rows_repo,
         statement_repository=stmt_repo,
         config=DummyConfig(),
         max_workers=2,
@@ -47,8 +47,8 @@ def test_run_skips_existing(monkeypatch):
     targets = [_make_nsd(1), _make_nsd(2)]
     result = usecase.run(targets, save_callback="cb", threshold=5)
 
-    stmt_repo.get_all_primary_keys.assert_called_once()
+    stmt_repo.get_all_primary_keys.assert_not_called()
     mock_fetch_all.assert_called_once_with(
-        targets=[targets[1]], save_callback="cb", threshold=5
+        targets=targets, save_callback="cb", threshold=5
     )
     assert result == mock_fetch_all.return_value

@@ -49,12 +49,12 @@ class SqlAlchemyNsdRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
         finally:
             session.close()
 
-    def has_item(self, identifier: str) -> bool:
+    def has_item(self, identifier: int) -> bool:
         """Checks if an item with the specified identifier exists in the
         database.
 
         Args:
-            identifier (str): The unique identifier of the item to check.
+            identifier (int): The unique identifier of the item to check.
 
         Returns:
             bool: True if the item exists, False otherwise.
@@ -65,11 +65,11 @@ class SqlAlchemyNsdRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
         finally:
             session.close()
 
-    def get_by_id(self, id: str) -> NsdDTO:
+    def get_by_id(self, id: int) -> NsdDTO:
         """Fetches an NSD record from the database by its unique identifier.
 
         Args:
-            id (str): The unique identifier (ticker) of the NSD to retrieve.
+            id (int): The unique identifier of the NSD to retrieve.
         Returns:
             NsdDTO: Data transfer object representing the retrieved NSD.
         Raises:

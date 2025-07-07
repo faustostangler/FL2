@@ -44,7 +44,7 @@ def test_run_calls_usecase(monkeypatch):
     mock_usecase_cls.assert_called_once_with(
         logger=service.logger,
         source=source,
-        repository=rows_repo,
+        statements_rows_repository=rows_repo,
         statement_repository=stmt_repo,
         config=dummy_config,
         max_workers=3,
@@ -56,6 +56,6 @@ def test_run_calls_usecase(monkeypatch):
     result = service.run(save_callback="cb", threshold=5)
 
     mock_usecase_inst.run.assert_called_once_with(
-        targets, save_callback="cb", threshold=5
+        batch_rows=targets, save_callback="cb", threshold=5
     )
     assert result == mock_usecase_inst.run.return_value

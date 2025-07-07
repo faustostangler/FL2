@@ -1,4 +1,5 @@
-"""DTO definitions for normalized NSD (Sequential Document Number, in Portuguese) data."""
+"""DTO definitions for normalized NSD (Sequential Document Number, in
+Portuguese) data."""
 
 from __future__ import annotations
 
@@ -11,7 +12,7 @@ from typing import Optional
 class NsdDTO:
     """Structured NSD data extracted from the exchange."""
 
-    nsd: str
+    nsd: int
     company_name: Optional[str]
     quarter: Optional[datetime]
     version: Optional[str]
@@ -25,11 +26,15 @@ class NsdDTO:
 
     @staticmethod
     def from_dict(raw: dict) -> "NsdDTO":
-        """Build an ``NsdDTO`` from scraped raw data.
-        """
-        # Map raw keys directly to the immutable dataclass fields
+        """Build an ``NsdDTO`` from scraped raw data."""
+
+        try:
+            nsd_value = int(raw.get("nsd", 0))
+        except (TypeError, ValueError) as exc:
+            raise ValueError("Invalid NSD value") from exc
+
         return NsdDTO(
-            nsd=str(raw.get("nsd", 0)),
+            nsd=nsd_value,
             company_name=raw.get("company_name"),
             quarter=raw.get("quarter"),
             version=raw.get("version"),
