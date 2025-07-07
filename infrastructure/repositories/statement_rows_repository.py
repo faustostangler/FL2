@@ -69,7 +69,7 @@ class SqlAlchemyStatementRowsRepository(
         finally:
             session.close()
 
-    def get_all_primary_keys(self) -> set[str]:
+    def get_all_primary_keys(self) -> set[int]:
         session = self.Session()
         try:
             rows = session.query(StatementRowsModel.nsd).distinct().all()
@@ -80,7 +80,7 @@ class SqlAlchemyStatementRowsRepository(
 
     def get_by_key(
         self,
-        nsd: str,
+        nsd: int,
         company_name: str,
         quarter: str,
         version: str,
