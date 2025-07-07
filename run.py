@@ -25,11 +25,11 @@ if __name__ == "__main__":
     controller = CLIController(config=config, logger=logger, data_cleaner=data_cleaner)
 
     # Run Controller
-    logger.log("Call Method controller.run()", level="info")
+    # logger.log("Call Method controller.run()", level="info")
     controller.run()
-    logger.log("End  Method controller.run()", level="info")
+    # logger.log("End  Method controller.run()", level="info")
 
-    logger.log("End Instance controller", level="info")
+    # logger.log("End Instance controller", level="info")
 
     # Finaliza a execução com uma mensagem de confirmação
     logger.log(
