@@ -42,6 +42,7 @@ class StatementFetchService:
             logger=self.logger,
             source=source,
             repository=rows_repository,
+            statement_repository=statement_repo,
             config=self.config,
             max_workers=self.max_workers,
         )
