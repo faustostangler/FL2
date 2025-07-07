@@ -21,11 +21,11 @@ class NsdService:
             logger=self.logger, repository=repository, scraper=scraper
         )
 
-        self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
+        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def run(self) -> None:
         """Start the NSD synchronization workflow."""
         # Delegate the work to the injected use case.
-        self.logger.log("Call Method controller.run()._nsd_service().run().sync_nsd_usecase.run()", level="info")
+        # self.logger.log("Call Method controller.run()._nsd_service().run().sync_nsd_usecase.run()", level="info")
         self.sync_nsd_usecase.run()
-        self.logger.log("End  Method controller.run()._nsd_service().run().sync_nsd_usecase.run()", level="info")
+        # self.logger.log("End  Method controller.run()._nsd_service().run().sync_nsd_usecase.run()", level="info")

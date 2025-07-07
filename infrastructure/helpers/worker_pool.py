@@ -62,7 +62,7 @@ class WorkerPool(WorkerPoolPort):
                     break
                 index, entry = item
                 task = WorkerTaskDTO(index=index, data=entry, worker_id=worker_id)
-                logger.log(f"task: {task}", level="info")
+                # logger.log(f"task: {task}", level="info")
                 result = processor(task)
                 try:
                     with lock:

@@ -16,7 +16,7 @@ class SqlAlchemyStatementRowsRepository(
 
     def __init__(self, config: Config, logger: LoggerPort) -> None:
         super().__init__(config, logger)
-        self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
+        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def save_all(self, items: List[StatementRowsDTO]) -> None:
         def _flatten(seq):

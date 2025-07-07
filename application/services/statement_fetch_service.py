@@ -47,14 +47,14 @@ class StatementFetchService:
             max_workers=self.max_workers,
         )
 
-        self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
+        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def _build_targets(self) -> List[NsdDTO]:
         """Return NSD identifiers that still need fetching."""
-        self.logger.log(
-            "Run  Method controller.run()._statement_service().statements_fetch_service.run()._build_targets()",
-            level="info",
-        )
+        # self.logger.log(
+        #     "Run  Method controller.run()._statement_service().statements_fetch_service.run()._build_targets()",
+        #     level="info",
+        # )
         company_records = self.company_repo.get_all()
         nsd_records = self.nsd_repo.get_all()
 
@@ -87,11 +87,11 @@ class StatementFetchService:
             for n in nsd_records
             if (n.nsd_type in valid_types and n.company_name in common_company_names)
         ]
-        self.logger.log(f"results: {len(results)} full_results: {len(full_results)}")
-        self.logger.log(
-            "End  Method controller.run()._statement_service().statements_fetch_service.run()._build_targets()",
-            level="info",
-        )
+        # self.logger.log(f"results: {len(results)} full_results: {len(full_results)}")
+        # self.logger.log(
+        #     "End  Method controller.run()._statement_service().statements_fetch_service.run()._build_targets()",
+        #     level="info",
+        # )
 
         return sorted(results, key=lambda n: (n.company_name, n.quarter, n.nsd))
 
@@ -112,42 +112,42 @@ class StatementFetchService:
             Number of items to collect before invoking ``save_callback``.
         """
 
-        self.logger.log(
-            "Run  Method controller.run()._statement_service().statements_fetch_service.run()",
-            level="info",
-        )
+        # self.logger.log(
+        #     "Run  Method controller.run()._statement_service().statements_fetch_service.run()",
+        #     level="info",
+        # )
 
-        self.logger.log(
-            "Call Method controller.run()._statement_service().statements_fetch_service.run()._build_targets()",
-            level="info",
-        )
+        # self.logger.log(
+        #     "Call Method controller.run()._statement_service().statements_fetch_service.run()._build_targets()",
+        #     level="info",
+        # )
         targets = self._build_targets()
-        self.logger.log(
-            "Run  Method controller.run()._statement_service().statements_fetch_service.run()._build_targets()",
-            level="info",
-        )
+        # self.logger.log(
+        #     "Run  Method controller.run()._statement_service().statements_fetch_service.run()._build_targets()",
+        #     level="info",
+        # )
 
         if not targets:
-            self.logger.log("No statements to fetch", level="info")
+            # self.logger.log("No statements to fetch", level="info")
             return []
 
-        self.logger.log(
-            "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",
-            level="info",
-        )
+        # self.logger.log(
+        #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",
+        #     level="info",
+        # )
         rows = self.fetch_usecase.run(
             batch_rows=targets,
             save_callback=save_callback,
             threshold=threshold,
         )
-        self.logger.log(
-            "End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",
-            level="info",
-        )
+        # self.logger.log(
+        #     "End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",
+        #     level="info",
+        # )
 
-        self.logger.log(
-            "End  Method controller.run()._statement_service().statements_fetch_service.run()",
-            level="info",
-        )
+        # self.logger.log(
+        #     "End  Method controller.run()._statement_service().statements_fetch_service.run()",
+        #     level="info",
+        # )
 
         return rows

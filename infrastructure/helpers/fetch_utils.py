@@ -20,7 +20,7 @@ class FetchUtils:
         self.config = config
         self.logger = logger
 
-        self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
+        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def header_random(self) -> dict:
         """Generate random HTTP headers based on scraping config."""
@@ -31,7 +31,7 @@ class FetchUtils:
                 "Accept-Language": random.choice(self.config.scraping.languages),
             }
         except Exception as e:
-            self.logger.log(f"Header generation failed: {e}", level="warning")
+            # self.logger.log(f"Header generation failed: {e}", level="warning")
             return {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                 "(KHTML, like Gecko) Chrome/114.0.5735.199 Safari/537.36",

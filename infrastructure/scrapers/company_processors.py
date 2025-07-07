@@ -73,7 +73,7 @@ class CompanyMerger:
         self.mapper = mapper
         self.logger = logger
 
-        self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
+        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def run(
         self, listing: CompanyListingDTO, detail: CompanyDetailDTO
