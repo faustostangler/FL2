@@ -181,12 +181,15 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         hash_value = self._extract_hash(response.text)
 
         statement_items = self.config.statements.statement_items
-        nsd_items = self._build_urls(row, statement_items, hash_value)
+        statements_urls = self._build_urls(row, statement_items, hash_value)
 
         # Parse all statement pages
         statements_rows_dto: List[StatementRowsDTO] = []
 
-        for i, item in enumerate(nsd_items):
+        # for i, item in enumerate(statements_urls):
+        for i in range(len(statements_urls)):
+            item = statements_urls[i]
+
             quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
             for attempt in range(self.config.scraping.max_attempts):
                 response, self.session = self.fetch_utils.fetch_with_retry(
@@ -194,22 +197,31 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 )
                 soup = BeautifulSoup(response.text, "html.parser")
 
-                if (
+                blocked = (
                     "MensagemModal" in response.text
                     or "acesse este conteúdo pela página principal dos documentos"
                     in soup.get_text()
-                ):
-                    # Tenta regenerar hash, embora neste caso hash_value_retry não seja usado
-                    response, self.session = self.fetch_utils.fetch_with_retry(
-                        scraper=None, url=url
-                    )
-                    # hash_value_retry = self._extract_hash(hash_response.text)
+                )
 
-                    # self.logger.log(
-                    #     f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} - Retry {attempt+1}',
-                    #     level="warning"
-                    # )
+                if blocked:
+                    self.logger.log(f"Headers que falhou: {self.session.headers}")
+                    self.session = self.fetch_utils.create_scraper()
+                    self.logger.log(f"Headers novo: {self.session.headers}")
+
+                    # Tenta regenerar hash, embora neste caso hash_value_retry não seja usado
+                    response_retry, self.session = self.fetch_utils.fetch_with_retry(self.session, url=url)
+                    hash_value_retry = self._extract_hash(response_retry.text)
+
+                    # rebuild statements_urls
+                    statements_urls = self._build_urls(row, statement_items, hash_value_retry)
+                    item = statements_urls[i]
+
+                    self.logger.log(
+                        f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} - Retry {attempt+1} {self.session.headers}',
+                        level="warning"
+                    )
                     TimeUtils(self.config).sleep_dynamic()
+                    continue
                 else:  # Sucesso
                     self.logger.log(
                         f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']}",
@@ -221,7 +233,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 # Se todas as tentativas falharem, aborta NSD
                 self.logger.log(
                     # f"{row.company_name} {quarter} {row.version} {row.nsd} - Aborted.",
-                    f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire company quarter.",
+                    f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire {quarter}.",
                         level="warning",
                         worker_id=task.worker_id,
                 )
