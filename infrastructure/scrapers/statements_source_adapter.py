@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import random
 import time
 from typing import Any, Dict, List
 from urllib.parse import quote_plus
@@ -29,6 +30,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         self.logger = logger
         self.data_cleaner = data_cleaner
         self.fetch_utils = FetchUtils(config, logger)
+        self.time_utils = TimeUtils(self.config)
         self.session = self.fetch_utils.create_scraper()
         self.endpoint = f"{self.config.exchange.nsd_endpoint}"
         self.statements_config = self.config.statements
@@ -211,9 +213,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     )
                         break # sucess
                 else:
-                    old_headers = self.session.headers
                     self.session = self.fetch_utils.create_scraper()
-                    self.logger.log(f"Headers:\nwas: {old_headers}\nnow: {self.session.headers}")
 
                     # Tenta regenerar hash, embora neste caso hash_value_retry não seja usado
                     response_retry, self.session = self.fetch_utils.fetch_with_retry(self.session, url=url)
@@ -225,9 +225,10 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
                     self.logger.log(
                         f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} - Retry {attempt+1}',
-                        level="warning"
+                        level="warning",
+                        worker_id=task.worker_id
                     )
-                    TimeUtils(self.config).sleep_dynamic()
+                    self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
                     continue # new attempt
             else: # all attempts failed
                 self.logger.log(
@@ -237,6 +238,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                         worker_id=task.worker_id,
                 )
                 result: dict[str, Any] = {"nsd": row, "statements": []}
+                self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
                 return result
 
             rows = self._parse_statement_page(soup, item["grupo"])

@@ -14,8 +14,8 @@ class TimeUtils:
         self.config = config
 
     def sleep_dynamic(
-        self, wait: Optional[float] = None, cpu_interval: Optional[float] = None
-    ) -> None:
+        self, wait: Optional[float] = None, cpu_interval: Optional[float] = None, 
+        multiplier: Optional[int] = 1) -> None:
         """Sleep for a dynamically adjusted time based on CPU utilization.
 
         The logic adjusts the delay as follows:
@@ -36,5 +36,7 @@ class TimeUtils:
             wait *= random.uniform(0.2, 1.0)
         else:
             wait *= random.uniform(0.1, 0.5)
+
+        wait = wait * multiplier if multiplier else wait
 
         time.sleep(wait)

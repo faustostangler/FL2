@@ -7,6 +7,7 @@ from typing import Optional
 
 import certifi
 import requests
+from requests.structures import CaseInsensitiveDict
 
 from domain.ports import LoggerPort
 from infrastructure.config import Config
@@ -20,6 +21,7 @@ class FetchUtils:
     def __init__(self, config: Config, logger: LoggerPort) -> None:
         self.config = config
         self.logger = logger
+        self.time_util = TimeUtils(self.config)
 
         self.id_generator = IdGenerator(config=config)
 
@@ -51,10 +53,13 @@ class FetchUtils:
         Returns:
             Configured ``requests.Session`` instance.
         """
-
-        headers = self.header_random()
+        self.test_internet()
 
         session = requests.Session()
+        session.trust_env = False
+        session.headers = CaseInsensitiveDict()
+
+        headers = self.header_random()
         session.headers.update(headers)
 
         if insecure:
@@ -90,6 +95,7 @@ class FetchUtils:
             return response.status_code == 200
         except Exception as e:
             self.logger.log(f"Internet test failed: {e}", level="debug")
+            self.time_util.sleep_dynamic()
             return False
 
     def fetch_with_retry(
@@ -126,10 +132,14 @@ class FetchUtils:
                         #     level="warning",
                         # )
                     return response, scraper
+            except (requests.Timeout, requests.ConnectionError) as e:
+                if not self.test_internet():
+                    continue
+
             except Exception as e:  # noqa: BLE001
                 # Ignore network errors and retry with a new scraper
                 pass
-                # self.logger.log(f"Attempt {attempt + 1} {url}", level="warning")
+                self.logger.log(f"Attempt {attempt + 1} {url}", level="warning")
 
             # Record the start of blocking period on first failure
             if block_start is None:
@@ -137,11 +147,9 @@ class FetchUtils:
 
             attempt += 1
             # Wait using dynamic sleep to avoid aggressive retries
-            TimeUtils(self.config).sleep_dynamic()
-            # Recreate the scraper session in case we were blocked
+            self.time_util.sleep_dynamic()
 
-            old_headers = scraper.headers
-            scraper.close()
+            # Recreate the scraper session in case we were blocked
             scraper = self.create_scraper(insecure=insecure)
-            self.logger.log(f"Headers:\nwas: {old_headers}\nnow: {scraper.headers}")
+
             # self.logger.log("Recreating scraper due to block", level="info")

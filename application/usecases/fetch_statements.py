@@ -90,7 +90,7 @@ class FetchStatementsUseCase:
             extra_info = {
                 }
             self.logger.log(
-                f"Statement {task.index}/{len(tasks)}",
+                f"Statement {task.index+1}/{len(tasks)}",
                 level="info",
                 progress={
                     "index": task.index + 1,
