@@ -16,7 +16,7 @@ from infrastructure.helpers.time_utils import TimeUtils
 class FetchUtils:
     """Utility class for HTTP operations with retry and randomized headers."""
 
-    def __init__(self, config: Config, logger: LoggerPort):
+    def __init__(self, config: Config, logger: LoggerPort) -> None:
         self.config = config
         self.logger = logger
 
@@ -30,7 +30,7 @@ class FetchUtils:
                 "Referer": random.choice(self.config.scraping.referers),
                 "Accept-Language": random.choice(self.config.scraping.languages),
             }
-        except Exception as e:
+        except Exception:
             # self.logger.log(f"Header generation failed: {e}", level="warning")
             return {
                 "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
@@ -60,7 +60,7 @@ class FetchUtils:
             context.verify_mode = ssl.CERT_NONE
 
             class InsecureAdapter(requests.adapters.HTTPAdapter):
-                def init_poolmanager(self, *args, **kwargs):
+                def init_poolmanager(self, *args, **kwargs) -> None:
                     kwargs["ssl_context"] = context
                     self.poolmanager = (
                         requests.packages.urllib3.poolmanager.PoolManager(

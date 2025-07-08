@@ -11,7 +11,7 @@ from domain.ports import DataCleanerPort
 class CompanyMapper:
     """Merge base and detail company data into a parsed DTO."""
 
-    def __init__(self, data_cleaner: DataCleanerPort):
+    def __init__(self, data_cleaner: DataCleanerPort) -> None:
         """Create a new mapper using the provided data cleaner utility."""
         self.data_cleaner = data_cleaner
 
