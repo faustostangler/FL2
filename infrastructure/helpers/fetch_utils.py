@@ -7,6 +7,8 @@ from typing import Optional
 
 import certifi
 import requests
+from requests.adapters import HTTPAdapter
+from urllib3 import poolmanager
 
 from domain.ports import LoggerPort
 from infrastructure.config import Config
@@ -59,14 +61,10 @@ class FetchUtils:
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
 
-            class InsecureAdapter(requests.adapters.HTTPAdapter):
-                def init_poolmanager(self, *args, **kwargs) -> None:
+            class InsecureAdapter(HTTPAdapter):
+                def init_poolmanager(self, *args, **kwargs) -> None:  # type: ignore[override]
                     kwargs["ssl_context"] = context
-                    self.poolmanager = (
-                        requests.packages.urllib3.poolmanager.PoolManager(
-                            *args, **kwargs
-                        )
-                    )
+                    self.poolmanager = poolmanager.PoolManager(*args, **kwargs)
 
             session.mount("https://", InsecureAdapter())
             session.verify = False
@@ -117,7 +115,7 @@ class FetchUtils:
                         #     level="warning",
                         # )
                     return response, scraper
-            except Exception as e:  # noqa: BLE001
+            except Exception:  # noqa: BLE001
                 # Ignore network errors and retry with a new scraper
                 pass
                 # self.logger.log(f"Attempt {attempt + 1} {url}", level="warning")

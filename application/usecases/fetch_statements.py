@@ -79,6 +79,7 @@ class FetchStatementsUseCase:
         tasks = list(enumerate(targets))
 
         start_time = time.perf_counter()
+
         def processor(task: WorkerTaskDTO) -> Tuple[NsdDTO, List[StatementRowsDTO]]:
             # self.logger.log(
             #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()",
@@ -87,8 +88,7 @@ class FetchStatementsUseCase:
 
             fetched = self.source.fetch(task)
 
-            extra_info = {
-                }
+            extra_info = {}
             self.logger.log(
                 f"Statement {task.index}/{len(tasks)}",
                 level="info",
@@ -114,7 +114,8 @@ class FetchStatementsUseCase:
             #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
             #     level="info",
             # )
-            strategy.handle(statements)
+            for stmt in statements:
+                strategy.handle(stmt)
             # self.logger.log(
             #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
             #     level="info",

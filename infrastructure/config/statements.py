@@ -36,94 +36,94 @@ NSD_TYPE_MAP: Mapping[str, Tuple[str, int]] = {
 
 STATEMENT_ITEMS: List[Dict[str, Optional[int | str]]] = [
     {
-        "grupo": "DFs Individuais",
-        "quadro": "Balanço Patrimonial Ativo",
-        "informacao": 1,
-        "demonstracao": 2,
-        "periodo": 0,
-    },
-    {
-        "grupo": "DFs Individuais",
-        "quadro": "Balanço Patrimonial Passivo",
-        "informacao": 1,
-        "demonstracao": 3,
-        "periodo": 0,
-    },
-    {
-        "grupo": "DFs Individuais",
-        "quadro": "Demonstração do Resultado",
-        "informacao": 1,
-        "demonstracao": 4,
-        "periodo": 0,
-    },
-    {
-        "grupo": "DFs Individuais",
-        "quadro": "Demonstração do Resultado Abrangente",
-        "informacao": 1,
-        "demonstracao": 5,
-        "periodo": 0,
-    },
-    {
-        "grupo": "DFs Individuais",
-        "quadro": "Demonstração do Fluxo de Caixa",
-        "informacao": 1,
-        "demonstracao": 99,
-        "periodo": 0,
-    },
-    {
-        "grupo": "DFs Individuais",
-        "quadro": "Demonstração de Valor Adicionado",
-        "informacao": 1,
-        "demonstracao": 9,
-        "periodo": 0,
-    },
-    {
-        "grupo": "DFs Consolidadas",
-        "quadro": "Balanço Patrimonial Ativo",
-        "informacao": 2,
-        "demonstracao": 2,
-        "periodo": 0,
-    },
-    {
-        "grupo": "DFs Consolidadas",
-        "quadro": "Balanço Patrimonial Passivo",
-        "informacao": 2,
-        "demonstracao": 3,
-        "periodo": 0,
-    },
-    {
-        "grupo": "DFs Consolidadas",
-        "quadro": "Demonstração do Resultado",
-        "informacao": 2,
-        "demonstracao": 4,
-        "periodo": 0,
-    },
-    {
-        "grupo": "DFs Consolidadas",
-        "quadro": "Demonstração do Resultado Abrangente",
-        "informacao": 2,
-        "demonstracao": 5,
-        "periodo": 0,
-    },
-    {
-        "grupo": "DFs Consolidadas",
-        "quadro": "Demonstração do Fluxo de Caixa",
-        "informacao": 2,
-        "demonstracao": 99,
-        "periodo": 0,
-    },
-    {
-        "grupo": "DFs Consolidadas",
-        "quadro": "Demonstração de Valor Adicionado",
-        "informacao": 2,
-        "demonstracao": 9,
-        "periodo": 0,
-    },
-    {
         "grupo": "Dados da Empresa",
         "quadro": "Composição do Capital",
         "informacao": None,
         "demonstracao": None,
+        "periodo": 0,
+    },
+    {
+        "grupo": "DFs Individuais",
+        "quadro": "Balanço Patrimonial Ativo",
+        "informacao": 1,
+        "demonstracao": 2,
+        "periodo": 0,
+    },
+    {
+        "grupo": "DFs Individuais",
+        "quadro": "Balanço Patrimonial Passivo",
+        "informacao": 1,
+        "demonstracao": 3,
+        "periodo": 0,
+    },
+    {
+        "grupo": "DFs Individuais",
+        "quadro": "Demonstração do Resultado",
+        "informacao": 1,
+        "demonstracao": 4,
+        "periodo": 0,
+    },
+    {
+        "grupo": "DFs Individuais",
+        "quadro": "Demonstração do Resultado Abrangente",
+        "informacao": 1,
+        "demonstracao": 5,
+        "periodo": 0,
+    },
+    {
+        "grupo": "DFs Individuais",
+        "quadro": "Demonstração do Fluxo de Caixa",
+        "informacao": 1,
+        "demonstracao": 99,
+        "periodo": 0,
+    },
+    {
+        "grupo": "DFs Individuais",
+        "quadro": "Demonstração de Valor Adicionado",
+        "informacao": 1,
+        "demonstracao": 9,
+        "periodo": 0,
+    },
+    {
+        "grupo": "DFs Consolidadas",
+        "quadro": "Balanço Patrimonial Ativo",
+        "informacao": 2,
+        "demonstracao": 2,
+        "periodo": 0,
+    },
+    {
+        "grupo": "DFs Consolidadas",
+        "quadro": "Balanço Patrimonial Passivo",
+        "informacao": 2,
+        "demonstracao": 3,
+        "periodo": 0,
+    },
+    {
+        "grupo": "DFs Consolidadas",
+        "quadro": "Demonstração do Resultado",
+        "informacao": 2,
+        "demonstracao": 4,
+        "periodo": 0,
+    },
+    {
+        "grupo": "DFs Consolidadas",
+        "quadro": "Demonstração do Resultado Abrangente",
+        "informacao": 2,
+        "demonstracao": 5,
+        "periodo": 0,
+    },
+    {
+        "grupo": "DFs Consolidadas",
+        "quadro": "Demonstração do Fluxo de Caixa",
+        "informacao": 2,
+        "demonstracao": 99,
+        "periodo": 0,
+    },
+    {
+        "grupo": "DFs Consolidadas",
+        "quadro": "Demonstração de Valor Adicionado",
+        "informacao": 2,
+        "demonstracao": 9,
         "periodo": 0,
     },
 ]
@@ -137,12 +137,8 @@ class StatementsConfig:
         default_factory=lambda: [item.copy() for item in STATEMENT_ITEMS]
     )
 
-    if isinstance(NSD_TYPE_MAP, dict):
-        NSD_TYPE_MAP = NSD_TYPE_MAP.copy()
-    else:
-        NSD_TYPE_MAP = dict(NSD_TYPE_MAP)
     nsd_type_map: Mapping[str, Tuple[str, int]] = field(
-        default_factory=lambda: NSD_TYPE_MAP
+        default_factory=lambda: dict(NSD_TYPE_MAP)
     )
 
     capital_items: List[Dict[str, str]] = field(
@@ -156,7 +152,7 @@ def load_statements_config() -> StatementsConfig:
     """Run the statements scraping configuration."""
     return StatementsConfig(
         statement_items=[item.copy() for item in STATEMENT_ITEMS],
-        nsd_type_map=NSD_TYPE_MAP.copy(),
+        nsd_type_map=dict(NSD_TYPE_MAP),
         capital_items=[item.copy() for item in CAPITAL_ITEMS],
         url_df=URL_DF,
         url_capital=URL_CAPITAL,

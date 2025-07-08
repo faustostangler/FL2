@@ -222,8 +222,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 self.logger.log(
                     # f"{row.company_name} {quarter} {row.version} {row.nsd} - Aborted.",
                     f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire company quarter.",
-                        level="warning",
-                        worker_id=task.worker_id,
+                    level="warning",
+                    worker_id=task.worker_id,
                 )
                 result: dict[str, Any] = {"nsd": row, "statements": []}
                 return result
@@ -247,10 +247,10 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
             statements_rows_dto.extend(parsed_rows)
 
-        elapsed = time.perf_counter() - start
+        _ = time.perf_counter() - start
         quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
         # self.logger.log(
-        #     f"{row.nsd} {row.company_name} {quarter} {row.version} in {elapsed:.2f}s",
+        #     f"{row.nsd} {row.company_name} {quarter} {row.version} in {_:.2f}s",
         #     level="info",
         # )
         result = {"nsd": row, "statements": statements_rows_dto}

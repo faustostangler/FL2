@@ -82,11 +82,11 @@ class StatementFetchService:
             )
         ]
 
-        full_results = [
-            n
-            for n in nsd_records
-            if (n.nsd_type in valid_types and n.company_name in common_company_names)
-        ]
+        # full_results = [
+        #     n
+        #     for n in nsd_records
+        #     if (n.nsd_type in valid_types and n.company_name in common_company_names)
+        # ]
         # self.logger.log(f"results: {len(results)} full_results: {len(full_results)}")
         # self.logger.log(
         #     "End  Method controller.run()._statement_service().statements_fetch_service.run()._build_targets()",
@@ -97,9 +97,7 @@ class StatementFetchService:
 
     def run(
         self,
-        save_callback: Optional[
-            Callable[[List[Tuple[NsdDTO, List[StatementRowsDTO]]]], None]
-        ] = None,
+        save_callback: Optional[Callable[[List[StatementRowsDTO]], None]] = None,
         threshold: Optional[int] = None,
     ) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
         """Execute the fetch workflow and return raw rows.
