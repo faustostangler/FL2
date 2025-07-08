@@ -206,12 +206,12 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 )
 
                 if not blocked:
-                        self.logger.log(
-                        f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']}",
-                        level="info",
-                        worker_id=task.worker_id,
-                    )
-                        break # sucess
+                #     self.logger.log(
+                #     f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']}",
+                #     level="info",
+                #     worker_id=task.worker_id,
+                # )
+                    break # sucess
                 else:
                     self.session = self.fetch_utils.create_scraper()
 
@@ -223,11 +223,11 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     statements_urls = self._build_urls(row, statement_items, hash_value_retry)
                     item = statements_urls[i]
 
-                    self.logger.log(
-                        f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} - Retry {attempt+1}',
-                        level="warning",
-                        worker_id=task.worker_id
-                    )
+                    # self.logger.log(
+                    #     f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} - Retry {attempt+1}',
+                    #     level="warning",
+                    #     worker_id=task.worker_id
+                    # )
                     self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
                     continue # new attempt
             else: # all attempts failed

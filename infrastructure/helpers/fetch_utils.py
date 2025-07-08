@@ -6,6 +6,7 @@ import time
 from typing import Optional
 
 import certifi
+import cloudscraper
 import requests
 from requests.structures import CaseInsensitiveDict
 
@@ -44,7 +45,7 @@ class FetchUtils:
                 "Accept-Language": "en-US,en;q=0.9",
             }
 
-    def create_scraper(self, insecure: bool = False) -> requests.Session:
+    def create_scraper_old(self, insecure: bool = False) -> requests.Session:
         """Return a configured requests session.
 
         Args:
@@ -82,6 +83,50 @@ class FetchUtils:
             session.verify = certifi.where()
 
         return session
+
+    def create_scraper(self, insecure: bool = False) -> requests.Session:
+        """Return a configured cloudscraper session.
+
+        Args:
+            insecure: Whether to disable SSL verification.
+
+        Returns:
+            Configured ``requests.Session`` instance.
+        """
+        self.test_internet()
+
+        headers = self.header_random()
+
+        if insecure:
+            context = ssl.create_default_context()
+            context.check_hostname = False
+            context.verify_mode = ssl.CERT_NONE
+
+            class InsecureAdapter(requests.adapters.HTTPAdapter):
+                def init_poolmanager(self, *args, **kwargs) -> None:
+                    kwargs["ssl_context"] = context
+                    self.poolmanager = (
+                        requests.packages.urllib3.poolmanager.PoolManager(
+                            *args, **kwargs
+                        )
+                    )
+
+            base_session = requests.Session()
+            base_session.mount("https://", InsecureAdapter())
+            base_session.headers = CaseInsensitiveDict()
+            base_session.headers.update(headers)
+            base_session.trust_env = False
+
+            scraper = cloudscraper.create_scraper(sess=base_session)
+            scraper.verify = False
+        else:
+            scraper = cloudscraper.create_scraper()
+            scraper.headers = CaseInsensitiveDict()
+            scraper.headers.update(headers)
+            scraper.trust_env = False
+            scraper.verify = certifi.where()
+
+        return scraper
 
     def test_internet(
         self, url: Optional[str] = None, timeout: Optional[int] = None
