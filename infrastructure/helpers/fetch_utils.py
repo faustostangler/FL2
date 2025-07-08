@@ -11,6 +11,7 @@ import requests
 from domain.ports import LoggerPort
 from infrastructure.config import Config
 from infrastructure.helpers.time_utils import TimeUtils
+from infrastructure.utils.id_generator import IdGenerator
 
 
 class FetchUtils:
@@ -19,6 +20,8 @@ class FetchUtils:
     def __init__(self, config: Config, logger: LoggerPort) -> None:
         self.config = config
         self.logger = logger
+
+        self.id_generator = IdGenerator(config=config)
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
@@ -106,8 +109,14 @@ class FetchUtils:
 
         while True:
             try:
+                # random parameter for no-cache, encoding is just for fun
+                param_name = self.id_generator.create_id(random.randint(1, 4))
+                digest = self.id_generator.create_id(random.randint(4, 12))
+                no_cache = f"{param_name}={digest}"
+                url_nocache = f"{url}&{no_cache}"
+
                 # Perform the request with the current session
-                response = scraper.get(url, timeout=timeout)
+                response = scraper.get(url_nocache, timeout=timeout)
                 if response.status_code == 200:
                     # On success, log the total block time if any
                     if block_start:
@@ -130,5 +139,9 @@ class FetchUtils:
             # Wait using dynamic sleep to avoid aggressive retries
             TimeUtils(self.config).sleep_dynamic()
             # Recreate the scraper session in case we were blocked
+
+            old_headers = scraper.headers
+            scraper.close()
             scraper = self.create_scraper(insecure=insecure)
+            self.logger.log(f"Headers:\nwas: {old_headers}\nnow: {scraper.headers}")
             # self.logger.log("Recreating scraper due to block", level="info")

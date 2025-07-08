@@ -203,10 +203,17 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     in soup.get_text()
                 )
 
-                if blocked:
-                    self.logger.log(f"Headers que falhou: {self.session.headers}")
+                if not blocked:
+                        self.logger.log(
+                        f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']}",
+                        level="info",
+                        worker_id=task.worker_id,
+                    )
+                        break # sucess
+                else:
+                    old_headers = self.session.headers
                     self.session = self.fetch_utils.create_scraper()
-                    self.logger.log(f"Headers novo: {self.session.headers}")
+                    self.logger.log(f"Headers:\nwas: {old_headers}\nnow: {self.session.headers}")
 
                     # Tenta regenerar hash, embora neste caso hash_value_retry não seja usado
                     response_retry, self.session = self.fetch_utils.fetch_with_retry(self.session, url=url)
@@ -217,20 +224,12 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     item = statements_urls[i]
 
                     self.logger.log(
-                        f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} - Retry {attempt+1} {self.session.headers}',
+                        f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} - Retry {attempt+1}',
                         level="warning"
                     )
                     TimeUtils(self.config).sleep_dynamic()
-                    continue
-                else:  # Sucesso
-                    self.logger.log(
-                        f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']}",
-                        level="info",
-                        worker_id=task.worker_id,
-                    )
-                    break
-            else:
-                # Se todas as tentativas falharem, aborta NSD
+                    continue # new attempt
+            else: # all attempts failed
                 self.logger.log(
                     # f"{row.company_name} {quarter} {row.version} {row.nsd} - Aborted.",
                     f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire {quarter}.",

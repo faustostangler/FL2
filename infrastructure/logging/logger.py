@@ -6,6 +6,7 @@ from domain.ports.logger_port import LoggerPort
 from infrastructure.config.config import Config
 from infrastructure.logging.context_tracker import ContextTracker
 from infrastructure.logging.progress_formatter import ProgressFormatter
+from infrastructure.utils.id_generator import IdGenerator
 
 
 class Logger(LoggerPort):
@@ -14,14 +15,17 @@ class Logger(LoggerPort):
     def __init__(
         self, config: Config, level: str = "DEBUG", logger_name: Optional[str] = None
     ) -> None:
-        self._run_id = uuid.uuid4().hex[:8]
-        self.worker_id = uuid.uuid4().hex[:8]
-
         self.config = config
         self.logger_name = logger_name or self.config.global_settings.app_name or "FLY"
         self.progress_formatter = ProgressFormatter()
         self.context_tracker = ContextTracker(config.paths.root_dir)
+
+        self.id_generator = IdGenerator(config=self.config, logger_name=self.logger_name)
+        self._run_id = self.id_generator.create_id(8)
+        self.worker_id = self.id_generator.create_id(8)
+
         self._logger = self._setup_logger(level)
+
 
     def _setup_logger(self, level: str) -> logging.LoggerAdapter:
         """Configure the underlying ``logging`` logger with console and file
