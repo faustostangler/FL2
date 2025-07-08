@@ -48,11 +48,11 @@ class CLIController:
 
         # Start the company synchronization workflow.
         # self.logger.log("Call Method controller.run()._company_service()", level="info")
-        self._company_service()
+        # self._company_service()
         # self.logger.log("End  Method controller.run()._company_service()", level="info")
 
         # self.logger.log("Call Method controller.run()._nsd_service()", level="info")
-        self._nsd_service()
+        # self._nsd_service()
         # self.logger.log("End  Method controller.run()._nsd_service()", level="info")
 
         # self.logger.log(
@@ -175,11 +175,11 @@ class CLIController:
         # )
 
         # self.logger.log("Instantiate nsd_service (nsd_repo, nsd_scraper)", level="info")
-        # nsd_service = NsdService(
-        #     logger=self.logger,
-        #     repository=nsd_repo,
-        #     scraper=nsd_scraper,
-        # )
+        nsd_service = NsdService(
+            logger=self.logger,
+            repository=nsd_repo,
+            scraper=nsd_scraper,
+        )
 
         # self.logger.log(
         #     "Call Method controller.run()._nsd_service().run()", level="info"

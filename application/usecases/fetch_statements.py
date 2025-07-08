@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from typing import Callable, Iterable, List, Optional, Tuple
 
 from domain.dto.nsd_dto import NsdDTO
@@ -77,12 +78,29 @@ class FetchStatementsUseCase:
         # Pair each target with its index for worker pool processing.
         tasks = list(enumerate(targets))
 
+        start_time = time.perf_counter()
         def processor(task: WorkerTaskDTO) -> Tuple[NsdDTO, List[StatementRowsDTO]]:
             # self.logger.log(
             #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()",
             #     level="info",
             # )
-            fetched = self.source.fetch(task.data)
+
+            fetched = self.source.fetch(task)
+
+            extra_info = {
+                }
+            self.logger.log(
+                f"Statement {task.index}/{len(tasks)}",
+                level="info",
+                progress={
+                    "index": task.index + 1,
+                    "size": len(tasks),
+                    "start_time": start_time,
+                },
+                extra=extra_info,
+                worker_id=task.worker_id,
+            )
+
             # self.logger.log(
             #     "End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()",
             #     level="info",
@@ -92,16 +110,15 @@ class FetchStatementsUseCase:
 
         def handle_batch(item: Tuple[NsdDTO, List[StatementRowsDTO]]) -> None:
             statements = item[1]
-            if statements:
-                # self.logger.log(
-                #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
-                #     level="info",
-                # )
-                strategy.handle(statements)
-                # self.logger.log(
-                #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
-                #     level="info",
-                # )
+            # self.logger.log(
+            #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
+            #     level="info",
+            # )
+            strategy.handle(statements)
+            # self.logger.log(
+            #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
+            #     level="info",
+            # )
 
         # self.logger.log(
         #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().worker_pool.run(tasks, processor, handle_batch)",

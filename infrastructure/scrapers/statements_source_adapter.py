@@ -9,8 +9,8 @@ from urllib.parse import quote_plus
 # import pandas as pd
 from bs4 import BeautifulSoup, Tag
 
+from domain.dto import StatementRowsDTO, WorkerTaskDTO
 from domain.dto.nsd_dto import NsdDTO
-from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.ports import LoggerPort, StatementSourcePort
 from infrastructure.config import Config
 from infrastructure.helpers.data_cleaner import DataCleaner
@@ -167,9 +167,10 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
             print(e)
         return result
 
-    def fetch(self, row: NsdDTO) -> dict[str, Any]:
+    def fetch(self, task: WorkerTaskDTO) -> dict[str, Any]:
         """Fetch statement pages for the given NSD and return parsed rows."""
         # self.logger.log("Run  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()", level="info")
+        row = task.data
 
         url = self.endpoint.format(nsd=row.nsd)
         start = time.perf_counter()
@@ -207,13 +208,16 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     self.logger.log(
                         f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']}",
                         level="info",
+                        worker_id=task.worker_id,
                     )
                     break
             else:
                 # Se todas as tentativas falharem, aborta NSD
                 self.logger.log(
+                    # f"{row.company_name} {quarter} {row.version} {row.nsd} - Aborted.",
                     f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire company quarter.",
-                    level="warning",
+                        level="warning",
+                        worker_id=task.worker_id,
                 )
                 result: dict[str, Any] = {"nsd": row, "statements": []}
                 return result

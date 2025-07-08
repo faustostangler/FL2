@@ -117,10 +117,10 @@ class FetchUtils:
                         #     level="warning",
                         # )
                     return response, scraper
-            except Exception:  # noqa: BLE001
+            except Exception as e:  # noqa: BLE001
                 # Ignore network errors and retry with a new scraper
                 pass
-                # self.logger.log(f"Attempt {attempt + 1} failed: {exc}", level="warning")
+                # self.logger.log(f"Attempt {attempt + 1} {url}", level="warning")
 
             # Record the start of blocking period on first failure
             if block_start is None:
