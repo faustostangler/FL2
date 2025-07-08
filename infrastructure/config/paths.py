@@ -6,6 +6,7 @@ TEMP_DIR = "temp"
 LOG_DIR = "logs"
 DATA_DIR = "data"
 
+
 @dataclass(frozen=True)
 class PathConfig:
     """Configuration for important filesystem paths.
@@ -16,12 +17,13 @@ class PathConfig:
         log_dir: Subfolder for log files.
         data_dir: Subfolder for databases.
     """
+
     temp_dir: Path = field(init=False)
     log_dir: Path = field(init=False)
     data_dir: Path = field(init=False)
     root_dir: Path = field(init=False)
 
-    def __post_init__(self):
+    def __post_init__(self) -> None:
         # Set root_dir to the project directory
         root = Path(__file__).resolve().parent.parent.parent
         object.__setattr__(self, "root_dir", root)

@@ -18,7 +18,7 @@ class BaseRepository(BaseRepositoryPort[T], ABC):
     Pode ser especializada para qualquer tipo de DTO.
     """
 
-    def __init__(self, config: Config, logger: LoggerPort):
+    def __init__(self, config: Config, logger: LoggerPort) -> None:
         """Initialize the SQLite database connection and ensure tables
         exist."""
         self.config = config

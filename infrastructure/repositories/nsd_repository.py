@@ -14,7 +14,7 @@ from infrastructure.repositories import BaseRepository
 class SqlAlchemyNsdRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
     """Concrete repository for NsdDTO using SQLite via SQLAlchemy."""
 
-    def __init__(self, config: Config, logger: LoggerPort):
+    def __init__(self, config: Config, logger: LoggerPort) -> None:
         super().__init__(config, logger)
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")

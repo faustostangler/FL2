@@ -21,7 +21,7 @@ class SqlAlchemyCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryP
         issues.
     """
 
-    def __init__(self, config: Config, logger: LoggerPort):
+    def __init__(self, config: Config, logger: LoggerPort) -> None:
         super().__init__(config, logger)
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")

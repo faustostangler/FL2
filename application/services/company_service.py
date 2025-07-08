@@ -1,4 +1,5 @@
 from application.usecases.sync_companies import SyncCompaniesUseCase
+from domain.dto import SyncCompaniesResultDTO
 from domain.ports import CompanyRepositoryPort, CompanySourcePort, LoggerPort
 from infrastructure.config import Config
 
@@ -27,7 +28,7 @@ class CompanyService:
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def run(self):
+    def run(self) -> SyncCompaniesResultDTO:
         """Execute company synchronization using the injected use case."""
         # Delegate execution to the underlying use case and return the result.
         # self.logger.log("Call Method sync_companies_usecase.run()", level="info")
