@@ -231,12 +231,12 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
                     continue # new attempt
             else: # all attempts failed
-                self.logger.log(
-                    # f"{row.company_name} {quarter} {row.version} {row.nsd} - Aborted.",
-                    f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire {quarter}.",
-                        level="warning",
-                        worker_id=task.worker_id,
-                )
+                # self.logger.log(
+                #     # f"{row.company_name} {quarter} {row.version} {row.nsd} - Aborted.",
+                #     f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire {quarter}.",
+                #         level="warning",
+                #         worker_id=task.worker_id,
+                # )
                 result: dict[str, Any] = {"nsd": row, "statements": []}
                 self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
                 return result
