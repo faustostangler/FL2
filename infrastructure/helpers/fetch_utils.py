@@ -135,13 +135,18 @@ class FetchUtils:
         url = url or self.config.scraping.test_internet or "https://www.google.com"
         timeout = timeout or self.config.scraping.timeout or 5
 
-        try:
-            response = requests.get(url, timeout=timeout)
-            return response.status_code == 200
-        except Exception as e:
-            self.logger.log(f"Internet test failed: {e}", level="debug")
+        while True:
+            try:
+                response = requests.get(url, timeout=timeout)
+                if response.status_code == 200 or response.status_code == 204:
+                    return True
+            except Exception:
+                # não faz nada, apenas dorme e tenta de novo
+                url = "https://www.google.com"
+                pass
+
+            # aguarda um intervalo antes da próxima tentativa
             self.time_util.sleep_dynamic()
-            return False
 
     def fetch_with_retry(
         self,
