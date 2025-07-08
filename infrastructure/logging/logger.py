@@ -13,7 +13,7 @@ class Logger(LoggerPort):
 
     def __init__(
         self, config: Config, level: str = "DEBUG", logger_name: Optional[str] = None
-    ):
+    ) -> None:
         self._run_id = uuid.uuid4().hex[:8]
         self.worker_id = uuid.uuid4().hex[:8]
 
@@ -24,7 +24,8 @@ class Logger(LoggerPort):
         self._logger = self._setup_logger(level)
 
     def _setup_logger(self, level: str) -> logging.LoggerAdapter:
-        """Configure the underlying ``logging`` logger with console and file handlers."""
+        """Configure the underlying ``logging`` logger with console and file
+        handlers."""
         log_path = self.config.logging.full_path
         logger = logging.getLogger(self.logger_name)
         logger.setLevel(logging.DEBUG)
@@ -56,7 +57,7 @@ class Logger(LoggerPort):
         progress: Optional[dict] = None,
         extra: Optional[dict] = None,
         worker_id: Optional[str] = None,
-    ):
+    ) -> None:
         """Log a message with optional progress and context information."""
         context_msg = (
             self.context_tracker.get_context() if level.lower() == "debug" else ""
@@ -89,7 +90,7 @@ class Logger(LoggerPort):
 class SafeFormatter(logging.Formatter):
     """Formatter that injects default values for missing log attributes."""
 
-    def format(self, record):
+    def format(self, record: logging.LogRecord) -> str:
         # Define valores padrão
         defaults = {
             "run_id": "0",
@@ -104,9 +105,10 @@ class SafeFormatter(logging.Formatter):
 
 
 class MergedLoggerAdapter(logging.LoggerAdapter):
-    """Logger adapter that merges ``extra`` dictionaries from calls and defaults."""
+    """Logger adapter that merges ``extra`` dictionaries from calls and
+    defaults."""
 
-    def process(self, msg, kwargs):
+    def process(self, msg: str, kwargs: dict) -> tuple[str, dict]:
         base = self.extra if isinstance(self.extra, dict) else {}
         extra = kwargs.get("extra") or {}
         if not isinstance(extra, dict):

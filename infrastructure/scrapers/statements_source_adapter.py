@@ -21,7 +21,9 @@ from infrastructure.helpers.time_utils import TimeUtils
 class RequestsStatementSourceAdapter(StatementSourcePort):
     """Fetch statement HTML using ``requests``."""
 
-    def __init__(self, config: Config, logger: LoggerPort, data_cleaner: DataCleaner):
+    def __init__(
+        self, config: Config, logger: LoggerPort, data_cleaner: DataCleaner
+    ) -> None:
         """Create the adapter with its configuration and logger."""
         self.config = config
         self.logger = logger
@@ -187,7 +189,9 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         for i, item in enumerate(nsd_items):
             quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
             for attempt in range(self.config.scraping.max_attempts):
-                response, self.session = self.fetch_utils.fetch_with_retry(self.session, item["url"])
+                response, self.session = self.fetch_utils.fetch_with_retry(
+                    self.session, item["url"]
+                )
                 soup = BeautifulSoup(response.text, "html.parser")
 
                 if (
@@ -196,7 +200,9 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     in soup.get_text()
                 ):
                     # Tenta regenerar hash, embora neste caso hash_value_retry não seja usado
-                    response, self.session = self.fetch_utils.fetch_with_retry(scraper=None, url=url)
+                    response, self.session = self.fetch_utils.fetch_with_retry(
+                        scraper=None, url=url
+                    )
                     # hash_value_retry = self._extract_hash(hash_response.text)
 
                     # self.logger.log(

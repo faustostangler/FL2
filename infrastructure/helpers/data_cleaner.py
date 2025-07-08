@@ -26,7 +26,7 @@ class DataCleaner(DataCleanerPort):
     Requires external configuration (e.g. words to remove) and a logger.
     """
 
-    def __init__(self, config: Config, logger: LoggerPort):
+    def __init__(self, config: Config, logger: LoggerPort) -> None:
         """Store configuration and logger."""
         self.config = config
         self.logger = logger

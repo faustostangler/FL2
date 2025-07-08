@@ -9,10 +9,13 @@ from infrastructure.config import Config
 
 class TimeUtils:
     """Helper for dynamic sleep intervals based on CPU usage."""
-    def __init__(self, config: Config):
+
+    def __init__(self, config: Config) -> None:
         self.config = config
 
-    def sleep_dynamic(self, wait: Optional[float] = None, cpu_interval: Optional[float] = None) -> None:
+    def sleep_dynamic(
+        self, wait: Optional[float] = None, cpu_interval: Optional[float] = None
+    ) -> None:
         """Sleep for a dynamically adjusted time based on CPU utilization.
 
         The logic adjusts the delay as follows:

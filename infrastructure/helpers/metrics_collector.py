@@ -33,7 +33,7 @@ class MetricsCollector(MetricsCollectorPort):
 
         return self._processing_bytes
 
-    def get_metrics(self, elapsed_time: float):
+    def get_metrics(self, elapsed_time: float) -> MetricsDTO:
         """Create a :class:`MetricsDTO` instance from the collected values."""
 
         return MetricsDTO(

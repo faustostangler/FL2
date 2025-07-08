@@ -17,7 +17,7 @@ class Config:
     respective domain.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Run all configuration sections."""
         # Run all configurations
         self.paths: PathConfig = load_paths()
