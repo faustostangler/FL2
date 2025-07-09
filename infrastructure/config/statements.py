@@ -138,7 +138,7 @@ class StatementsConfig:
     )
 
     if isinstance(NSD_TYPE_MAP, dict):
-        NSD_TYPE_MAP = NSD_TYPE_MAP.copy()
+        NSD_TYPE_MAP = dict(NSD_TYPE_MAP)
     else:
         NSD_TYPE_MAP = dict(NSD_TYPE_MAP)
     nsd_type_map: Mapping[str, Tuple[str, int]] = field(
@@ -160,7 +160,7 @@ def load_statements_config() -> StatementsConfig:
     )
     return StatementsConfig(
         statement_items=statement_items,
-        nsd_type_map=NSD_TYPE_MAP.copy(),
+        nsd_type_map=dict(NSD_TYPE_MAP),
         capital_items=[item.copy() for item in CAPITAL_ITEMS],
         url_df=URL_DF,
         url_capital=URL_CAPITAL,
