@@ -223,9 +223,14 @@ class CLIController:
         )
         # self.logger.log("End Instance raw_rows_repo", level="info")
 
+        # self.logger.log("Instantiate collector", level="info")
+        collector = MetricsCollector()
         # self.logger.log("Instantiate source", level="info")
         source = RequestsStatementSourceAdapter(
-            config=self.config, logger=self.logger, data_cleaner=self.data_cleaner
+            config=self.config,
+            logger=self.logger,
+            data_cleaner=self.data_cleaner,
+            metrics_collector=collector,
         )
         # self.logger.log("End Instance source", level="info")
 

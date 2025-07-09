@@ -82,7 +82,7 @@ class StatementFetchService:
             )
         ]
 
-        full_results = [
+        _full_results = [
             n
             for n in nsd_records
             if (n.nsd_type in valid_types and n.company_name in common_company_names)
