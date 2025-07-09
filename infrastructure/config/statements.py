@@ -154,8 +154,12 @@ class StatementsConfig:
 
 def load_statements_config() -> StatementsConfig:
     """Run the statements scraping configuration."""
+    statement_items = [item.copy() for item in STATEMENT_ITEMS]
+    statement_items.sort(
+        key=lambda item: 0 if item.get("grupo") == "Dados da Empresa" else 1
+    )
     return StatementsConfig(
-        statement_items=[item.copy() for item in STATEMENT_ITEMS],
+        statement_items=statement_items,
         nsd_type_map=NSD_TYPE_MAP.copy(),
         capital_items=[item.copy() for item in CAPITAL_ITEMS],
         url_df=URL_DF,

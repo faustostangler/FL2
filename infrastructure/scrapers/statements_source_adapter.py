@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup, Tag
 
 from domain.dto import StatementRowsDTO, WorkerTaskDTO
 from domain.dto.nsd_dto import NsdDTO
-from domain.ports import LoggerPort, StatementSourcePort
+from domain.ports import LoggerPort, MetricsCollectorPort, StatementSourcePort
 from infrastructure.config import Config
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.fetch_utils import FetchUtils
@@ -24,12 +24,17 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
     """Fetch statement HTML using ``requests``."""
 
     def __init__(
-        self, config: Config, logger: LoggerPort, data_cleaner: DataCleaner
+        self,
+        config: Config,
+        logger: LoggerPort,
+        data_cleaner: DataCleaner,
+        metrics_collector: MetricsCollectorPort,
     ) -> None:
         """Create the adapter with its configuration and logger."""
         self.config = config
         self.logger = logger
         self.data_cleaner = data_cleaner
+        self._metrics_collector = metrics_collector
         self.fetch_utils = FetchUtils(config, logger)
         self.time_utils = TimeUtils(self.config)
         self.session = self.fetch_utils.create_scraper()
@@ -38,6 +43,12 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         self.id_generator = IdGenerator(config=config)
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
+
+    @property
+    def metrics_collector(self) -> MetricsCollectorPort:
+        """Metrics collector used by the scraper."""
+
+        return self._metrics_collector
 
     def _parse_statement_page(
         self, soup: BeautifulSoup, group: str
@@ -182,6 +193,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         start = time.perf_counter()
 
         response, self.session = self.fetch_utils.fetch_with_retry(self.session, url)
+        self.metrics_collector.record_network_bytes(len(response.content))
         hash_value = self._extract_hash(response.text)
 
         statement_items = self.config.statements.statement_items
@@ -200,6 +212,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 response, self.session = self.fetch_utils.fetch_with_retry(
                     self.session, item["url"]
                 )
+                self.metrics_collector.record_network_bytes(len(response.content))
                 soup = BeautifulSoup(response.text, "html.parser")
 
                 blocked = (
@@ -209,37 +222,46 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 )
 
                 if not blocked:
-                #     self.logger.log(
-                #     f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']}",
-                #     level="info",
-                #     worker_id=task.worker_id,
-                # )
-                    break # sucess
+                    #     self.logger.log(
+                    #     f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']}",
+                    #     level="info",
+                    #     worker_id=task.worker_id,
+                    # )
+                    break  # sucess
                 else:
                     self.session = self.fetch_utils.create_scraper()
 
                     # Tenta regenerar hash, embora neste caso hash_value_retry não seja usado
-                    response_retry, self.session = self.fetch_utils.fetch_with_retry(self.session, url=url)
+                    response_retry, self.session = self.fetch_utils.fetch_with_retry(
+                        self.session, url=url
+                    )
+                    self.metrics_collector.record_network_bytes(
+                        len(response_retry.content)
+                    )
                     hash_value_retry = self._extract_hash(response_retry.text)
-                    soup_retry = BeautifulSoup(response_retry.text, "html.parser")
+                    _soup_retry = BeautifulSoup(response_retry.text, "html.parser")
 
                     # rebuild statements_urls
-                    statements_urls = self._build_urls(row, statement_items, hash_value_retry)
+                    statements_urls = self._build_urls(
+                        row, statement_items, hash_value_retry
+                    )
                     item = statements_urls[i]
 
                     self.logger.log(
-                        f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} \n\n{url}\n{item["url"]}\n\n',
+                        f"{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item['grupo']} {item['quadro']} \n\n{url}\n{item['url']}\n\n",
                         level="warning",
-                        worker_id=f"retry_0{attempt+1}"
+                        worker_id=f"retry_0{attempt + 1}",
                     )
-                    self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10) * attempt)
-                    continue # new attempt
-            else: # all attempts failed
+                    self.time_utils.sleep_dynamic(
+                        multiplier=random.randint(5, 10) * attempt
+                    )
+                    continue  # new attempt
+            else:  # all attempts failed
                 self.logger.log(
                     # f"{row.company_name} {quarter} {row.version} {row.nsd} - Aborted.",
                     f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire {quarter}.",
-                        level="warning",
-                        worker_id=task.worker_id,
+                    level="warning",
+                    worker_id=task.worker_id,
                 )
                 result: dict[str, Any] = {"nsd": row, "statements": []}
                 self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
@@ -264,7 +286,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
             statements_rows_dto.extend(parsed_rows)
 
-        elapsed = time.perf_counter() - start
+        _elapsed = time.perf_counter() - start
         quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
         # self.logger.log(
         #     f"{row.nsd} {row.company_name} {quarter} {row.version} in {elapsed:.2f}s",
