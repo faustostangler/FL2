@@ -87,7 +87,9 @@ class FetchStatementsUseCase:
 
             fetched = self.source.fetch(task)
             quarter = fetched['nsd'].quarter.strftime("%Y-%m-%d") if fetched['nsd'].quarter else None
-            extra_info = {"details": f"{fetched['nsd'].nsd} {fetched['nsd'].company_name} {quarter} {fetched['nsd'].version}"
+            extra_info = {
+                "details": f"{fetched['nsd'].nsd} {fetched['nsd'].company_name} {quarter} {fetched['nsd'].version}",
+                "lines": f"{len(fetched['statements'])} lines"
                 }
             self.logger.log(
                 f"Statement {task.index+1}/{len(tasks)}",

@@ -17,6 +17,7 @@ from infrastructure.config import Config
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.fetch_utils import FetchUtils
 from infrastructure.helpers.time_utils import TimeUtils
+from infrastructure.utils.id_generator import IdGenerator
 
 
 class RequestsStatementSourceAdapter(StatementSourcePort):
@@ -34,6 +35,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         self.session = self.fetch_utils.create_scraper()
         self.endpoint = f"{self.config.exchange.nsd_endpoint}"
         self.statements_config = self.config.statements
+        self.id_generator = IdGenerator(config=config)
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
@@ -194,6 +196,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
             quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
             for attempt in range(self.config.scraping.max_attempts):
+                self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
                 response, self.session = self.fetch_utils.fetch_with_retry(
                     self.session, item["url"]
                 )
@@ -218,25 +221,26 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     # Tenta regenerar hash, embora neste caso hash_value_retry não seja usado
                     response_retry, self.session = self.fetch_utils.fetch_with_retry(self.session, url=url)
                     hash_value_retry = self._extract_hash(response_retry.text)
+                    soup_retry = BeautifulSoup(response_retry.text, "html.parser")
 
                     # rebuild statements_urls
                     statements_urls = self._build_urls(row, statement_items, hash_value_retry)
                     item = statements_urls[i]
 
-                    # self.logger.log(
-                    #     f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} - Retry {attempt+1}',
-                    #     level="warning",
-                    #     worker_id=task.worker_id
-                    # )
-                    self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
+                    self.logger.log(
+                        f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} \n\n{url}\n{item["url"]}\n\n',
+                        level="warning",
+                        worker_id=f"retry_0{attempt+1}"
+                    )
+                    self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10) * attempt)
                     continue # new attempt
             else: # all attempts failed
-                # self.logger.log(
-                #     # f"{row.company_name} {quarter} {row.version} {row.nsd} - Aborted.",
-                #     f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire {quarter}.",
-                #         level="warning",
-                #         worker_id=task.worker_id,
-                # )
+                self.logger.log(
+                    # f"{row.company_name} {quarter} {row.version} {row.nsd} - Aborted.",
+                    f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire {quarter}.",
+                        level="warning",
+                        worker_id=task.worker_id,
+                )
                 result: dict[str, Any] = {"nsd": row, "statements": []}
                 self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
                 return result
