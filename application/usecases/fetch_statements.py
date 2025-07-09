@@ -1,3 +1,5 @@
+"""Use cases for fetching raw statement rows."""
+
 from __future__ import annotations
 
 import time
@@ -13,7 +15,12 @@ from domain.ports import (
     StatementSourcePort,
 )
 from infrastructure.config import Config
-from infrastructure.helpers import MetricsCollector, SaveStrategy, WorkerPool
+from infrastructure.helpers import (
+    ByteFormatter,
+    MetricsCollector,
+    SaveStrategy,
+    WorkerPool,
+)
 
 
 class FetchStatementsUseCase:
@@ -29,7 +36,6 @@ class FetchStatementsUseCase:
         max_workers: int = 1,
     ) -> None:
         """Store dependencies for fetching and saving raw rows."""
-
         self.logger = logger
         self.source = source
         self.statements_rows_repository = statements_rows_repository
@@ -46,15 +52,18 @@ class FetchStatementsUseCase:
         threshold: Optional[int] = None,
     ) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
         """Fetch statements for ``targets`` concurrently."""
-
         # self.logger.log(
         #     "Run  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all(save_callback, threshold)",
         #     level="info",
         # )
 
-        # Set up a metrics collector to track progress.
+        # Set up a metrics collector to track progress. Prefer using the
+        # collector from the source if available so network metrics remain
+        # consistent across the entire workflow.
         # self.logger.log("Instantiate collector", level="info")
-        collector = MetricsCollector()
+        collector = getattr(self.source, "metrics_collector", None)
+        if collector is None:
+            collector = MetricsCollector()
         # self.logger.log("End Instance collector", level="info")
 
         # Create the worker pool responsible for parallel fetching.
@@ -64,6 +73,7 @@ class FetchStatementsUseCase:
             metrics_collector=collector,
             max_workers=self.max_workers,
         )
+        byte_formatter = ByteFormatter()
         # self.logger.log("End Instance worker_pool", level="info")
 
         # Initialize the saving strategy that buffers results.
@@ -87,6 +97,7 @@ class FetchStatementsUseCase:
             # )
             attempt = 0
 
+            bytes_before = collector.network_bytes
             fetched = self.source.fetch(task)
             lines = len(fetched["statements"])
 
@@ -111,6 +122,8 @@ class FetchStatementsUseCase:
                 fetched = self.source.fetch(task)
                 lines = len(fetched["statements"])
 
+            download_bytes = collector.network_bytes - bytes_before
+
             quarter = (
                 fetched["nsd"].quarter.strftime("%Y-%m-%d")
                 if fetched["nsd"].quarter
@@ -119,6 +132,8 @@ class FetchStatementsUseCase:
             extra_info = {
                 "details": f"{fetched['nsd'].nsd} {fetched['nsd'].company_name} {quarter} {fetched['nsd'].version}",
                 "lines": f"{len(fetched['statements'])} lines",
+                "Download": byte_formatter.format_bytes(download_bytes),
+                "Total download": byte_formatter.format_bytes(collector.network_bytes),
             }
             self.logger.log(
                 f"Statement {task.index + 1}/{len(tasks)}",
@@ -182,7 +197,6 @@ class FetchStatementsUseCase:
         threshold: Optional[int] = None,
     ) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
         """Execute the use case for ``batch_rows``."""
-
         # self.logger.log(
         #     "Run  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",
         #     level="info",
