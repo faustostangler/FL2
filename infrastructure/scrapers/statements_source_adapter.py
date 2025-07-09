@@ -193,7 +193,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         start = time.perf_counter()
 
         response, self.session = self.fetch_utils.fetch_with_retry(self.session, url)
-        self.metrics_collector.record_network_bytes(len(response.content))
+        download = len(response.content)
+        self.metrics_collector.record_network_bytes(download)
         hash_value = self._extract_hash(response.text)
 
         statement_items = self.config.statements.statement_items
@@ -212,7 +213,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 response, self.session = self.fetch_utils.fetch_with_retry(
                     self.session, item["url"]
                 )
-                self.metrics_collector.record_network_bytes(len(response.content))
+                download = len(response.content)
+                self.metrics_collector.record_network_bytes(download)
                 soup = BeautifulSoup(response.text, "html.parser")
 
                 blocked = (
@@ -235,9 +237,8 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     response_retry, self.session = self.fetch_utils.fetch_with_retry(
                         self.session, url=url
                     )
-                    self.metrics_collector.record_network_bytes(
-                        len(response_retry.content)
-                    )
+                    download = len(response.content)
+                    self.metrics_collector.record_network_bytes(download)
                     hash_value_retry = self._extract_hash(response_retry.text)
                     _soup_retry = BeautifulSoup(response_retry.text, "html.parser")
 
