@@ -97,9 +97,7 @@ class StatementFetchService:
 
     def run(
         self,
-        save_callback: Optional[
-            Callable[[List[Tuple[NsdDTO, List[StatementRowsDTO]]]], None]
-        ] = None,
+        save_callback: Optional[Callable[[List[StatementRowsDTO]], None]] = None,
         threshold: Optional[int] = None,
     ) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
         """Execute the fetch workflow and return raw rows.

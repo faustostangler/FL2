@@ -79,6 +79,7 @@ class FetchStatementsUseCase:
         tasks = list(enumerate(targets))
 
         start_time = time.perf_counter()
+
         def processor(task: WorkerTaskDTO) -> Tuple[NsdDTO, List[StatementRowsDTO]]:
             # self.logger.log(
             #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()",
@@ -90,14 +91,18 @@ class FetchStatementsUseCase:
             lines = len(fetched["statements"])
 
             while lines == 0:
-                attempt +=1
-                quarter = fetched['nsd'].quarter.strftime("%Y-%m-%d") if fetched['nsd'].quarter else None
+                attempt += 1
+                quarter = (
+                    fetched["nsd"].quarter.strftime("%Y-%m-%d")
+                    if fetched["nsd"].quarter
+                    else None
+                )
                 extra_info = {
                     "details": f"{fetched['nsd'].nsd} {fetched['nsd'].company_name} {quarter} {fetched['nsd'].version}",
-                    "attempt": f"attempt {attempt}"
-                    }
+                    "attempt": f"attempt {attempt}",
+                }
                 self.logger.log(
-                    f"Retrying {task.index+1}/{len(tasks)}",
+                    f"Retrying {task.index + 1}/{len(tasks)}",
                     level="warning",
                     extra=extra_info,
                     worker_id=task.worker_id,
@@ -106,13 +111,17 @@ class FetchStatementsUseCase:
                 fetched = self.source.fetch(task)
                 lines = len(fetched["statements"])
 
-            quarter = fetched['nsd'].quarter.strftime("%Y-%m-%d") if fetched['nsd'].quarter else None
+            quarter = (
+                fetched["nsd"].quarter.strftime("%Y-%m-%d")
+                if fetched["nsd"].quarter
+                else None
+            )
             extra_info = {
                 "details": f"{fetched['nsd'].nsd} {fetched['nsd'].company_name} {quarter} {fetched['nsd'].version}",
-                "lines": f"{len(fetched['statements'])} lines"
-                }
+                "lines": f"{len(fetched['statements'])} lines",
+            }
             self.logger.log(
-                f"Statement {task.index+1}/{len(tasks)}",
+                f"Statement {task.index + 1}/{len(tasks)}",
                 level="info",
                 progress={
                     "index": task.index + 1,
@@ -131,16 +140,16 @@ class FetchStatementsUseCase:
             return fetched["nsd"], fetched["statements"]
 
         def handle_batch(item: Tuple[NsdDTO, List[StatementRowsDTO]]) -> None:
-            statements = item[1]
-            # self.logger.log(
-            #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
-            #     level="info",
-            # )
-            strategy.handle(statements)
-            # self.logger.log(
-            #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
-            #     level="info",
-            # )
+            for statement in item[1]:
+                # self.logger.log(
+                #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
+                #     level="info",
+                # )
+                strategy.handle(statement)
+                # self.logger.log(
+                #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
+                #     level="info",
+                # )
 
         # self.logger.log(
         #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().worker_pool.run(tasks, processor, handle_batch)",
