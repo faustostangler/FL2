@@ -8,6 +8,8 @@ from typing import Optional
 import certifi
 import cloudscraper
 import requests
+import urllib3
+from requests.adapters import HTTPAdapter
 from requests.structures import CaseInsensitiveDict
 
 from domain.ports import LoggerPort
@@ -68,14 +70,10 @@ class FetchUtils:
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
 
-            class InsecureAdapter(requests.adapters.HTTPAdapter):
+            class InsecureAdapter(HTTPAdapter):
                 def init_poolmanager(self, *args, **kwargs) -> None:
                     kwargs["ssl_context"] = context
-                    self.poolmanager = (
-                        requests.packages.urllib3.poolmanager.PoolManager(
-                            *args, **kwargs
-                        )
-                    )
+                    self.poolmanager = urllib3.poolmanager.PoolManager(*args, **kwargs)
 
             session.mount("https://", InsecureAdapter())
             session.verify = False
@@ -102,14 +100,10 @@ class FetchUtils:
             context.check_hostname = False
             context.verify_mode = ssl.CERT_NONE
 
-            class InsecureAdapter(requests.adapters.HTTPAdapter):
+            class InsecureAdapter(HTTPAdapter):
                 def init_poolmanager(self, *args, **kwargs) -> None:
                     kwargs["ssl_context"] = context
-                    self.poolmanager = (
-                        requests.packages.urllib3.poolmanager.PoolManager(
-                            *args, **kwargs
-                        )
-                    )
+                    self.poolmanager = urllib3.poolmanager.PoolManager(*args, **kwargs)
 
             base_session = requests.Session()
             base_session.mount("https://", InsecureAdapter())
@@ -182,11 +176,11 @@ class FetchUtils:
                         #     level="warning",
                         # )
                     return response, scraper
-            except (requests.Timeout, requests.ConnectionError) as e:
+            except (requests.Timeout, requests.ConnectionError):
                 if not self.test_internet():
                     continue
 
-            except Exception as e:  # noqa: BLE001
+            except Exception:  # noqa: BLE001
                 # Ignore network errors and retry with a new scraper
                 pass
                 self.logger.log(f"Attempt {attempt + 1} {url}", level="warning")
