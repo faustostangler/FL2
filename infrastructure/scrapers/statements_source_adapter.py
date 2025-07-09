@@ -196,7 +196,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
 
             quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
             for attempt in range(self.config.scraping.max_attempts):
-                self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
+                # self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
                 response, self.session = self.fetch_utils.fetch_with_retry(
                     self.session, item["url"]
                 )
@@ -227,20 +227,21 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                     statements_urls = self._build_urls(row, statement_items, hash_value_retry)
                     item = statements_urls[i]
 
-                    self.logger.log(
-                        f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} \n\n{url}\n{item["url"]}\n\n',
-                        level="warning",
-                        worker_id=f"retry_0{attempt+1}"
-                    )
-                    self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10) * attempt)
+                    # self.logger.log(
+                    #     f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} retry_0{attempt+1}',
+                    #     # f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} \n{url}\n{item["url"]}\n\n',
+                    #     level="warning",
+                    #     worker_id=task.worker_id
+                    # )
+                    # self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10) * attempt)
                     continue # new attempt
             else: # all attempts failed
-                self.logger.log(
-                    # f"{row.company_name} {quarter} {row.version} {row.nsd} - Aborted.",
-                    f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire {quarter}.",
-                        level="warning",
-                        worker_id=task.worker_id,
-                )
+                # self.logger.log(
+                #     # f"{row.company_name} {quarter} {row.version} {row.nsd} - Aborted.",
+                #     f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire {quarter}.",
+                #         level="warning",
+                #         worker_id=task.worker_id,
+                # )
                 result: dict[str, Any] = {"nsd": row, "statements": []}
                 self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
                 return result

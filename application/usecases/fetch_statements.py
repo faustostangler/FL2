@@ -84,8 +84,28 @@ class FetchStatementsUseCase:
             #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()",
             #     level="info",
             # )
+            attempt = 0
 
             fetched = self.source.fetch(task)
+            lines = len(fetched["statements"])
+
+            while lines == 0:
+                attempt +=1
+                quarter = fetched['nsd'].quarter.strftime("%Y-%m-%d") if fetched['nsd'].quarter else None
+                extra_info = {
+                    "details": f"{fetched['nsd'].nsd} {fetched['nsd'].company_name} {quarter} {fetched['nsd'].version}",
+                    "attempt": f"attempt {attempt}"
+                    }
+                self.logger.log(
+                    f"Retrying {task.index+1}/{len(tasks)}",
+                    level="warning",
+                    extra=extra_info,
+                    worker_id=task.worker_id,
+                )
+
+                fetched = self.source.fetch(task)
+                lines = len(fetched["statements"])
+
             quarter = fetched['nsd'].quarter.strftime("%Y-%m-%d") if fetched['nsd'].quarter else None
             extra_info = {
                 "details": f"{fetched['nsd'].nsd} {fetched['nsd'].company_name} {quarter} {fetched['nsd'].version}",

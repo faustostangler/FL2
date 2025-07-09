@@ -1,4 +1,4 @@
-"""Start the FLY CLI in background for debugging purposes."""
+"""Command-line entry point for the FLY application."""
 
 from infrastructure.config import Config
 from infrastructure.factories import create_data_cleaner
@@ -10,14 +10,29 @@ if __name__ == "__main__":
     # Inicializa a configuração
     config = Config()
     logger = Logger(config)
+
+    # Load CLI
+    logger.log(
+        "Run Project FLY",
+        level="info",
+    )
+
+    # Load data_cleaner
     data_cleaner = create_data_cleaner(config, logger)
 
-    # Run CLI
-    logger.log("Run Project FLY", level="info")
-
     # Entry point for the FLY CLI application.
-    controller = CLIController(config, logger, data_cleaner)
-    controller.run()
+    # logger.log("Instantiate controller", level="info")
+    controller = CLIController(config=config, logger=logger, data_cleaner=data_cleaner)
 
-    # Log the completion of the background execution
-    logger.log("done", level="info")
+    # Run Controller
+    # logger.log("Call Method controller.run()", level="info")
+    controller.run()
+    # logger.log("End  Method controller.run()", level="info")
+
+    # logger.log("End Instance controller", level="info")
+
+    # Finaliza a execução com uma mensagem de confirmação
+    logger.log(
+        "Finish Project FLY",
+        level="info",
+    )
