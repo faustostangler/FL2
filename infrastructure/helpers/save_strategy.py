@@ -50,8 +50,6 @@ class SaveStrategy(Generic[T]):
         self.buffer.append(item)
 
         flush_by_remaining = False
-        if remaining is not None:
-            flush_by_remaining = remaining % self.threshold == 0
 
         should_flush = len(self.buffer) >= self.threshold or flush_by_remaining
         # if remaining is not None:

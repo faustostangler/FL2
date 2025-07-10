@@ -225,6 +225,8 @@ class CLIController:
 
         # self.logger.log("Instantiate collector", level="info")
         collector = MetricsCollector()
+        collector._network_bytes = 1696429094
+
         # self.logger.log("Instantiate source", level="info")
         source = RequestsStatementSourceAdapter(
             config=self.config,

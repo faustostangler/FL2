@@ -191,7 +191,7 @@ class FetchUtils:
 
             attempt += 1
             # Wait using dynamic sleep to avoid aggressive retries
-            self.time_util.sleep_dynamic()
+            self.time_util.sleep_dynamic(multiplier=attempt)
 
             # Recreate the scraper session in case we were blocked
             scraper = self.create_scraper(insecure=insecure)

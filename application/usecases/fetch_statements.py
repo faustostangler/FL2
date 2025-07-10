@@ -155,16 +155,15 @@ class FetchStatementsUseCase:
             return fetched["nsd"], fetched["statements"]
 
         def handle_batch(item: Tuple[NsdDTO, List[StatementRowsDTO]]) -> None:
-            for statement in item[1]:
-                # self.logger.log(
-                #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
-                #     level="info",
-                # )
-                strategy.handle(statement)
-                # self.logger.log(
-                #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
-                #     level="info",
-                # )
+            # self.logger.log(
+            #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
+            #     level="info",
+            # )
+            strategy.handle(item[1])
+            # self.logger.log(
+            #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().strategy.handle()",
+            #     level="info",
+            # )
 
         # self.logger.log(
         #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().worker_pool.run(tasks, processor, handle_batch)",
