@@ -225,7 +225,7 @@ class CLIController:
 
         # self.logger.log("Instantiate collector", level="info")
         collector = MetricsCollector()
-        collector._network_bytes = 1990381610 # setup initial value for reloading
+        collector._network_bytes = 3150000000 # setup initial value for reloading
 
         # self.logger.log("Instantiate source", level="info")
         source = RequestsStatementSourceAdapter(

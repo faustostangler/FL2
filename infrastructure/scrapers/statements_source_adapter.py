@@ -223,7 +223,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
                 attempt += 1
                 # 1) tentativa de fetch
                 response, self.session = self.fetch_utils.fetch_with_retry(
-                    self.session, item["url"]
+                    self.session, url=item["url"], worker_id=task.worker_id
                 )
                 # 2) registra bytes baixados
                 download = len(response.content)

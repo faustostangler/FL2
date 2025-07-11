@@ -148,6 +148,7 @@ class FetchUtils:
         url: str,
         timeout: Optional[int] = None,
         insecure: bool = False,
+        worker_id: Optional[str] = None,
     ) -> tuple[requests.Response, requests.Session]:
         """Fetch a URL, recreating the scraper when blocked."""
 
@@ -172,10 +173,11 @@ class FetchUtils:
                     # On success, log the total block time if any
                     if block_start:
                         block_duration = time.perf_counter() - block_start
-                        self.logger.log(
-                            f"Dodging server block: {block_duration:.2f}s",
-                            level="warning",
-                        )
+                        # self.logger.log(
+                        #     f"Dodging server block: {block_duration:.2f}s",
+                        #     level="warning",
+                        #     worker_id=worker_id,
+                        # )
                     return response, scraper
             except (requests.Timeout, requests.ConnectionError) as e:
                 if not self.test_internet():
@@ -184,7 +186,7 @@ class FetchUtils:
             except Exception:  # noqa: BLE001
                 # Ignore network errors and retry with a new scraper
                 pass
-                self.logger.log(f"Attempt {attempt + 1} {url}", level="warning")
+                self.logger.log(f"Attempt {attempt + 1} {url}", level="warning", worker_id=worker_id)
 
             # Record the start of blocking period on first failure
             if block_start is None:
