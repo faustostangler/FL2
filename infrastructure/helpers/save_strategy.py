@@ -35,7 +35,7 @@ class SaveStrategy(Generic[T]):
         self.buffer: List[T] = []
 
     def handle(
-        self, item: Optional[Union[T, Iterable[T]]], remaining: Optional[int] = None
+        self, item: Optional[Iterable[T]], remaining: Optional[int] = None
     ) -> None:
         """Add one or more items to the buffer and flush when ``threshold`` is
         reached.
@@ -51,19 +51,15 @@ class SaveStrategy(Generic[T]):
         if remaining is None and self.config:
             remaining = self.config.global_settings.threshold
 
-        if isinstance(item, Iterable):
-            self.buffer.extend(item)
-        else:
-            self.buffer.append(item)
+        self.buffer.append(item) # type: ignore
 
-        flush_by_remaining = False
-        if remaining is not None:
-            flush_by_remaining = remaining % self.threshold == 0
-
-        should_flush = len(self.buffer) >= self.threshold or flush_by_remaining
+        should_flush = len(self.buffer) >= self.threshold
+        # if remaining is not None:
+        #     should_flush = should_flush or remaining % self.threshold == 0
 
         if remaining == 0 or should_flush:
             self.flush()
+
 
     def flush(self) -> None:
         """Invoke the callback with all buffered items and clear the buffer."""
