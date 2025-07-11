@@ -30,13 +30,13 @@ class TimeUtils:
         wait = wait or self.config.global_settings.wait or 2
         cpu_usage = psutil.cpu_percent(interval=cpu_interval or 0.25)
 
-        if cpu_usage > 80:
+        if cpu_usage > 50:
             wait *= random.uniform(0.3, 1.5)
-        elif cpu_usage > 50:
+        elif cpu_usage > 5:
             wait *= random.uniform(0.2, 1.0)
         else:
             wait *= random.uniform(0.1, 0.5)
 
-        wait = wait * multiplier if multiplier else wait
+        wait_multiplier = wait ** multiplier if multiplier else wait
 
-        time.sleep(wait)
+        time.sleep(wait_multiplier)

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-import random
+import re
 import time
 from typing import Any, Dict, List
 from urllib.parse import quote_plus
@@ -119,15 +119,22 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
     def _extract_hash(self, html: str) -> str:
         """Extract the hidden hash value from the HTML response."""
         soup = BeautifulSoup(html, "html.parser")
+        # hash in element
         element = soup.select_one("#hdnHash")
-        if element is None:
-            raise ValueError("Element with selector '#hdnHash' not found")
-        value = element.get("value")
-        if isinstance(value, list):
-            value = value[0] if value else ""
-        if not isinstance(value, str):
-            raise ValueError("Expected a string value for 'value' attribute")
-        return value
+        if element:
+            value = element.get("value")
+            if isinstance(value, str) and value.strip():
+                return value.strip()
+
+        # hash in form
+        form = soup.select_one("form[action*='Hash=']")
+        if form:
+            action_url = form.get("action", "")
+            match = re.search(r"[?&]Hash=([a-zA-Z0-9_-]+)", action_url)
+            if match:
+                return match.group(1)
+
+        return ""
 
     def _build_urls(
         self, row: NsdDTO, items: list, hash_value: str
@@ -193,8 +200,10 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         start = time.perf_counter()
 
         response, self.session = self.fetch_utils.fetch_with_retry(self.session, url)
+
         download = len(response.content)
         self.metrics_collector.record_network_bytes(download)
+
         hash_value = self._extract_hash(response.text)
 
         statement_items = self.config.statements.statement_items
@@ -208,82 +217,68 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
             item = statements_urls[i]
 
             quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
-            for attempt in range(self.config.scraping.max_attempts):
-                # self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
+            attempt = 0
+            # loop infinito até conseguir um response não bloqueado
+            while True:
+                attempt += 1
+                # 1) tentativa de fetch
                 response, self.session = self.fetch_utils.fetch_with_retry(
                     self.session, item["url"]
                 )
+                # 2) registra bytes baixados
                 download = len(response.content)
                 self.metrics_collector.record_network_bytes(download)
+
+                # 3) parse do HTML
                 soup = BeautifulSoup(response.text, "html.parser")
 
+               # 4) checa se houve bloqueio
                 blocked = (
                     "MensagemModal" in response.text
                     or "acesse este conteúdo pela página principal dos documentos"
-                    in soup.get_text()
+                    in soup.get_text() 
                 )
 
                 if not blocked:
-                    #     self.logger.log(
+                    # Sucesso: podemos sair do loop
+                    # self.logger.log(
                     #     f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']}",
                     #     level="info",
                     #     worker_id=task.worker_id,
                     # )
-                    break  # sucess
-                else:
-                    self.session = self.fetch_utils.create_scraper()
+                    break
 
-                    # Tenta regenerar hash, embora neste caso hash_value_retry não seja usado
-                    response_retry, self.session = self.fetch_utils.fetch_with_retry(
-                        self.session, url=url
-                    )
-                    download = len(response.content)
-                    self.metrics_collector.record_network_bytes(download)
-                    hash_value_retry = self._extract_hash(response_retry.text)
-                    _soup_retry = BeautifulSoup(response_retry.text, "html.parser")
+                # --- caso de bloqueio: prepara nova tentativa ---
+                # 5) recria a sessão (novo scraper)
+                self.session = self.fetch_utils.create_scraper()
 
-                    # rebuild statements_urls
-                    statements_urls = self._build_urls(
-                        row, statement_items, hash_value_retry
-                    )
+                # 6) faz um novo fetch para extrair o hash atualizado
+                response_retry, self.session = self.fetch_utils.fetch_with_retry(
+                    self.session, url
+                )
+                download = len(response_retry.content)
+                self.metrics_collector.record_network_bytes(download)
+
+                # 7) extrai novo hash
+                hash_retry_value = self._extract_hash(response_retry.text)
+
+                # 8) reconstrói as URLs de statements
+                if hash_value != hash_retry_value:
+                    statements_urls = self._build_urls(row, statement_items, hash_retry_value or hash_value)
                     item = statements_urls[i]
 
-                    # self.logger.log(
-                    #     f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} retry_0{attempt+1}',
-                    #     # f'{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item["grupo"]} {item["quadro"]} \n{url}\n{item["url"]}\n\n',
-                    #     level="warning",
-                    #     worker_id=task.worker_id
-                    # )
-                    # self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10) * attempt)
-                    continue # new attempt
-            else: # all attempts failed
                 # self.logger.log(
-                #     # f"{row.company_name} {quarter} {row.version} {row.nsd} - Aborted.",
-                #     f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire {quarter}.",
-                #         level="warning",
-                #         worker_id=task.worker_id,
+                #     f"{row.nsd} {row.company_name} {quarter} {row.version} - {i} {item['grupo']} {item['quadro']} retry {attempt}",
+                #     level="warning",
+                #     worker_id=task.worker_id
                 # )
-# =======
-#                     self.logger.log(
-#                         f"{row.company_name} {quarter} {row.version} {row.nsd} - {i} {item['grupo']} {item['quadro']} \n\n{url}\n{item['url']}\n\n",
-#                         level="warning",
-#                         worker_id=f"retry_0{attempt + 1}",
-#                     )
-#                     self.time_utils.sleep_dynamic(
-#                         multiplier=random.randint(5, 10) * attempt
-#                     )
-#                     continue  # new attempt
-#             else:  # all attempts failed
-#                 self.logger.log(
-#                     # f"{row.company_name} {quarter} {row.version} {row.nsd} - Aborted.",
-#                     f"{row.company_name} {quarter} {row.version} {row.nsd} {url}... Aborted entire {quarter}.",
-#                     level="warning",
-#                     worker_id=task.worker_id,
-#                 )
-# >>>>>>> 6c1e985533bed16102036957c0d9cec1618c5488
-                result: dict[str, Any] = {"nsd": row, "statements": []}
-                self.time_utils.sleep_dynamic(multiplier=random.randint(5, 10))
-                return result
+
+                # 8) espera dinamicamente, aumentando o multiplicador a cada retry
+                self.time_utils.sleep_dynamic(multiplier=attempt)
+                # e repete até obter sucesso
+
+            # A partir daqui, `response` e `item` já estão válidos (não bloqueados)
+            result: dict[str, Any] = {"nsd": row, "statements": []}
 
             rows = self._parse_statement_page(soup, item["grupo"])
             parsed_rows = []

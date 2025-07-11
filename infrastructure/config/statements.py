@@ -156,7 +156,11 @@ def load_statements_config() -> StatementsConfig:
     """Run the statements scraping configuration."""
     statement_items = [item.copy() for item in STATEMENT_ITEMS]
     statement_items.sort(
-        key=lambda item: 0 if item.get("grupo") == "Dados da Empresa" else 1
+        key=lambda item: (
+            1 if item.get("grupo") == "Dados da Empresa" else 0,
+            item.get("informacao", 0),
+            item.get("demonstracao", 0),
+        )
     )
     return StatementsConfig(
         statement_items=statement_items,

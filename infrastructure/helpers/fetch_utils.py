@@ -166,17 +166,18 @@ class FetchUtils:
                 url_nocache = f"{url}&{no_cache}"
 
                 # Perform the request with the current session
-                response = scraper.get(url_nocache, timeout=timeout)
+                timeout_wait = timeout + attempt
+                response = scraper.get(url_nocache, timeout=timeout_wait)
                 if response.status_code == 200:
                     # On success, log the total block time if any
                     if block_start:
-                        _ = time.perf_counter() - block_start
-                        # self.logger.log(
-                        #     f"Dodging server block: {_:.2f}s",
-                        #     level="warning",
-                        # )
+                        block_duration = time.perf_counter() - block_start
+                        self.logger.log(
+                            f"Dodging server block: {block_duration:.2f}s",
+                            level="warning",
+                        )
                     return response, scraper
-            except (requests.Timeout, requests.ConnectionError):
+            except (requests.Timeout, requests.ConnectionError) as e:
                 if not self.test_internet():
                     continue
 
