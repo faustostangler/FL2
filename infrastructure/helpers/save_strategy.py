@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Callable, Generic, List, Optional, TypeVar
+from collections.abc import Iterable
+from typing import Callable, Generic, List, Optional, TypeVar, Union
 
 from infrastructure.config import Config
 
@@ -33,11 +34,14 @@ class SaveStrategy(Generic[T]):
         )
         self.buffer: List[T] = []
 
-    def handle(self, item: Optional[T], remaining: Optional[int] = None) -> None:
-        """Add ``item`` to the buffer and flush when ``threshold`` is reached.
+    def handle(
+        self, item: Optional[Union[T, Iterable[T]]], remaining: Optional[int] = None
+    ) -> None:
+        """Add one or more items to the buffer and flush when ``threshold`` is
+        reached.
 
         Args:
-            item: Item to add to the buffer.
+            item: Single item or iterable of items to add to the buffer.
             remaining: Number of items left to process. If provided, the buffer
                 flushes when this value is a multiple of ``threshold`` or zero.
         """
@@ -47,13 +51,16 @@ class SaveStrategy(Generic[T]):
         if remaining is None and self.config:
             remaining = self.config.global_settings.threshold
 
-        self.buffer.append(item)
+        if isinstance(item, Iterable):
+            self.buffer.extend(item)
+        else:
+            self.buffer.append(item)
 
         flush_by_remaining = False
+        if remaining is not None:
+            flush_by_remaining = remaining % self.threshold == 0
 
         should_flush = len(self.buffer) >= self.threshold or flush_by_remaining
-        # if remaining is not None:
-        #     should_flush = should_flush or remaining % self.threshold == 0
 
         if remaining == 0 or should_flush:
             self.flush()
