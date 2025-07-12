@@ -2,7 +2,7 @@
 skinparam packageStyle rectangle
 
 package "fly" {
-    package "presentation" {
+    package "fly.presentation" {
         class main <<entrypoint>> {
             +__main__() : void
             }
@@ -26,9 +26,9 @@ package "fly" {
             CLIController --> MetricsCollector : uses
             CLIController --> StatementFetchService
         }
-    package "services" {
+    package "fly.services" {
         }
-    package "domain" {
+    package "fly.domain" {
         package "fly.domain.ports" {
             interface LoggerPort {
                 -message: str
