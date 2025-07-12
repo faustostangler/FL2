@@ -4,7 +4,8 @@ from application import CompanyMapper
 from application.services.company_service import CompanyService
 from application.services.nsd_service import NsdService
 from application.services.statement_fetch_service import StatementFetchService
-from application.services.statement_parse_service import StatementParseService
+
+# from application.services.statement_parse_service import StatementParseService
 from domain.ports import LoggerPort
 from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
@@ -42,7 +43,7 @@ class CLIController:
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def start(self):
+    def start_fly(self):
         """Execute the main CLI tasks sequentially."""
         # self.logger.log("Run  Method controller.run()", level="info")
 
@@ -258,6 +259,7 @@ class CLIController:
         #     level="info",
         # )
         raw_rows = statements_fetch_service.fetch_statements()
+        self.logger.log(f"total {len(raw_rows)}")
         # self.logger.log(
         #     "End  Method controller.run()._statement_service().statements_fetch_service.run()",
         #     level="info",
@@ -268,27 +270,30 @@ class CLIController:
         #     level="info",
         # )
 
-        # UseCase 2: Parse
-        # self.logger.log("Instantiate parse_service (statement_repo)", level="info")
-        parse_service = StatementParseService(
-            logger=self.logger,
-            repository=statement_repo,
-            config=self.config,
-            max_workers=self.config.global_settings.max_workers,
-        )
 
-        # self.logger.log(
-        #     "Call Method controller.start()._statement_service().parse_service.parse_statements()",
-        #     level="info",
-        # )
-        parse_service.parse_statements(raw_rows)
-        # self.logger.log(
-        #     "End  Method controller.start()._statement_service().parse_service.parse_statements(",
-        #     level="info",
+
+
+        # # UseCase 2: Parse
+        # # self.logger.log("Instantiate parse_service (statement_repo)", level="info")
+        # parse_service = StatementParseService(
+        #     logger=self.logger,
+        #     repository=statement_repo,
+        #     config=self.config,
+        #     max_workers=self.config.global_settings.max_workers,
         # )
 
-        # self.logger.log("End Instance parse_service (statement_repo)", level="info")
+        # # self.logger.log(
+        # #     "Call Method controller.start()._statement_service().parse_service.parse_statements()",
+        # #     level="info",
+        # # )
+        # parse_service.parse_statements(raw_rows)
+        # # self.logger.log(
+        # #     "End  Method controller.start()._statement_service().parse_service.parse_statements(",
+        # #     level="info",
+        # # )
 
-        # self.logger.log(
-        #     "End  Method controller.run()._statement_service()", level="info"
-        # )
+        # # self.logger.log("End Instance parse_service (statement_repo)", level="info")
+
+        # # self.logger.log(
+        # #     "End  Method controller.run()._statement_service()", level="info"
+        # # )

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Generic, List, Set, TypeVar
+from typing import Generic, List, TypeVar
 
 T = TypeVar("T")
 

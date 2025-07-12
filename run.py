@@ -26,7 +26,7 @@ if __name__ == "__main__":
 
     # Run Controller
     # logger.log("Call Method controller.start()", level="info")
-    controller.start()
+    controller.start_fly()
     # logger.log("End  Method controller.start()", level="info")
 
     # logger.log("End Instance controller", level="info")

@@ -1,6 +1,5 @@
 import logging
-import uuid
-from typing import Optional
+from typing import Any, MutableMapping, Optional
 
 from domain.ports.logger_port import LoggerPort
 from infrastructure.config.config import Config
@@ -112,10 +111,10 @@ class MergedLoggerAdapter(logging.LoggerAdapter):
     """Logger adapter that merges ``extra`` dictionaries from calls and
     defaults."""
 
-    def process(self, msg: str, kwargs: dict) -> tuple[str, dict]:
+    def process(self, msg: str, kwargs: MutableMapping[str, Any]) -> tuple[str, MutableMapping[str, Any]]:
         base = self.extra if isinstance(self.extra, dict) else {}
         extra = kwargs.get("extra") or {}
         if not isinstance(extra, dict):
             extra = {}
         kwargs["extra"] = {**base, **extra}
-        return msg, kwargs
+        return (msg, kwargs)
