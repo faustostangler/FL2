@@ -25,7 +25,7 @@ class ParseAndClassifyStatementsUseCase:
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def run(self, row: StatementRowsDTO) -> StatementDTO:
+    def parse_and_store_row(self, row: StatementRowsDTO) -> StatementDTO:
         """Build a :class:`StatementDTO` from a statement row."""
         dto = StatementDTO(
             batch_id=str(row.nsd),

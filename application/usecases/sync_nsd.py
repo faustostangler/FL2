@@ -20,7 +20,7 @@ class SyncNSDUseCase:
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def     run(self) -> None:
+    def synchronize_nsd(self) -> None:
         """Start the NSD synchronization workflow."""
 
         # self.logger.log("Run  Method controller.run()._nsd_service().run().sync_nsd_usecase.run()", level="info")

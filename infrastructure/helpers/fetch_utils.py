@@ -172,21 +172,23 @@ class FetchUtils:
                 if response.status_code == 200:
                     # On success, log the total block time if any
                     if block_start:
-                        block_duration = time.perf_counter() - block_start
+                        _block_duration = time.perf_counter() - block_start
                         # self.logger.log(
                         #     f"Dodging server block: {block_duration:.2f}s",
                         #     level="warning",
                         #     worker_id=worker_id,
                         # )
                     return response, scraper
-            except (requests.Timeout, requests.ConnectionError) as e:
+            except (requests.Timeout, requests.ConnectionError):
                 if not self.test_internet():
                     continue
 
             except Exception:  # noqa: BLE001
                 # Ignore network errors and retry with a new scraper
                 pass
-                self.logger.log(f"Attempt {attempt + 1} {url}", level="warning", worker_id=worker_id)
+                self.logger.log(
+                    f"Attempt {attempt + 1} {url}", level="warning", worker_id=worker_id
+                )
 
             # Record the start of blocking period on first failure
             if block_start is None:

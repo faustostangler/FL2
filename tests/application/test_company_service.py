@@ -7,7 +7,7 @@ from domain.ports import CompanyRepositoryPort, CompanySourcePort
 from tests.conftest import DummyConfig, DummyLogger
 
 
-def test_run_calls_usecase_execute(monkeypatch):
+def test_sync_companies_calls_usecase(monkeypatch):
     dummy_config = DummyConfig()
     dummy_config.global_settings.max_workers = 3
 
@@ -37,7 +37,7 @@ def test_run_calls_usecase_execute(monkeypatch):
         max_workers=3,
     )
 
-    result = service.run()
+    result = service.sync_companies()
 
-    mock_usecase_inst.run.assert_called_once()
-    assert result == mock_usecase_inst.run.return_value
+    mock_usecase_inst.synchronize_companies.assert_called_once()
+    assert result == mock_usecase_inst.synchronize_companies.return_value

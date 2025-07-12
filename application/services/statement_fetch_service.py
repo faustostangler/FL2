@@ -95,7 +95,7 @@ class StatementFetchService:
 
         return sorted(results, key=lambda n: (n.company_name, n.quarter, n.nsd))
 
-    def run(
+    def fetch_statements(
         self,
         save_callback: Optional[Callable[[List[StatementRowsDTO]], None]] = None,
         threshold: Optional[int] = None,
@@ -133,7 +133,7 @@ class StatementFetchService:
         #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",
         #     level="info",
         # )
-        rows = self.fetch_usecase.run(
+        rows = self.fetch_usecase.fetch_statement_rows(
             batch_rows=targets,
             save_callback=save_callback,
             threshold=threshold,

@@ -185,7 +185,7 @@ class FetchStatementsUseCase:
 
         return result.items
 
-    def run(
+    def fetch_statement_rows(
         self,
         batch_rows: Iterable[NsdDTO],
         save_callback: Optional[Callable[[List[StatementRowsDTO]], None]] = None,

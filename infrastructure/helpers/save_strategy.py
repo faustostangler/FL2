@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable
-from typing import Callable, Generic, List, Optional, TypeVar, Union
+from typing import Callable, Generic, List, Optional, TypeVar
 
 from infrastructure.config import Config
 
@@ -51,15 +51,17 @@ class SaveStrategy(Generic[T]):
         if remaining is None and self.config:
             remaining = self.config.global_settings.threshold
 
-        self.buffer.append(item) # type: ignore
+        if isinstance(item, Iterable) and not isinstance(item, (str, bytes)):
+            self.buffer.extend(item)
+        else:
+            self.buffer.append(item)  # type: ignore
 
         should_flush = len(self.buffer) >= self.threshold
-        # if remaining is not None:
-        #     should_flush = should_flush or remaining % self.threshold == 0
+        if remaining is not None:
+            should_flush = should_flush or remaining % self.threshold == 0
 
         if remaining == 0 or should_flush:
             self.flush()
-
 
     def flush(self) -> None:
         """Invoke the callback with all buffered items and clear the buffer."""

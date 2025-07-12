@@ -26,7 +26,7 @@ class SyncCompaniesUseCase:
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def run(self) -> SyncCompaniesResultDTO:
+    def synchronize_companies(self) -> SyncCompaniesResultDTO:
         """Start the full synchronization pipeline.
 
         Steps:
