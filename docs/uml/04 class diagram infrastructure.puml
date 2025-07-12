@@ -1,0 +1,90 @@
+@startuml
+skinparam packageStyle rectangle
+        package "fly.infrastructure.config" {
+            class DatabaseConfig {
+                -data_dir: Path
+                -db_filename: str
+                -tables: str
+                -connection_string: str
+                +load_database_config() : DatabaseConfig
+                }
+
+            class PathConfig {
+                -temp_dir : Path
+                -log_dir : Path
+                -data_dir : Path
+                -root_dir : Path
+                +load_paths() : PathConfig
+                }
+
+            class ExchangeApiConfig{
+                -language : str
+                -company_endpoint : str
+                -nsd_endpoint : str
+                +load_exchange_api_config() : ExchangeApiConfig
+                }
+
+            class ScrapingConfig{
+                -user_agents : List
+                -referers : List
+                -languages : List
+                -test_internet : str
+                -timeout: int
+                -max_attempts : int
+                +load_scraping_config() : ScrapingConfig
+                }
+
+            class LoggingConfig{
+                -log_dir: Path
+                -log_file_name: str
+                -level: str
+                +load_logging_config() : LoggingConfig
+                }
+
+                class GlobalSettingsConfig{
+                -app_name: str
+                -wait: int
+                -threshold: int
+                -max_linear_holes: int
+                -max_workers: int
+                -batch_size: int
+                -queue_size: int
+
+                +load_logging_config() : GlobalSettingsConfig
+                }
+
+            class DomainConfig{
+                -words_to_remove: list
+                -statements_types: list
+                +load_domain_config() : DomainConfig
+                }
+
+            class StatementsConfig{
+                -statement_items: list
+                -capital_items: list
+                -url_df: str
+                -url_capital: str
+                +load_statements_config() : StatementsConfig
+                }
+
+            class Config {
+                -paths : PathConfig
+                -database : DatabaseConfig
+                -exchange : ExchangeApiConfig
+                -scraping : ScrapingConfig
+                -logging : LoggingConfig
+                -global_settings : GlobalSettingsConfig
+                -domain : DomainConfig
+                -statements : StatementsConfig
+                }
+                Config --> fly.infrastructure.config.DatabaseConfig
+                Config --> fly.infrastructure.config.PathConfig
+                Config --> fly.infrastructure.config.ExchangeApiConfig
+                Config --> fly.infrastructure.config.ScrapingConfig
+                Config --> fly.infrastructure.config.LoggingConfig
+                Config --> fly.infrastructure.config.GlobalSettingsConfig
+                Config --> fly.infrastructure.config.DomainConfig
+                Config --> fly.infrastructure.config.StatementsConfig
+            }
+
+ @enduml

@@ -1,0 +1,28 @@
+@startuml
+skinparam packageStyle rectangle
+    package "fly.presentation" {
+        class main <<entrypoint>> {
+            +__main__() : void
+            }
+            main --> fly.presentation.CLIController
+
+        class CLIController {
+            -config: Config
+            +start_fly() : void
+            -_statement_service() : void
+            -_nsd_service() : void
+            -_company_service() : void
+            }
+            CLIController --> fly.infrastructure.config.Config
+            CLIController --> CompanyService
+            CLIController --> NsdService
+            CLIController --> fly.infrastructure.repositories.SqlAlchemyCompanyRepository : uses
+            CLIController --> SqlAlchemyNsdRepository : uses
+            CLIController --> SqlAlchemyStatementRepository : uses
+            CLIController --> SqlAlchemyStatementRowsRepository : uses
+            CLIController --> RequestsStatementSourceAdapter : uses
+            CLIController --> MetricsCollector : uses
+            CLIController --> StatementFetchService
+        }
+
+ @enduml

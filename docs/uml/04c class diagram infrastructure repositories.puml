@@ -1,0 +1,62 @@
+@startuml
+skinparam packageStyle rectangle
+        package "fly.infrastructure.models" {
+            abstract class BaseModel {
+                <<ORM base>>
+                }
+
+            class CompanyModel {
+                +from_dto(dto: CompanyRawDTO | CompanyDTO) : CompanyModel
+                +to_dto() : CompanyDTO
+                }
+                CompanyModel --|> BaseModel
+                CompanyModel --> CompanyDTO : to_dto()
+                CompanyModel --> CompanyRawDTO : to_dto()
+                CompanyModel <-- CompanyDTO : from_dto()
+                CompanyModel <-- CompanyRawDTO : from_dto()
+                SqlAlchemyCompanyRepository --> CompanyModel : uses
+            }
+
+        package "fly.infrastructure.repositories" {
+            class SqlAlchemyCompanyRepository {
+                CompanyDTO : CompanyDTO
+                +save_all(items: List[CompanyDTO]) : void
+                +get_all() : List[CompanyDTO]
+                +has_item(identifier: str) : bool
+                +get_by_id(id: str) : CompanyDTO
+                +get_all_primary_keys() : Set[str>
+                }
+                SqlAlchemyCompanyRepository --|> CompanyRepositoryPort
+                SqlAlchemyCompanyRepository --|> BaseRepository
+                SqlAlchemyCompanyRepository --> CompanyDTO
+
+            class SqlAlchemyNsdRepository {
+                +save_all(items: List[NsdDTO]) : void
+                +get_all() : List[NsdDTO]
+                +has_item(identifier: int) : bool
+                +get_by_id(id: int) : NsdDTO
+                +get_all_primary_keys() : Set[int]
+                }
+                SqlAlchemyNsdRepository --|> NSDRepositoryPort
+                SqlAlchemyNsdRepository --|> BaseRepository
+                SqlAlchemyCompanyRepository --> NsdDTO
+
+            abstract class BaseRepository<T> {
+                -config : Config
+                -logger : LoggerPort
+                -engine
+                -Session
+
+                +save_all(items: List<T>) : void
+                +get_all() : List<T>
+                +has_item(identifier: str) : bool
+                +get_by_id(id: str) : T
+                }
+                BaseRepository --|> domain.ports.BaseRepositoryPort
+                BaseRepository --> fly.infrastructure.config.Config
+                BaseRepository --> domain.ports.LoggerPort
+                BaseRepository --> fly.infrastructure.models.BaseModel
+
+            }
+
+ @enduml
