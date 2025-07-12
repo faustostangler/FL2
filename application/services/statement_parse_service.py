@@ -48,12 +48,14 @@ class StatementParseService:
 
         def processor(task: WorkerTaskDTO) -> List[StatementDTO]:
             _nsd, rows = task.data
-            return [self.parse_usecase.run(r) for r in rows]
+            return [self.parse_usecase.parse_and_store_row(r) for r in rows]
 
         result = parse_pool.run(tasks=tasks, processor=processor, logger=self.logger)
         return result.items
 
-    def run(self, fetched: List[Tuple[NsdDTO, List[StatementRowsDTO]]]) -> None:
+    def parse_statements(
+        self, fetched: List[Tuple[NsdDTO, List[StatementRowsDTO]]]
+    ) -> None:
         """Parse and persist statements from ``fetched`` rows."""
         # self.logger.log("Run  Method statement_parse_service.run()", level="info")
 

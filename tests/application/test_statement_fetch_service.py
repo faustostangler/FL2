@@ -13,7 +13,7 @@ from domain.ports import (
 from tests.conftest import DummyConfig, DummyLogger
 
 
-def test_run_calls_usecase(monkeypatch):
+def test_fetch_statements_calls_usecase(monkeypatch):
     dummy_config = DummyConfig()
 
     mock_usecase_cls = MagicMock(spec=FetchStatementsUseCase)
@@ -53,9 +53,9 @@ def test_run_calls_usecase(monkeypatch):
     targets = [MagicMock(spec=NsdDTO)]
     monkeypatch.setattr(service, "_build_targets", lambda: targets)
 
-    result = service.run(save_callback="cb", threshold=5)
+    result = service.fetch_statements(save_callback="cb", threshold=5)
 
-    mock_usecase_inst.run.assert_called_once_with(
+    mock_usecase_inst.fetch_statement_rows.assert_called_once_with(
         batch_rows=targets, save_callback="cb", threshold=5
     )
-    assert result == mock_usecase_inst.run.return_value
+    assert result == mock_usecase_inst.fetch_statement_rows.return_value

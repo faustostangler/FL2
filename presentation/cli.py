@@ -42,7 +42,7 @@ class CLIController:
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def run(self):
+    def start(self):
         """Execute the main CLI tasks sequentially."""
         # self.logger.log("Run  Method controller.run()", level="info")
 
@@ -123,11 +123,13 @@ class CLIController:
 
         # Trigger the actual company synchronization process.
         # self.logger.log(
-        #     "Call Method controller.run().company_service.run()", level="info"
+        #     "Call Method controller.start().company_service.sync_companies()",
+        #     level="info",
         # )
-        company_service.run()
+        company_service.sync_companies()
         # self.logger.log(
-        #     "Finish Method controller.run().company_service.run()", level="info"
+        #     "Finish Method controller.start().company_service.sync_companies()",
+        #     level="info",
         # )
 
         # self.logger.log(
@@ -182,11 +184,11 @@ class CLIController:
         )
 
         # self.logger.log(
-        #     "Call Method controller.run()._nsd_service().run()", level="info"
+        #     "Call Method controller.start()._nsd_service().sync_nsd()", level="info"
         # )
-        nsd_service.run()
+        nsd_service.sync_nsd()
         # self.logger.log(
-        #     "End  Method controller.run()._nsd_service().run()", level="info"
+        #     "End  Method controller.start()._nsd_service().sync_nsd()", level="info"
         # )
 
         # self.logger.log("End Instance nsd_service (nsd_repo, nsd_scraper", level="info")
@@ -225,7 +227,7 @@ class CLIController:
 
         # self.logger.log("Instantiate collector", level="info")
         collector = MetricsCollector()
-        collector._network_bytes = 4508770675 # setup initial value for reloading
+        collector._network_bytes = 4508770675  # setup initial value for reloading
 
         # self.logger.log("Instantiate source", level="info")
         source = RequestsStatementSourceAdapter(
@@ -255,7 +257,7 @@ class CLIController:
         #     "Call Method controller.run()._statement_service().statements_fetch_service.run()",
         #     level="info",
         # )
-        raw_rows = statements_fetch_service.run()
+        raw_rows = statements_fetch_service.fetch_statements()
         # self.logger.log(
         #     "End  Method controller.run()._statement_service().statements_fetch_service.run()",
         #     level="info",
@@ -276,12 +278,12 @@ class CLIController:
         )
 
         # self.logger.log(
-        #     "Call Method controller.run()._statement_service().parse_service.run()",
+        #     "Call Method controller.start()._statement_service().parse_service.parse_statements()",
         #     level="info",
         # )
-        parse_service.run(raw_rows)
+        parse_service.parse_statements(raw_rows)
         # self.logger.log(
-        #     "End  Method controller.run()._statement_service().parse_service.run(",
+        #     "End  Method controller.start()._statement_service().parse_service.parse_statements(",
         #     level="info",
         # )
 

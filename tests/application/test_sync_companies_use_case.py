@@ -74,7 +74,7 @@ def test_execute_converts_and_saves():
         max_workers=2,
     )
 
-    result = usecase.run()
+    result = usecase.synchronize_companies()
 
     repo.get_all_primary_keys.assert_called_once()
     scraper.fetch_all.assert_called_once()

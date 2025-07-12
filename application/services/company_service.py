@@ -28,10 +28,16 @@ class CompanyService:
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def run(self) -> SyncCompaniesResultDTO:
+    def sync_companies(self) -> SyncCompaniesResultDTO:
         """Execute company synchronization using the injected use case."""
         # Delegate execution to the underlying use case and return the result.
-        # self.logger.log("Call Method sync_companies_usecase.run()", level="info")
-        result = self.sync_companies_usecase.run()
-        # self.logger.log("End  Method sync_companies_usecase.run()", level="info")
+        # self.logger.log(
+        #     "Call Method sync_companies_usecase.synchronize_companies()",
+        #     level="info",
+        # )
+        result = self.sync_companies_usecase.synchronize_companies()
+        # self.logger.log(
+        #     "End  Method sync_companies_usecase.synchronize_companies()",
+        #     level="info",
+        # )
         return result

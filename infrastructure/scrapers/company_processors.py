@@ -20,18 +20,19 @@ class EntryCleaner:
         """Initialize with ``DataCleaner``."""
         self.data_cleaner = data_cleaner
 
-    def run(
-            self,
-            entry: Dict,
-            text_keys: List[str],
-            date_keys: List[str],
-            number_keys: Optional[List[str]],
-            dto_class: Type[Union[CompanyListingDTO, CompanyDetailDTO]],
-            ) -> Union[CompanyListingDTO, CompanyDetailDTO]:
+    def clean_entry(
+        self,
+        entry: Dict,
+        text_keys: List[str],
+        date_keys: List[str],
+        number_keys: Optional[List[str]],
+        dto_class: Type[Union[CompanyListingDTO, CompanyDetailDTO]],
+    ) -> Union[CompanyListingDTO, CompanyDetailDTO]:
         """Return a ``CompanyListingDTO`` from the given entry."""
-        cleaned = self.data_cleaner.clean_dict_fields(entry, text_keys, date_keys, number_keys)
+        cleaned = self.data_cleaner.clean_dict_fields(
+            entry, text_keys, date_keys, number_keys
+        )
         return dto_class.from_dict(cleaned)
-
 
 
 class DetailFetcher:
@@ -54,7 +55,7 @@ class DetailFetcher:
         self.metrics_collector = metrics_collector
         self.data_cleaner = data_cleaner
 
-    def run(self, cvm_code: str) -> Dict:
+    def fetch_detail(self, cvm_code: str) -> Dict:
         """Fetch detail JSON and normalize fields."""
         payload = {"codeCVM": cvm_code, "language": self.language}
         token = base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
@@ -75,7 +76,7 @@ class CompanyMerger:
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def run(
+    def merge_details(
         self, listing: CompanyListingDTO, detail: CompanyDetailDTO
     ) -> Optional[CompanyRawDTO]:
         """Merge listing and detail DTOs into a raw DTO."""
@@ -97,10 +98,10 @@ class CompanyDetailProcessor:
         self.fetcher = fetcher
         self.merger = merger
 
-    def run(self, entry: Dict) -> Optional[CompanyRawDTO]:
+    def process_entry(self, entry: Dict) -> Optional[CompanyRawDTO]:
         """Clean, fetch details, and merge into a raw DTO."""
         try:
-            text_keys=[
+            text_keys = [
                 "issuingCompany",
                 "companyName",
                 "tradingName",
@@ -108,12 +109,21 @@ class CompanyDetailProcessor:
                 "segmentEng",
                 "market",
             ]
-            date_keys=["dateListing"]
+            date_keys = ["dateListing"]
             number_keys = []
-            listing = cast(CompanyListingDTO, self.cleaner.run(entry=entry, text_keys=text_keys, date_keys=date_keys, number_keys=number_keys, dto_class=CompanyListingDTO))
+            listing = cast(
+                CompanyListingDTO,
+                self.cleaner.clean_entry(
+                    entry=entry,
+                    text_keys=text_keys,
+                    date_keys=date_keys,
+                    number_keys=number_keys,
+                    dto_class=CompanyListingDTO,
+                ),
+            )
 
-            detail = self.fetcher.run(str(listing.cvm_code))
-            text_keys=[
+            detail = self.fetcher.fetch_detail(str(listing.cvm_code))
+            text_keys = [
                 "issuingCompany",
                 "companyName",
                 "tradingName",
@@ -124,11 +134,20 @@ class CompanyDetailProcessor:
                 "market",
                 "institutionCommon",
                 "institutionPreffered",
-                ]
-            date_keys=["lastDate", "dateQuotation"]
+            ]
+            date_keys = ["lastDate", "dateQuotation"]
             number_keys = []
-            detail = cast(CompanyDetailDTO, self.cleaner.run(entry=detail, text_keys=text_keys, date_keys=date_keys, number_keys=number_keys, dto_class=CompanyDetailDTO))
+            detail = cast(
+                CompanyDetailDTO,
+                self.cleaner.clean_entry(
+                    entry=detail,
+                    text_keys=text_keys,
+                    date_keys=date_keys,
+                    number_keys=number_keys,
+                    dto_class=CompanyDetailDTO,
+                ),
+            )
 
-            return self.merger.run(listing, detail)
+            return self.merger.merge_details(listing, detail)
         except Exception:
             pass

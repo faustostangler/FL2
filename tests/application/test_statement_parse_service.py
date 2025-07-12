@@ -9,7 +9,7 @@ from domain.ports import StatementRepositoryPort
 from tests.conftest import DummyConfig, DummyLogger
 
 
-def test_run_invokes_parse_and_finalize(monkeypatch):
+def test_parse_statements_invokes_usecase_and_finalize(monkeypatch):
     dummy_config = DummyConfig()
 
     mock_usecase_cls = MagicMock(spec=ParseAndClassifyStatementsUseCase)
@@ -38,7 +38,7 @@ def test_run_invokes_parse_and_finalize(monkeypatch):
 
     fetched = [(MagicMock(spec=NsdDTO), [MagicMock(spec=StatementRowsDTO)])]
 
-    service.run(fetched)
+    service.parse_statements(fetched)
 
     parse_all.assert_called_once_with(fetched)
     mock_usecase_inst.finalize.assert_called_once()

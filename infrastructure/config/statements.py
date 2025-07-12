@@ -157,7 +157,7 @@ def load_statements_config() -> StatementsConfig:
     statement_items = [item.copy() for item in STATEMENT_ITEMS]
     statement_items.sort(
         key=lambda item: (
-            1 if item.get("grupo") == "Dados da Empresa" else 0,
+            0 if item.get("grupo") == "Dados da Empresa" else 1,
             item.get("informacao", 0),
             item.get("demonstracao", 0),
         )

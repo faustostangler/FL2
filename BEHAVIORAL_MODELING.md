@@ -9,9 +9,9 @@ use PlantUML syntax and follow the Hexagonal Architecture layers
 ```
 @startuml
 actor User
-User -> CLIController : run()
-CLIController -> NsdService : run()
-NsdService -> SyncNSDUseCase : run()
+User -> CLIController : start()
+CLIController -> NsdService : sync_nsd()
+NsdService -> SyncNSDUseCase : synchronize_nsd()
 SyncNSDUseCase -> NSDRepositoryPort : get_all_primary_keys()
 SyncNSDUseCase -> NsdScraper : fetch_all(skip_codes, save_callback)
 loop for each nsd
@@ -29,7 +29,7 @@ SaveStrategy -> NSDRepositoryPort : save_all(remaining)
 @enduml
 ```
 
-1. **CLIController** builds dependencies and invokes `NsdService.run()`.
+1. **CLIController** builds dependencies and invokes `NsdService.sync_nsd()`.
 2. **SyncNSDUseCase** collects existing NSD ids from the repository.
 3. The **NsdScraper** iterates through sequential ids with the worker pool.
 4. **FetchUtils.fetch_with_retry** retries on network errors or Cloudflare blocks,
@@ -44,9 +44,9 @@ SaveStrategy -> NSDRepositoryPort : save_all(remaining)
 @startuml
 actor User
 User -> CLIController : _statement_service()
-CLIController -> StatementFetchService : run()
+CLIController -> StatementFetchService : fetch_statements()
 StatementFetchService -> StatementFetchService : _build_targets()
-StatementFetchService -> FetchStatementsUseCase : run(targets)
+StatementFetchService -> FetchStatementsUseCase : fetch_statement_rows(targets)
 FetchStatementsUseCase -> FetchStatementsUseCase : fetch_all()
 FetchStatementsUseCase -> WorkerPool : run(tasks, processor)
 loop per NSD
@@ -78,10 +78,10 @@ SaveStrategy -> StatementRowsRepositoryPort : save_all(remaining)
 @startuml
 actor User
 User -> CLIController : _statement_service()
-CLIController -> StatementParseService : run(fetched)
+CLIController -> StatementParseService : parse_statements(fetched)
 StatementParseService -> WorkerPool : run(tasks, processor)
 loop per statement row
-    WorkerPool -> ParseAndClassifyStatementsUseCase : run(row)
+    WorkerPool -> ParseAndClassifyStatementsUseCase : parse_and_store_row(row)
     ParseAndClassifyStatementsUseCase -> SaveStrategy : handle(dto)
     alt threshold reached
         SaveStrategy -> StatementRepositoryPort : save_all(batch)
@@ -92,7 +92,7 @@ ParseAndClassifyStatementsUseCase -> StatementParseService : finalize()
 @enduml
 ```
 
-1. After fetching rows, the controller invokes `StatementParseService.run()`.
+1. After fetching rows, the controller invokes `StatementParseService.parse_statements()`.
 2. A worker pool processes each raw row, calling
    `ParseAndClassifyStatementsUseCase.run`.
 3. The use case converts a `StatementRowsDTO` to a `StatementDTO`, classifies the

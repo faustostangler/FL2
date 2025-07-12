@@ -26,7 +26,7 @@ def _make_nsd(nsd: int) -> NsdDTO:
     )
 
 
-def test_run_skips_existing(monkeypatch):
+def test_fetch_statement_rows_skips_existing(monkeypatch):
     source = MagicMock(spec=StatementSourcePort)
     rows_repo = MagicMock(spec=StatementRowsRepositoryPort)
     stmt_repo = MagicMock(spec=StatementRepositoryPort)
@@ -45,7 +45,7 @@ def test_run_skips_existing(monkeypatch):
     monkeypatch.setattr(usecase, "fetch_all", mock_fetch_all)
 
     targets = [_make_nsd(1), _make_nsd(2)]
-    result = usecase.run(targets, save_callback="cb", threshold=5)
+    result = usecase.fetch_statement_rows(targets, save_callback="cb", threshold=5)
 
     stmt_repo.get_all_primary_keys.assert_not_called()
     mock_fetch_all.assert_called_once_with(
