@@ -1,0 +1,67 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam defaultTextAlignment center
+
+package presentation {
+  [cli]  
+}
+
+package application {
+  [controllers]
+  [processors]
+  [services]
+}
+
+package domain {
+  [entities]
+  [dtos]
+  [usecases]
+  [interfaces]  
+}
+
+package infrastructure {
+  [adapters]
+  [repositories]
+  [config]
+  [database]
+  [utils]
+}
+
+' --- DEPENDÊNCIAS ---
+
+' Presentation depende apenas da Application
+[cli] --> [controllers]
+
+' Controllers orquestram Processors e Services
+[controllers] --> [processors]
+[controllers] --> [services]
+
+' Services são coordenadores de UseCases e DTOs
+[services] --> [usecases]
+[services] --> [dtos]
+
+' Processors compõem serviços + adaptadores + repositórios
+[processors] --> [services]
+[processors] --> [adapters]
+[processors] --> [repositories]
+
+' Application depende de Domain
+[controllers] --> [dtos]
+[processors] --> [dtos]
+[services] --> [entities]
+[services] --> [interfaces]
+
+' Infrastructure implementa Domain (ports)
+[repositories] --> [interfaces]
+[adapters] --> [interfaces]
+
+' Repositórios acessam banco e lidam com persistência
+[repositories] --> [database]
+[repositories] --> [dtos]
+
+' Infraestrutura também usa config e utils
+[adapters] --> [config]
+[repositories] --> [config]
+[adapters] --> [utils]
+
+@enduml

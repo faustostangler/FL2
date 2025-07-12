@@ -1,0 +1,12 @@
+@startuml
+actor CLI
+participant CompanyService
+participant SyncCompaniesUseCase
+participant CompanySourcePort
+participant CompanyRepositoryPort
+
+CLI -> CompanyService : sync_companies()
+CompanyService -> SyncCompaniesUseCase : execute()
+SyncCompaniesUseCase -> CompanySourcePort : fetch_raw_companies()
+SyncCompaniesUseCase -> CompanyRepositoryPort : persist_companies()
+@enduml

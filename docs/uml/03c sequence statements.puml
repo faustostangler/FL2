@@ -1,0 +1,12 @@
+@startuml
+actor CLI
+participant CompanyService
+participant FetchStatementsUseCase
+participant StatementSourcePort
+participant StatementRepositoryPort
+
+CLI -> CompanyService : fetch_statements()
+CompanyService -> FetchStatementsUseCase : execute()
+FetchStatementsUseCase -> StatementSourcePort : fetch()
+FetchStatementsUseCase -> StatementRepositoryPort : persist_statements()
+@enduml

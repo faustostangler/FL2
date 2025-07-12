@@ -1,0 +1,12 @@
+@startuml
+actor CLI
+participant NSDService
+participant SyncNSDUseCase
+participant NSDSourcePort
+participant NSDRepositoryPort
+
+CLI -> NSDService : sync_nsd()
+NSDService -> SyncNSDUseCase : execute()
+SyncNSDUseCase -> NSDSourcePort : fetch_nsd_data()
+SyncNSDUseCase -> NSDRepositoryPort : persist_nsd_data()
+@enduml
