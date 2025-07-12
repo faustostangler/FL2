@@ -1,16 +1,15 @@
-    @startuml
-    skinparam packageStyle rectangle
+@startuml
+skinparam packageStyle rectangle
 
-    package "fly" {
-        package "presentation" {
-            class main <<entrypoint>> {
-                +__main__() : void
+package "fly" {
+    package "presentation" {
+        class main <<entrypoint>> {
+            +__main__() : void
             }
             main --> fly.presentation.CLIController
 
-            class CLIController {
+        class CLIController {
             -config: Config
-
             +start_fly() : void
             -_statement_service() : void
             -_nsd_service() : void
@@ -19,65 +18,44 @@
             CLIController --> fly.infrastructure.config.Config
             CLIController --> CompanyService
             CLIController --> NsdService
-
             CLIController --> fly.infrastructure.repositories.SqlAlchemyCompanyRepository : uses
             CLIController --> SqlAlchemyNsdRepository : uses
             CLIController --> SqlAlchemyStatementRepository : uses
             CLIController --> SqlAlchemyStatementRowsRepository : uses
             CLIController --> RequestsStatementSourceAdapter : uses
             CLIController --> MetricsCollector : uses
-
             CLIController --> StatementFetchService
-    }
-    }
-        package "services" {
-            class CompanyService
-            class NsdService
-            class StatementFetchService
-            class StatementParseService
-            class NsdPredictionService
-
-            CompanyService --> SyncCompaniesUseCase
-            NsdService --> SyncNSDUseCase
-            StatementFetchService --> FetchStatementsUseCase
-            StatementParseService --> ParseAndClassifyStatementsUseCase
         }
-
-        package "application.usecases" {
-            class SyncCompaniesUseCase
-            class SyncNSDUseCase
-            class FetchStatementsUseCase
-            class ParseAndClassifyStatementsUseCase
+    package "services" {
         }
-
-        package "domain" {
-            package "fly.domain.ports" {
-                interface LoggerPort {
-                    -message: str
-                    -level: str
-                    -progress: dict
-                    -extra: dict
-                    -worker_id : str
+    package "domain" {
+        package "fly.domain.ports" {
+            interface LoggerPort {
+                -message: str
+                -level: str
+                -progress: dict
+                -extra: dict
+                -worker_id : str
                 }
 
-                interface BaseRepositoryPort<T> {
-                    +save_all(items: List<T>) : void
-                    +get_all() : List<T>
-                    +has_item(identifier: str) : bool
-                    +get_by_id(id: str) : T
+            interface BaseRepositoryPort<T> {
+                +save_all(items: List<T>) : void
+                +get_all() : List<T>
+                +has_item(identifier: str) : bool
+                +get_by_id(id: str) : T
                 }
 
-                interface CompanyRepositoryPort
+            interface CompanyRepositoryPort
                 CompanyRepositoryPort --|> BaseRepositoryPort        
-                interface NSDRepositoryPort {
+
+            interface NSDRepositoryPort {
                 }
                 NSDRepositoryPort --|> BaseRepositoryPort
 
-                interface StatementsRepositoryPort {
+            interface StatementsRepositoryPort {
                 }
                 StatementsRepositoryPort --|> BaseRepositoryPort
             }
-        }
 
         package "fly.domain.dto" {
             class CompanyDTO {
@@ -115,11 +93,10 @@
                 +date_quotation: datetime
                 +last_date: datetime
                 +listing_date: datetime
-
                 +from_dict(raw: dict) : CompanyDTO
                 +from_raw(raw: CompanyRawDTO) : CompanyDTO
-            }
-            CompanyDTO --> CompanyRawDTO
+                }
+                CompanyDTO --> CompanyRawDTO
 
             class CompanyRawDTO {
                 -cvm_code: str
@@ -156,7 +133,7 @@
                 -date_quotation: datetime
                 -last_date: datetime
                 -listing_date: datetime
-            }
+                }
 
             class NsdDTO {
                 +nsd: int
@@ -170,97 +147,88 @@
                 +protocol: str
                 +sent_date: datetime
                 +reason: str
-
                 +from_dict(raw: dict) : NsdDTO
+                }
             }
         }
-
-        package "fly.infrastructure" {
-            package "fly.infrastructure.config" {
-                class DatabaseConfig {
-                    -data_dir: Path
-                    -db_filename: str
-                    -tables: str
-                    -connection_string: str
-
-                    +load_database_config() : DatabaseConfig
+    package "fly.infrastructure" {
+        package "fly.infrastructure.config" {
+            class DatabaseConfig {
+                -data_dir: Path
+                -db_filename: str
+                -tables: str
+                -connection_string: str
+                +load_database_config() : DatabaseConfig
                 }
 
-                class PathConfig {
-                    -temp_dir : Path
-                    -log_dir : Path
-                    -data_dir : Path
-                    -root_dir : Path
-
-                    +load_paths() : PathConfig
+            class PathConfig {
+                -temp_dir : Path
+                -log_dir : Path
+                -data_dir : Path
+                -root_dir : Path
+                +load_paths() : PathConfig
                 }
 
-                class ExchangeApiConfig{
-                    -language : str
-                    -company_endpoint : str
-                    -nsd_endpoint : str
-
-                    +load_exchange_api_config() : ExchangeApiConfig
+            class ExchangeApiConfig{
+                -language : str
+                -company_endpoint : str
+                -nsd_endpoint : str
+                +load_exchange_api_config() : ExchangeApiConfig
                 }
 
-                class ScrapingConfig{
-                    -user_agents : List
-                    -referers : List
-                    -languages : List
-                    -test_internet : str
-                    -timeout: int
-                    -max_attempts : int
-
-                    +load_scraping_config() : ScrapingConfig
+            class ScrapingConfig{
+                -user_agents : List
+                -referers : List
+                -languages : List
+                -test_internet : str
+                -timeout: int
+                -max_attempts : int
+                +load_scraping_config() : ScrapingConfig
                 }
 
-                class LoggingConfig{
-                    -log_dir: Path
-                    -log_file_name: str
-                    -level: str
-
-                    +load_logging_config() : LoggingConfig
+            class LoggingConfig{
+                -log_dir: Path
+                -log_file_name: str
+                -level: str
+                +load_logging_config() : LoggingConfig
                 }
 
-                 class GlobalSettingsConfig{
-                    -app_name: str
-                    -wait: int
-                    -threshold: int
-                    -max_linear_holes: int
-                    -max_workers: int
-                    -batch_size: int
-                    -queue_size: int
+                class GlobalSettingsConfig{
+                -app_name: str
+                -wait: int
+                -threshold: int
+                -max_linear_holes: int
+                -max_workers: int
+                -batch_size: int
+                -queue_size: int
 
-                    +load_logging_config() : GlobalSettingsConfig
+                +load_logging_config() : GlobalSettingsConfig
                 }
 
-                class DomainConfig{
-                    -words_to_remove: list
-                    -statements_types: list
-
-                    +load_domain_config() : DomainConfig
+            class DomainConfig{
+                -words_to_remove: list
+                -statements_types: list
+                +load_domain_config() : DomainConfig
                 }
 
-                class StatementsConfig{
-                    -statement_items: list
-                    -capital_items: list
-                    -url_df: str
-                    -url_capital: str
-
-                    +load_statements_config() : StatementsConfig
+            class StatementsConfig{
+                -statement_items: list
+                -capital_items: list
+                -url_df: str
+                -url_capital: str
+                +load_statements_config() : StatementsConfig
                 }
 
-                class Config {
-                    -paths : PathConfig
-                    -database : DatabaseConfig
-                    -exchange : ExchangeApiConfig
-                    -scraping : ScrapingConfig
-                    -logging : LoggingConfig
-                    -global_settings : GlobalSettingsConfig
-                    -domain : DomainConfig
-                    -statements : StatementsConfig
+            class Config {
+                -paths : PathConfig
+                -database : DatabaseConfig
+                -exchange : ExchangeApiConfig
+                -scraping : ScrapingConfig
+                -logging : LoggingConfig
+                -global_settings : GlobalSettingsConfig
+                -domain : DomainConfig
+                -statements : StatementsConfig
                 }
-
                 Config --> fly.infrastructure.config.DatabaseConfig
                 Config --> fly.infrastructure.config.PathConfig
                 Config --> fly.infrastructure.config.ExchangeApiConfig
@@ -273,18 +241,17 @@
         package "fly.infrastructure.factories" {
             class DataCleanerFactory <<factory>> {
                 +create_data_cleaner(config: Config, logger: LoggerPort) : DataCleaner
+                }
             }
-        }
         package "fly.infrastructure.helpers" {
             class DataCleaner {
                 +clean_text(...) : str
                 +clean_number(...) : float
                 +clean_date(...) : datetime
                 +clean_dict_fields(...) : dict
+                }
+                DataCleaner --> fly.infrastructure.config.Config
             }
-
-            DataCleaner --> fly.infrastructure.config.Config
-        }
         package "fly.infrastructure.logging" {
             class Logger {
                 -config : fly.infrastructure.config.Config
@@ -293,89 +260,59 @@
                 -context_tracker : ContextTracker
                 -id_generator : IdGenerator
                 -_logger : LoggerAdapter
-
-                +log(... ) : void
+                +log(...) : void
                 -_setup_logger(level: str) : LoggerAdapter
-            }
-            Logger --|> domain.LoggerPort
-            Logger --> fly.infrastructure.config.Config
-            Logger --> ContextTracker
-            Logger --> ProgressFormatter
-            Logger --> IdGenerator
-            Logger --> LoggerAdapter
+                }
+                Logger --|> domain.LoggerPort
+                Logger --> fly.infrastructure.config.Config
+                Logger --> ContextTracker
+                Logger --> ProgressFormatter
+                Logger --> IdGenerator
+                Logger --> LoggerAdapter
 
             class ContextTracker {
                 +get_context() : str
-            }
+                }
 
             class ProgressFormatter {
                 +format(progress: dict) : str
-            }
+                }
 
             class IdGenerator {
                 +create_id(size: int = 0, string_id: str = None) : str
-            }
+                }
 
             class MergedLoggerAdapter {
                 -msg: str
                 -kwargs: dict
-
                 +process() : tuple[str, dict]
-            }
+                }
 
             class SafeFormatter {
                 -record: LogRecord
-
                 +format() : str
-            }
-            MergedLoggerAdapter --|> logging.LoggerAdapter
-            SafeFormatter --|> logging.Formatter
+                }
+                MergedLoggerAdapter --|> logging.LoggerAdapter
+                SafeFormatter --|> logging.Formatter
 
-        }
+            }
 
         package "fly.infrastructure.models" {
             abstract class BaseModel {
                 <<ORM base>>
-            }
+                }
 
             class CompanyModel {
                 +from_dto(dto: CompanyRawDTO | CompanyDTO) : CompanyModel
                 +to_dto() : CompanyDTO
+                }
+                CompanyModel --|> BaseModel
+                CompanyModel --> CompanyDTO : to_dto()
+                CompanyModel --> CompanyRawDTO : to_dto()
+                CompanyModel <-- CompanyDTO : from_dto()
+                CompanyModel <-- CompanyRawDTO : from_dto()
+                SqlAlchemyCompanyRepository --> CompanyModel : uses
             }
-            CompanyModel --|> BaseModel
-            CompanyModel --> CompanyDTO : to_dto()
-            CompanyModel --> CompanyRawDTO : to_dto()
-            CompanyModel <-- CompanyDTO : from_dto()
-            CompanyModel <-- CompanyRawDTO : from_dto()
-            SqlAlchemyCompanyRepository --> CompanyModel : uses
-
-            class NSDModel {
-                +from_dto(dto: NsdDTO) : NSDModel
-                +to_dto() : NsdDTO
-            }
-            NSDModel --|> BaseModel
-            NSDModel --> NsdDTO : to_dto()
-            NSDModel <-- NsdDTO : from_dto()
-            SqlAlchemyNsdRepository --> NSDModel : uses
-
-            class StatementModel {
-                +from_dto(dto: StatementDTO) : StatementModel
-                +to_dto() : StatementDTO
-            }
-            StatementModel --|> BaseModel
-            StatementModel --> StatementDTO : to_dto()
-            StatementModel <-- StatementDTO : from_dto()
-            SqlAlchemyStatementRepository --> StatementModel : uses
-
-            class StatementRowsModel {
-                +from_dto(dto: StatementRowsDTO) : StatementRowsModel
-                +to_dto() : StatementRowsDTO
-            }
-            StatementRowsModel --|> BaseModel
-            StatementRowsModel --> StatementRowsDTO : to_dto()
-            StatementRowsModel <-- StatementRowsDTO : from_dto()
-            SqlAlchemyStatementRowsRepository --> StatementRowsModel : uses
-        }
 
         package "fly.infrastructure.repositories" {
             class SqlAlchemyCompanyRepository {
@@ -385,44 +322,21 @@
                 +has_item(identifier: str) : bool
                 +get_by_id(id: str) : CompanyDTO
                 +get_all_primary_keys() : Set[str>
-            }
+                }
+                SqlAlchemyCompanyRepository --|> CompanyRepositoryPort
+                SqlAlchemyCompanyRepository --|> BaseRepository
+                SqlAlchemyCompanyRepository --> CompanyDTO
+
             class SqlAlchemyNsdRepository {
                 +save_all(items: List[NsdDTO]) : void
                 +get_all() : List[NsdDTO]
                 +has_item(identifier: int) : bool
                 +get_by_id(id: int) : NsdDTO
                 +get_all_primary_keys() : Set[int]
-            }
-            class SqlAlchemyStatementRepository {
-                +save_all(items: List[StatementDTO]) : void
-                +get_all() : List[StatementDTO]
-                +has_item(identifier: str) : bool
-                +get_by_id(id: str) : StatementDTO
-            }
-            class SqlAlchemyStatementRowsRepository {
-                +save_all(items: List[StatementRowsDTO]) : void
-                +get_all() : List[StatementRowsDTO]
-                +has_item(identifier: str) : bool
-                +get_by_id(id: str) : StatementRowsDTO
-                +get_all_primary_keys() : Set[int]
-            }
-
-            SqlAlchemyCompanyRepository --|> CompanyRepositoryPort
-            SqlAlchemyCompanyRepository --|> BaseRepository
-            SqlAlchemyCompanyRepository --> CompanyDTO
-
-            SqlAlchemyNsdRepository --|> NSDRepositoryPort
-            SqlAlchemyNsdRepository --|> BaseRepository
-            SqlAlchemyNsdRepository --> NsdDTO
-
-            SqlAlchemyStatementRepository --|> StatementRepositoryPort
-            SqlAlchemyStatementRepository --|> BaseRepository
-            SqlAlchemyStatementRepository --> StatementDTO
-
-            SqlAlchemyStatementRowsRepository --|> StatementRowsRepositoryPort
-            SqlAlchemyStatementRowsRepository --|> BaseRepository
-            SqlAlchemyStatementRowsRepository --> StatementRowsDTO
-        }
+                }
+                SqlAlchemyNsdRepository --|> NSDRepositoryPort
+                SqlAlchemyNsdRepository --|> BaseRepository
+                SqlAlchemyCompanyRepository --> NsdDTO
 
             abstract class BaseRepository<T> {
                 -config : Config
@@ -434,12 +348,13 @@
                 +get_all() : List<T>
                 +has_item(identifier: str) : bool
                 +get_by_id(id: str) : T
+                }
+                BaseRepository --|> domain.ports.BaseRepositoryPort
+                BaseRepository --> fly.infrastructure.config.Config
+                BaseRepository --> domain.ports.LoggerPort
+                BaseRepository --> fly.infrastructure.models.BaseModel
+
             }
-            BaseRepository --|> domain.ports.BaseRepositoryPort
-            BaseRepository --> fly.infrastructure.config.Config
-            BaseRepository --> domain.ports.LoggerPort
-            BaseRepository --> fly.infrastructure.models.BaseModel
-
-
+        }
     }
-    @enduml
+@enduml
