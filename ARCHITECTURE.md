@@ -136,5 +136,53 @@ This layer:
 
 No logic. No data validation. Just orchestration and delegation.
 
+## Architectural Model
 
+The table below maps the main components to their respective layers.
+
+| Component | Layer | Type |
+|-----------|-------|------|
+| `cli.py` | Presentation | Controller |
+| `CompanyService` | Application | Service |
+| `SyncCompaniesUseCase` | Application | Use case |
+| `CompanyDTO` | Domain | DTO |
+| `CompanyRepositoryPort` | Domain | Port |
+| `SqlAlchemyCompanyRepository` | Infrastructure | Repository |
+| `CompanyExchangeScraper` | Infrastructure | Adapter |
+
+### Ports and Adapters
+
+Every external dependency is accessed through a port defined in the domain. The
+infrastructure layer implements these ports. For example:
+
+- `CompanyRepositoryPort` ← `SqlAlchemyCompanyRepository`
+- `CompanySourcePort` ← `CompanyExchangeScraper`
+
+### Dependency Map
+
+Dependencies always point inward:
+
+1. **Presentation → Application** – the CLI triggers services.
+2. **Application → Domain** – services call use cases and ports.
+3. **Infrastructure → Domain** – adapters implement ports.
+
+### High-level Flow
+
+```plantuml
+@startuml
+skinparam componentStyle rectangle
+actor User
+User -> CLI : run
+CLI -> CompanyService : run()
+CompanyService -> SyncCompaniesUseCase : execute()
+SyncCompaniesUseCase -> CompanySourcePort : fetch()
+CompanySourcePort <.. CompanyExchangeScraper
+SyncCompaniesUseCase -> CompanyRepositoryPort : save()
+CompanyRepositoryPort <.. SqlAlchemyCompanyRepository
+SqlAlchemyCompanyRepository -> SQLiteDB : insert/update
+@enduml
+```
+
+This diagram shows one example of how a request flows through the system. The
+ports allow the application to remain unaware of the specific adapters used.
 
