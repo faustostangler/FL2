@@ -55,7 +55,7 @@ class SyncNSDUseCase:
         flat_items = ListFlattener.flatten(buffer)  # recebe nested lists, devolve flat list
 
         # Transform raw DTOs from the scraper to domain DTOs.
-        dtos = [NsdDTO.from_dict(item) for item in flat_items]
+        dtos = [NsdDTO.from_raw(item) for item in flat_items]
 
         # Save the batch to the repository in a single call.
         self.repository.save_all(dtos)

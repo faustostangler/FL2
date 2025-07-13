@@ -46,3 +46,20 @@ class NsdDTO:
             sent_date=raw.get("sent_date"),
             reason=raw.get("reason"),
         )
+
+    @staticmethod
+    def from_raw(raw: NsdDTO) -> NsdDTO:
+        """Build an NsdDTO from a NsdRawDTO instance."""
+        return NsdDTO(
+            nsd=raw.nsd,
+            company_name=raw.company_name,
+            quarter=raw.quarter,
+            version=raw.version,
+            nsd_type=raw.nsd_type,
+            dri=raw.dri,
+            auditor=raw.auditor,
+            responsible_auditor=raw.responsible_auditor,
+            protocol=raw.protocol,
+            sent_date=raw.sent_date,
+            reason=raw.reason,
+        )

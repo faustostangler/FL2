@@ -63,7 +63,7 @@ class CLIController:
 
         # Start the company synchronization workflow.
         # self.logger.log("Call Method controller.run()._company_service()", level="info")
-        self._company_service()
+        # self._company_service()
         # self.logger.log("End  Method controller.run()._company_service()", level="info")
 
         # self.logger.log("Call Method controller.run()._nsd_service()", level="info")
@@ -221,7 +221,7 @@ class CLIController:
         # self.logger.log("End Instance parsed_statements_repo", level="info")
 
         # self.logger.log("Instantiate source", level="info")
-        source_adapter = RequestsRawStatementSourceAdapter(
+        raw_statements_scraper = RequestsRawStatementSourceAdapter(
             config=self.config,
             logger=self.logger,
             data_cleaner=self.data_cleaner,
@@ -237,7 +237,7 @@ class CLIController:
         # )
         statements_fetch_service = StatementFetchService(
             logger=self.logger,
-            source=source_adapter,
+            source=raw_statements_scraper,
             parsed_statements_repo=parsed_statements_repo,
             company_repo=company_repo,
             nsd_repo=nsd_repo,
