@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, TypeVar
+from typing import List, Set, TypeVar
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
@@ -58,3 +58,8 @@ class BaseRepository(BaseRepositoryPort[T], ABC):
     def get_by_id(self, id: str) -> T:
         """Recupera uma empresa a partir do ticker."""
         pass
+
+    @abstractmethod
+    def get_all_primary_keys(self) -> Set[str]:
+        """Retrieve the set of all primary keys already persisted."""
+        raise NotImplementedError

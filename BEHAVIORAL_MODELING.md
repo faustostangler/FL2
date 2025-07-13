@@ -50,16 +50,16 @@ StatementFetchService -> FetchStatementsUseCase : fetch_statement_rows(targets)
 FetchStatementsUseCase -> FetchStatementsUseCase : fetch_all()
 FetchStatementsUseCase -> WorkerPool : run(tasks, processor)
 loop per NSD
-    WorkerPool -> StatementSourcePort : fetch()
+    WorkerPool -> RawStatementSourcePort : fetch()
     alt no rows returned
-        WorkerPool -> StatementSourcePort : fetch() retry
+        WorkerPool -> RawStatementSourcePort : fetch() retry
     end
     WorkerPool -> SaveStrategy : handle(rows)
     alt threshold reached
-        SaveStrategy -> StatementRowsRepositoryPort : save_all(batch)
+        SaveStrategy -> ParsedStatementRepositoryPort : save_all(batch)
     end
 end
-SaveStrategy -> StatementRowsRepositoryPort : save_all(remaining)
+SaveStrategy -> ParsedStatementRepositoryPort : save_all(remaining)
 @enduml
 ```
 
@@ -67,7 +67,7 @@ SaveStrategy -> StatementRowsRepositoryPort : save_all(remaining)
 2. `_build_targets()` filters NSDs that have valid types and are missing
    statement rows.
 3. **FetchStatementsUseCase.fetch_all** sets up a worker pool and `SaveStrategy`.
-4. Each worker calls the `StatementSourcePort.fetch` method. Empty results
+4. Each worker calls the `RawStatementSourcePort.fetch` method. Empty results
    trigger retries until rows are returned.
 5. Fetched `StatementRowsDTO` objects are buffered and written in batches via the
    repository.
@@ -84,10 +84,10 @@ loop per statement row
     WorkerPool -> ParseAndClassifyStatementsUseCase : parse_and_store_row(row)
     ParseAndClassifyStatementsUseCase -> SaveStrategy : handle(dto)
     alt threshold reached
-        SaveStrategy -> StatementRepositoryPort : save_all(batch)
+        SaveStrategy -> RawStatementRepositoryPort : save_all(batch)
     end
 end
-SaveStrategy -> StatementRepositoryPort : save_all(remaining)
+SaveStrategy -> RawStatementRepositoryPort : save_all(remaining)
 ParseAndClassifyStatementsUseCase -> StatementParseService : finalize()
 @enduml
 ```
@@ -97,7 +97,7 @@ ParseAndClassifyStatementsUseCase -> StatementParseService : finalize()
    `ParseAndClassifyStatementsUseCase.run`.
 3. The use case converts a `StatementRowsDTO` to a `StatementDTO`, classifies the
    section, and buffers it through `SaveStrategy`.
-4. Batches are saved using `StatementRepositoryPort.save_all`, and any remaining
+4. Batches are saved using `RawStatementRepositoryPort.save_all`, and any remaining
    items flush during `finalize()`.
 
 ---

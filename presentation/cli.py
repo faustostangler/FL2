@@ -13,13 +13,13 @@ from infrastructure.helpers.metrics_collector import MetricsCollector
 from infrastructure.repositories import (
     SqlAlchemyCompanyRepository,
     SqlAlchemyNsdRepository,
-    SqlAlchemyStatementRepository,
-    SqlAlchemyStatementRowsRepository,
+    SqlAlchemyParsedStatementRepository,
+    SqlAlchemyRawStatementRepository,
 )
 from infrastructure.scrapers.company_exchange_scraper import CompanyExchangeScraper
 from infrastructure.scrapers.nsd_scraper import NsdScraper
 from infrastructure.scrapers.statements_source_adapter import (
-    RequestsStatementSourceAdapter,
+    RequestsRawStatementSourceAdapter,
 )
 
 
@@ -53,7 +53,7 @@ class CLIController:
         # self.logger.log("End  Method controller.run()._company_service()", level="info")
 
         # self.logger.log("Call Method controller.run()._nsd_service()", level="info")
-        # self._nsd_service()
+        self._nsd_service()
         # self.logger.log("End  Method controller.run()._nsd_service()", level="info")
 
         # self.logger.log(
@@ -213,25 +213,25 @@ class CLIController:
         nsd_repo = SqlAlchemyNsdRepository(config=self.config, logger=self.logger)
         # self.logger.log("End Instance nsd_repo", level="info")
 
-        # self.logger.log("Instantiate statement_repo", level="info")
-        statement_repo = SqlAlchemyStatementRepository(
+        # self.logger.log("Instantiate raw_statement_repo", level="info")
+        raw_statement_repo = SqlAlchemyRawStatementRepository(
             config=self.config, logger=self.logger
         )
-        # self.logger.log("End Instance statement_repo", level="info")
+        # self.logger.log("End Instance raw_statement_repo", level="info")
 
-        # self.logger.log("Instantiate raw_rows_repo", level="info")
-        raw_rows_repo = SqlAlchemyStatementRowsRepository(
+        # self.logger.log("Instantiate parsed_statements_repo", level="info")
+        parsed_statements_repo = SqlAlchemyParsedStatementRepository(
             config=self.config,
             logger=self.logger,
         )
-        # self.logger.log("End Instance raw_rows_repo", level="info")
+        # self.logger.log("End Instance parsed_statements_repo", level="info")
 
         # self.logger.log("Instantiate collector", level="info")
         collector = MetricsCollector()
-        collector._network_bytes = 4508770675  # setup initial value for reloading
+        collector._network_bytes = 12207202367 # 12201796003 # 4508770675  # setup initial value for reloading
 
         # self.logger.log("Instantiate source", level="info")
-        source = RequestsStatementSourceAdapter(
+        source = RequestsRawStatementSourceAdapter(
             config=self.config,
             logger=self.logger,
             data_cleaner=self.data_cleaner,
@@ -241,16 +241,16 @@ class CLIController:
 
         # UseCase 1: Fetch
         # self.logger.log(
-        #     "Instantiate statements_fetch_service (source, raw_rows_repo, company_repo, nsd_repo, statement_repo)",
+        #     "Instantiate statements_fetch_service (source, raw_rows_repo, company_repo, nsd_repo, raw_statement_repo)",
         #     level="info",
         # )
         statements_fetch_service = StatementFetchService(
             logger=self.logger,
             source=source,
-            statements_rows_repository=raw_rows_repo,
+            parsed_statements_repo=parsed_statements_repo,
             company_repo=company_repo,
             nsd_repo=nsd_repo,
-            statement_repo=statement_repo,
+            raw_statement_repo=raw_statement_repo,
             config=self.config,
             max_workers=self.config.global_settings.max_workers,
         )
@@ -266,7 +266,7 @@ class CLIController:
         # )
 
         # self.logger.log(
-        #     "End Instance statements_fetch_service (source, raw_rows_repo, company_repo, nsd_repo, statement_repo)",
+        #     "End Instance statements_fetch_service (source, raw_rows_repo, company_repo, nsd_repo, raw_statement_repo)",
         #     level="info",
         # )
 
@@ -274,10 +274,10 @@ class CLIController:
 
 
         # # UseCase 2: Parse
-        # # self.logger.log("Instantiate parse_service (statement_repo)", level="info")
+        # # self.logger.log("Instantiate parse_service (raw_statement_repo)", level="info")
         # parse_service = StatementParseService(
         #     logger=self.logger,
-        #     repository=statement_repo,
+        #     repository=raw_statement_repo,
         #     config=self.config,
         #     max_workers=self.config.global_settings.max_workers,
         # )
@@ -292,7 +292,7 @@ class CLIController:
         # #     level="info",
         # # )
 
-        # # self.logger.log("End Instance parse_service (statement_repo)", level="info")
+        # # self.logger.log("End Instance parse_service (raw_statement_repo)", level="info")
 
         # # self.logger.log(
         # #     "End  Method controller.run()._statement_service()", level="info"

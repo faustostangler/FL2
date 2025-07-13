@@ -1,5 +1,0 @@
-@startuml
-skinparam packageStyle rectangle
-    package "fly.services" {
-        }
- @enduml

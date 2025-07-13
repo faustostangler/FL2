@@ -29,8 +29,8 @@ Dependencies are injected through constructors and point inward to domain ports 
   - `StatementDTO`, `StatementRowsDTO`
   - `ExecutionResultDTO`, `PageResultDTO`, `MetricsDTO`, `SyncCompaniesResultDTO`, `WorkerTaskDTO`
 - **Ports** (`domain/ports`)
-  - Repository ports: `CompanyRepositoryPort`, `NSDRepositoryPort`, `StatementRepositoryPort`, `StatementRowsRepositoryPort`.
-  - Source ports: `CompanySourcePort`, `NSDSourcePort`, `StatementSourcePort`.
+  - Repository ports: `CompanyRepositoryPort`, `NSDRepositoryPort`, `RawStatementRepositoryPort`, `ParsedStatementRepositoryPort`.
+  - Source ports: `CompanySourcePort`, `NSDSourcePort`, `RawStatementSourcePort`.
   - `LoggerPort`, `WorkerPoolPort`, `MetricsCollectorPort`, `DataCleanerPort`.
 - **Utilities**
   - `statement_processing.classify_section` – maps account names to statement sections.
@@ -39,12 +39,12 @@ The domain contains no infrastructure references and consists only of dataclasse
 
 ## Infrastructure Layer
 - **Repositories** (`infrastructure/repositories`)
-  - `SqlAlchemyCompanyRepository`, `SqlAlchemyNSDRepository`, `SqlAlchemyStatementRepository`, `SqlAlchemyStatementRowsRepository` – implement respective repository ports and manage database persistence using SQLAlchemy.
+  - `SqlAlchemyCompanyRepository`, `SqlAlchemyNSDRepository`, `SqlAlchemyRawStatementRepository`, `SqlAlchemyParsedStatementRepository` – implement respective repository ports and manage database persistence using SQLAlchemy.
   - `BaseRepository` – shared connection logic used by concrete repositories.
 - **Scrapers & Adapters** (`infrastructure/scrapers`)
   - `CompanyExchangeScraper` – implements `CompanySourcePort` using `FetchUtils`, `DataCleaner`, and several processor classes (`EntryCleaner`, `DetailFetcher`, `CompanyMerger`, `CompanyDetailProcessor`).
   - `NsdScraper` – implements `NSDSourcePort` and fetches sequential documents.
-  - `StatementsSourceAdapter` – implements `StatementSourcePort` for statement pages.
+  - `StatementsSourceAdapter` – implements `RawStatementSourcePort` for statement pages.
 - **Helpers** (`infrastructure/helpers`)
   - `FetchUtils` – HTTP fetching with retry logic.
   - `SaveStrategy` – buffers DTOs before persistence.

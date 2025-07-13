@@ -8,9 +8,9 @@ from domain.ports import (
     CompanyRepositoryPort,
     LoggerPort,
     NSDRepositoryPort,
-    StatementRepositoryPort,
-    StatementRowsRepositoryPort,
-    StatementSourcePort,
+    ParsedStatementRepositoryPort,
+    RawStatementRepositoryPort,
+    RawStatementSourcePort,
 )
 from infrastructure.config import Config
 
@@ -21,28 +21,28 @@ class StatementFetchService:
     def __init__(
         self,
         logger: LoggerPort,
-        source: StatementSourcePort,
-        statements_rows_repository: StatementRowsRepositoryPort,
+        source: RawStatementSourcePort,
+        parsed_statements_repo: ParsedStatementRepositoryPort,
         company_repo: CompanyRepositoryPort,
         nsd_repo: NSDRepositoryPort,
-        statement_repo: StatementRepositoryPort,
+        raw_statement_repo: RawStatementRepositoryPort,
         config: Config,
         max_workers: int = 1,
     ) -> None:
         """Store dependencies for the service."""
         self.logger = logger
-        self.statements_rows_repository = statements_rows_repository
+        self.parsed_statements_repo = parsed_statements_repo
         self.company_repo = company_repo
         self.nsd_repo = nsd_repo
-        self.statement_repo = statement_repo
+        self.raw_statement_repo = raw_statement_repo
         self.config = config
         self.max_workers = max_workers
 
         self.fetch_usecase = FetchStatementsUseCase(
             logger=self.logger,
             source=source,
-            statements_rows_repository=statements_rows_repository,
-            statement_repository=statement_repo,
+            parsed_statements_repo=parsed_statements_repo,
+            raw_statement_repository=raw_statement_repo,
             config=self.config,
             max_workers=self.max_workers,
         )
@@ -61,7 +61,7 @@ class StatementFetchService:
         if not company_records or not nsd_records:
             return []
 
-        processed = self.statements_rows_repository.get_existing_by_column(
+        processed = self.parsed_statements_repo.get_existing_by_column(
             column_name="nsd"
         )
         valid_types = set(self.config.domain.statements_types)

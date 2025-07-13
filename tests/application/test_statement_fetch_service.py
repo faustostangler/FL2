@@ -6,9 +6,9 @@ from domain.dto.nsd_dto import NsdDTO
 from domain.ports import (
     CompanyRepositoryPort,
     NSDRepositoryPort,
-    StatementRepositoryPort,
-    StatementRowsRepositoryPort,
-    StatementSourcePort,
+    RawStatementRepositoryPort,
+    ParsedStatementRepositoryPort,
+    RawStatementSourcePort,
 )
 from tests.conftest import DummyConfig, DummyLogger
 
@@ -26,17 +26,17 @@ def test_fetch_statements_calls_usecase(monkeypatch):
 
     company_repo = MagicMock(spec=CompanyRepositoryPort)
     nsd_repo = MagicMock(spec=NSDRepositoryPort)
-    stmt_repo = MagicMock(spec=StatementRepositoryPort)
-    rows_repo = MagicMock(spec=StatementRowsRepositoryPort)
-    source = MagicMock(spec=StatementSourcePort)
+    stmt_repo = MagicMock(spec=RawStatementRepositoryPort)
+    rows_repo = MagicMock(spec=ParsedStatementRepositoryPort)
+    source = MagicMock(spec=RawStatementSourcePort)
 
     service = StatementFetchService(
         logger=DummyLogger(),
         source=source,
-        statements_rows_repository=rows_repo,
+        parsed_statements_repo=rows_repo,
         company_repo=company_repo,
         nsd_repo=nsd_repo,
-        statement_repo=stmt_repo,
+        raw_statement_repo=stmt_repo,
         config=dummy_config,
         max_workers=3,
     )
@@ -44,8 +44,8 @@ def test_fetch_statements_calls_usecase(monkeypatch):
     mock_usecase_cls.assert_called_once_with(
         logger=service.logger,
         source=source,
-        statements_rows_repository=rows_repo,
-        statement_repository=stmt_repo,
+        parsed_statements_repo=rows_repo,
+        raw_statement_repository=stmt_repo,
         config=dummy_config,
         max_workers=3,
     )

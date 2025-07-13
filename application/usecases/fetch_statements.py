@@ -10,9 +10,9 @@ from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.dto.worker_class_dto import WorkerTaskDTO
 from domain.ports import (
     LoggerPort,
-    StatementRepositoryPort,
-    StatementRowsRepositoryPort,
-    StatementSourcePort,
+    ParsedStatementRepositoryPort,
+    RawStatementRepositoryPort,
+    RawStatementSourcePort,
 )
 from infrastructure.config import Config
 from infrastructure.helpers import (
@@ -29,17 +29,17 @@ class FetchStatementsUseCase:
     def __init__(
         self,
         logger: LoggerPort,
-        source: StatementSourcePort,
-        statements_rows_repository: StatementRowsRepositoryPort,
-        statement_repository: StatementRepositoryPort,
+        source: RawStatementSourcePort,
+        parsed_statements_repo: ParsedStatementRepositoryPort,
+        raw_statement_repository: RawStatementRepositoryPort,
         config: Config,
         max_workers: int = 1,
     ) -> None:
         """Store dependencies for fetching and saving raw rows."""
         self.logger = logger
         self.source = source
-        self.statements_rows_repository = statements_rows_repository
-        self.statement_repository = statement_repository
+        self.parsed_statements_repo = parsed_statements_repo
+        self.raw_statement_repository = raw_statement_repository
         self.config = config
         self.max_workers = max_workers
 
@@ -79,7 +79,7 @@ class FetchStatementsUseCase:
         # Initialize the saving strategy that buffers results.
         # self.logger.log("Instantiate strategy", level="info")
         strategy: SaveStrategy[StatementRowsDTO] = SaveStrategy(
-            save_callback or self.statements_rows_repository.save_all,
+            save_callback or self.parsed_statements_repo.save_all,
             threshold,
             config=self.config,
         )

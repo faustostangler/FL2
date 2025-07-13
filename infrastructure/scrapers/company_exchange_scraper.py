@@ -399,7 +399,7 @@ class CompanyExchangeScraper(CompanySourcePort):
             download_bytes_pre = self._metrics_collector.network_bytes
 
             # self.logger.log("Call Method CompanyExchangeScraper._fetch_companies_details().processor().self.detail_processor.run(entry)", level="info")
-            result = self.detail_processor.run(entry)
+            result = self.detail_processor.process_entry(entry)
             # self.logger.log("End  Method CompanyExchangeScraper._fetch_companies_details().processor().self.detail_processor.run(entry)", level="info")
 
             download_bytes_pos = self._metrics_collector.network_bytes - download_bytes_pre
@@ -433,7 +433,8 @@ class CompanyExchangeScraper(CompanySourcePort):
         def handle_batch(item: Optional[CompanyRawDTO]) -> None:
             # Buffer each parsed company and flush when threshold is hit
             # self.logger.log("Call Method strategy.handle()", level="info")
-            strategy.handle(item)
+            if item is not None:
+                strategy.handle([item])
             # self.logger.log("End  Method strategy.handle()", level="info")
 
         detail_exec = self.worker_pool_executor.run(

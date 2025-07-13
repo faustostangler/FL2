@@ -6,7 +6,7 @@ from typing import Any
 from domain.dto.worker_class_dto import WorkerTaskDTO
 
 
-class StatementSourcePort(ABC):
+class RawStatementSourcePort(ABC):
     """Port for fetching raw statement HTML."""
 
     @abstractmethod

@@ -168,7 +168,8 @@ class NsdScraper(NSDSourcePort):
             return NsdDTO.from_dict(parsed) if parsed else None
 
         def handle_batch(item: Optional[NsdDTO]) -> None:
-            strategy.handle(item)
+            if item is not None:
+                strategy.handle([item])
 
         # self.logger.log(
         #     "Call Method controller.run()._nsd_service().run().sync_nsd_usecase.run().worker_pool_executor.run()",

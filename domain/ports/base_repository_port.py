@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Generic, List, TypeVar
+from typing import Generic, List, Set, TypeVar
 
 T = TypeVar("T")
 
@@ -31,7 +31,7 @@ class BaseRepositoryPort(ABC, Generic[T]):
         """Retrieve an item by its identifier."""
         raise NotImplementedError
 
-    # @abstractmethod
-    # def get_all_primary_keys(self) -> Set[str]:
-    #     """Return all stored CVM codes."""
-    #     raise NotImplementedError
+    @abstractmethod
+    def get_all_primary_keys(self) -> Set[str]:
+        """Retrieve the set of all primary keys already persisted."""
+        raise NotImplementedError

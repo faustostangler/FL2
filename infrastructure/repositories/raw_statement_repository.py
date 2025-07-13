@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-from typing import List
+from typing import List, Set
 
 from domain.dto.statement_dto import StatementDTO
-from domain.ports import LoggerPort, StatementRepositoryPort
+from domain.ports import LoggerPort, RawStatementRepositoryPort
 from infrastructure.config import Config
 from infrastructure.models.statement_model import StatementModel
 from infrastructure.repositories.base_repository import BaseRepository
 
 
-class SqlAlchemyStatementRepository(
-    BaseRepository[StatementDTO], StatementRepositoryPort
+class SqlAlchemyRawStatementRepository(
+    BaseRepository[StatementDTO], RawStatementRepositoryPort
 ):
     """SQLite-backed repository for ``StatementDTO`` objects."""
 
@@ -60,3 +60,7 @@ class SqlAlchemyStatementRepository(
             return obj.to_dto()
         finally:
             session.close()
+
+    def get_all_primary_keys(self) -> Set[str]:
+        """Retrieve the set of all primary keys already persisted."""
+        raise NotImplementedError

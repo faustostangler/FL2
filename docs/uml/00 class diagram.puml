@@ -20,16 +20,129 @@ package "fly" {
             CLIController --> NsdService
             CLIController --> fly.infrastructure.repositories.SqlAlchemyCompanyRepository : uses
             CLIController --> SqlAlchemyNsdRepository : uses
-            CLIController --> SqlAlchemyStatementRepository : uses
-            CLIController --> SqlAlchemyStatementRowsRepository : uses
-            CLIController --> RequestsStatementSourceAdapter : uses
+            CLIController --> SqlAlchemyRawStatementRepository : uses
+            CLIController --> SqlAlchemyParsedStatementRepository : uses
+            CLIController --> RequestsRawStatementSourceAdapter : uses
             CLIController --> MetricsCollector : uses
             CLIController --> StatementFetchService
         }
-    package "fly.services" {
+    package "fly.application" {
+        package "fly.application.processors" {
+            class EntryCleaner {
+                +clean_entry(...) : CompanyListingDTO | CompanyDetailDTO
+                }
+
+            class DetailFetcher {
+                +fetch_detail(cvm_code: str) : dict
+                }
+
+            class CompanyMerger {
+                +merge_details(listing: CompanyListingDTO, detail: CompanyDetailDTO) : CompanyRawDTO
+                }
+
+            class CompanyDetailProcessor {
+                +process_entry(entry: dict) : CompanyRawDTO
+                }
+                CompanyDetailProcessor --> EntryCleaner
+                CompanyDetailProcessor --> DetailFetcher
+                CompanyDetailProcessor --> CompanyMerger
+                EntryCleaner --> DataCleaner
+                DetailFetcher --> FetchUtils
+                DetailFetcher --> MetricsCollectorPort
+                DetailFetcher --> DataCleaner
+                CompanyMerger --> CompanyMapper
+                CompanyMerger --> LoggerPort
+            }
+
+        package "fly.application.services" {
+            class CompanyService {
+                +__init__(config: Config, logger: LoggerPort, repository: CompanyRepositoryPort, scraper: CompanySourcePort)
+                +sync_companies() : SyncCompaniesResultDTO
+                }
+                CompanyService --> SyncCompaniesUseCase
+                CompanyService --> LoggerPort
+                CompanyService --> CompanyRepositoryPort
+                CompanyService --> CompanySourcePort
+                CompanyService --> Config
+                CompanyService --> SyncCompaniesResultDTO
+
+            class CompanyMapper {
+                +merge_company_dtos(listing: CompanyListingDTO, detail: CompanyDetailDTO) : CompanyRawDTO
+                }
+                CompanyMapper --> DataCleanerPort
+                CompanyMapper --> CompanyListingDTO
+                CompanyMapper --> CompanyDetailDTO
+                CompanyMapper --> CompanyRawDTO
+            class NsdService {
+                +sync_nsd() : void
+                }
+                NsdService --> SyncNSDUseCase
+                NsdService --> LoggerPort
+                NsdService --> NSDRepositoryPort
+                NsdService --> NSDSourcePort
+
+            class StatementFetchService {
+                +fetch_statements(...) : List[Tuple[NsdDTO, List[StatementRowsDTO]]]
+                -_build_targets() : List[NsdDTO]
+                }
+                StatementFetchService --> FetchStatementsUseCase
+                StatementFetchService --> LoggerPort
+                StatementFetchService --> RawStatementSourcePort
+                StatementFetchService --> ParsedStatementRepositoryPort
+                StatementFetchService --> CompanyRepositoryPort
+                StatementFetchService --> NSDRepositoryPort
+                StatementFetchService --> RawStatementRepositoryPort
+            }
         }
+        package "fly.application.usecases" {
+            class SyncCompaniesUseCase {
+                +synchronize_companies() : SyncCompaniesResultDTO
+                -_save_batch(buffer: List[CompanyRawDTO]) : void
+                }
+                SyncCompaniesUseCase --> LoggerPort
+                SyncCompaniesUseCase --> CompanyRepositoryPort
+                SyncCompaniesUseCase --> CompanySourcePort
+                SyncCompaniesUseCase --> SyncCompaniesResultDTO
+                SyncCompaniesUseCase --> CompanyDTO
+                SyncCompaniesUseCase --> CompanyRawDTO
+            class SyncNSDUseCase {
+                +synchronize_nsd() : void
+                -_save_batch(buffer: list[NsdDTO]) : void
+                }
+                SyncNSDUseCase --> LoggerPort
+                SyncNSDUseCase --> NSDRepositoryPort
+                SyncNSDUseCase --> NSDSourcePort
+                SyncNSDUseCase --> NsdDTO
+            class FetchStatementsUseCase {
+                +fetch_statement_rows(...) : List[Tuple[NsdDTO, List[StatementRowsDTO]]]
+                +fetch_all(...) : List[Tuple[NsdDTO, List[StatementRowsDTO]]]
+                }
+                FetchStatementsUseCase --> LoggerPort
+                FetchStatementsUseCase --> RawStatementSourcePort
+                FetchStatementsUseCase --> ParsedStatementRepositoryPort
+                FetchStatementsUseCase --> RawStatementRepositoryPort
+                FetchStatementsUseCase --> Config
+                FetchStatementsUseCase --> WorkerPool
+                FetchStatementsUseCase --> ByteFormatter
+                FetchStatementsUseCase --> SaveStrategy
+            }
     package "fly.domain" {
         package "fly.domain.ports" {
+            interface BaseSourcePort<T> {
+                +fetch_all(...) : ExecutionResultDTO<T>
+                +metrics_collector : MetricsCollectorPort
+                }
+            interface CompanySourcePort {
+                }
+                CompanySourcePort --|> BaseSourcePort
+            interface NSDSourcePort {
+                +fetch_all(...) : ExecutionResultDTO<NsdDTO>
+                }
+                interface WorkerPoolPort
+                interface LoggerPort
+                interface MetricsCollectorPort
+                interface NSDRepositoryPort
+
             interface LoggerPort {
                 -message: str
                 -level: str
@@ -55,9 +168,91 @@ package "fly" {
             interface StatementsRepositoryPort {
                 }
                 StatementsRepositoryPort --|> BaseRepositoryPort
-            }
+
+            interface MetricsCollectorPort {
+                +record_network_bytes(...) : void
+                +record_processing_bytes(...) : void
+                +get_metrics(...) : MetricsDTO
+                }
+            interface RawStatementRepositoryPort {
+                task: WorkerDTO
+                +fetch() : dict
+                }
+                RawStatementRepositoryPort --> WorkerDTO
+            interface DataCleanerPort {
+                +clean_text(text: str, words_to_remove: Optional[List[str]]) : str
+                +clean_number(text: str) : float
+                +clean_date(text: str) : datetime
+                +clean_dict_fields(entry: dict, text_keys: List[str], date_keys: List[str], number_keys: Optional[List[str]]) : dict
+                }
+            interface WorkerPoolPort {
+                +run(tasks: Iterable[Tuple[int, Any]], processor: Callable[[WorkerTaskDTO], R], logger: LoggerPort, on_result: Callable[[R], None], post_callback: Callable[[List[R]], None]) : ExecutionResultDTO
+                }
+                WorkerPoolPort --> ExecutionResultDTO
+                WorkerPoolPort --> LoggerPort
+                WorkerPoolPort --> WorkerTaskDTO
+            interface ParsedStatementRepositoryPort {
+                +get_existing_by_column(column_name: str) : Set[Any]
+                +save_all(items: List[StatementRowsDTO]) : void
+                }
+            interface RawStatementRepositoryPort {
+                +save_all(items: List[StatementRowsDTO]) : void
+                }
+            interface RawStatementSourcePort {
+                +fetch(task: WorkerTaskDTO) : dict
+                }
 
         package "fly.domain.dto" {
+            class CompanyListingDTO {
+                +cvm_code: str
+                +issuing_company: str
+                +company_name: str
+                +trading_name: str
+                +cnpj: str
+                +market_indicator: str
+                +type_bdr: str
+                +listing_date: datetime
+                +status: str
+                +segment: str
+                +segment_eng: str
+                +company_type: str
+                +market: str
+                +from_dict() : CompanyListingDTO
+                }
+            class CompanyDetailDTO {
+                issuing_company: str
+                company_name: str
+                trading_name: str
+                cnpj: str
+                industry_classification: str
+                industry_classification_eng: str
+                activity: str
+                website: str
+                has_quotation: bool
+                status: str
+                market_indicator: str
+                market: str
+                institution_common: str
+                institution_preferred: str
+                code: str
+                cvm_code: str
+                last_date: datetime
+                other_codes: CodeDTO
+                has_emissions: bool
+                has_bdr: bool
+                type_bdr: str
+                company_category: str
+                date_quotation: datetime
+                listing_segment: str
+                registrar: str
+                +from_dict() : CompanyDetailDTO
+                }
+                CompanyDetailDTO --> CodeDTO
+                CompanyRawDTO --> CodeDTO
+            class CodeDTO {
+                +code: str
+                +isin: str
+                }
             class CompanyDTO {
                 +cvm_code: str
                 +issuing_company: str
@@ -134,6 +329,7 @@ package "fly" {
                 -last_date: datetime
                 -listing_date: datetime
                 }
+                ExecutionResultDTO --> CompanyRawDTO
 
             class NsdDTO {
                 +nsd: int
@@ -149,9 +345,94 @@ package "fly" {
                 +reason: str
                 +from_dict(raw: dict) : NsdDTO
                 }
+            class MetricsDTO {
+                elapsed_time: float
+                network_bytes: int = 0
+                processing_bytes: int = 0
+                failures: int = 0
+                }
+            class WorkerDTO {
+                +index: int
+                +data: Any
+                +worker_id: str
+                }
+            class ExecutionResultDTO<R> {
+                +items: List<R>
+                +metrics: MetricsDTO
+                }
+                ExecutionResultDTO --> MetricsDTO
+            class PageResultDTO {
+                +items: List[Dict]
+                +total_pages: int
+                +bytes_downloaded: int
+                }
+                CompanyExchangeScraper --> PageResultDTO
+            class SyncCompaniesResultDTO {
+                +processed_count: int
+                +skipped_count: int
+                +bytes_downloaded: int
+                +elapsed_time: float
+                +warnings: Optional[List[str]]
+                }
+            }
             }
         }
     package "fly.infrastructure" {
+        package "fly.infrastructure.scrapers" {
+            class CompanyExchangeScraper {
+                +fetch_all(...) : ExecutionResultDTO
+                -_fetch_companies_list(...) : ExecutionResultDTO
+                -_fetch_companies_details(...) : ExecutionResultDTO
+                -_fetch_page(page_number: int) : PageResultDTO
+                -_encode_payload(payload: dict) : str
+                }
+                CompanyExchangeScraper --|> CompanySourcePort
+                CompanyExchangeScraper --> ExecutionResultDTO
+                CompanyExchangeScraper --> WorkerPoolPort
+                CompanyExchangeScraper --> LoggerPort
+                CompanyExchangeScraper --> MetricsCollectorPort
+                CompanyExchangeScraper --> CompanyMapper
+                CompanyExchangeScraper --> SaveStrategy
+                CompanyExchangeScraper --> ByteFormatter
+                CompanyExchangeScraper --> DetailFetcher
+                CompanyExchangeScraper --> EntryCleaner
+                CompanyExchangeScraper --> CompanyMerger
+                CompanyExchangeScraper --> CompanyDetailProcessor
+                CompanyExchangeScraper --> FetchUtils
+
+            class NsdScraper {
+                +fetch_all(...) : ExecutionResultDTO<NsdDTO>
+                -_parse_html(nsd: int, html: str) : dict
+                -_find_last_existing_nsd(start: int) : int
+                -_try_nsd(nsd: int) : dict
+                -_find_next_probable_nsd(start: int) : int
+                +metrics_collector : MetricsCollectorPort
+                }
+                NsdScraper --|> NSDSourcePort
+                NsdScraper --> Config
+                NsdScraper --> LoggerPort
+                NsdScraper --> DataCleaner
+                NsdScraper --> WorkerPoolPort
+                NsdScraper --> MetricsCollectorPort
+                NsdScraper --> NSDRepositoryPort
+                NsdScraper --> FetchUtils
+                NsdScraper --> NsdDTO
+                NsdScraper --> ExecutionResultDTO
+
+            class RequestsRawStatementSourceAdapter {
+                session : Session
+                endpoint : str
+                id_generator : IdGenerator
+                metrics_collector() : MetricsCollectorPort
+                -_parse_statement_page() : list
+                -_extract_hash() : str
+                -_build_urls() : list
+                +fetch() : dict
+                }
+                RequestsRawStatementSourceAdapter --> IdGenerator
+                RequestsRawStatementSourceAdapter --> MetricsCollector
+                }
+            }
         package "fly.infrastructure.config" {
             class DatabaseConfig {
                 -data_dir: Path
@@ -251,7 +532,56 @@ package "fly" {
                 +clean_dict_fields(...) : dict
                 }
                 DataCleaner --> fly.infrastructure.config.Config
+
+            class MetricsCollector {
+                +self._network_bytes(...) : void
+                +self._processing_bytes(...) : void
+                +get_metrics(...) : MetricsDTO
+                }
+                MetricsCollector --> fly.presentation.CLIController
+                MetricsCollector --|> MetricsCollectorPort
+                MetricsCollector --> MetricsDTO
+
+            class WorkerPool {
+                +__init__(config: Config, metrics_collector: MetricsCollectorPort, max_workers: int)
+                +run(tasks: Iterable[Tuple[int, Any]], processor: Callable[[WorkerTaskDTO], R], logger: LoggerPort, on_result: Callable[[R], None], post_callback: Callable[[List[R]], None]) : ExecutionResultDTO
+                }
+                WorkerPool --|> WorkerPoolPort
+                WorkerPool --> LoggerPort
+                WorkerPool --> Config
+                WorkerPool --> MetricsCollectorPort
+                WorkerPool --> ExecutionResultDTO
+                WorkerPool --> WorkerTaskDTO
+                WorkerPool --> ByteFormatter
+            class ByteFormatter {
+                +format_bytes(bytes_amount: int) : str
+                }
+            class FetchUtils {
+                +__init__(config: Config, logger: LoggerPort)
+                +header_random() : dict
+                +create_scraper(insecure: bool) : Session
+                -create_scraper_old(insecure: bool) : Session
+                -test_internet(url: str, timeout: int) : bool
+                +fetch_with_retry(scraper: Session, url: str, ...) : (Response, Session)
+                }
+                FetchUtils --> Config
+                FetchUtils --> LoggerPort
+                FetchUtils --> TimeUtils
+                FetchUtils --> IdGenerator
+            class TimeUtils {
+                +__init__(config: Config)
+                +sleep_dynamic(wait: float, cpu_interval: float, multiplier: int) : void
+                }
+                TimeUtils --> fly.infrastructure.config.Config
+            class SaveStrategy<T> {
+                +handle(item: Iterable<T>, remaining: int) : void
+                +flush() : void
+                +finalize() : void
+                }
+                SaveStrategy --> fly.infrastructure.config.Config : uses
+
             }
+
         package "fly.infrastructure.logging" {
             class Logger {
                 -config : fly.infrastructure.config.Config
@@ -338,6 +668,16 @@ package "fly" {
                 SqlAlchemyNsdRepository --|> BaseRepository
                 SqlAlchemyCompanyRepository --> NsdDTO
 
+            class SqlAlchemyRawStatementRepository {
+                +save_all(items: List[StatementDTO]) : void
+                +get_all() : List[StatementDTO]
+                +has_item(identifier: int) : bool
+                +get_by_id(id: int) : StatementDTO
+                }
+                SqlAlchemyNsdRepository --|> RawStatementRepositoryPort
+                SqlAlchemyNsdRepository --|> BaseRepository
+                SqlAlchemyCompanyRepository --> StatementDTO
+
             abstract class BaseRepository<T> {
                 -config : Config
                 -logger : LoggerPort
@@ -354,7 +694,6 @@ package "fly" {
                 BaseRepository --> domain.ports.LoggerPort
                 BaseRepository --> fly.infrastructure.models.BaseModel
 
-            }
         }
     }
 @enduml

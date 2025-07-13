@@ -3,14 +3,14 @@ from __future__ import annotations
 from typing import Any, List, Set
 
 from domain.dto.statement_rows_dto import StatementRowsDTO
-from domain.ports import LoggerPort, StatementRowsRepositoryPort
+from domain.ports import LoggerPort, ParsedStatementRepositoryPort
 from infrastructure.config import Config
 from infrastructure.models.statement_rows_model import StatementRowsModel
 from infrastructure.repositories.base_repository import BaseRepository
 
 
-class SqlAlchemyStatementRowsRepository(
-    BaseRepository[StatementRowsDTO], StatementRowsRepositoryPort
+class SqlAlchemyParsedStatementRepository(
+    BaseRepository[StatementRowsDTO], ParsedStatementRepositoryPort
 ):
     """SQLite-backed repository for ``StatementRowsDTO`` objects."""
 

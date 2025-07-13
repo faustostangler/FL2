@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup, Tag
 
 from domain.dto import StatementRowsDTO, WorkerTaskDTO
 from domain.dto.nsd_dto import NsdDTO
-from domain.ports import LoggerPort, MetricsCollectorPort, StatementSourcePort
+from domain.ports import LoggerPort, MetricsCollectorPort, RawStatementSourcePort
 from infrastructure.config import Config
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.fetch_utils import FetchUtils
@@ -20,7 +20,7 @@ from infrastructure.helpers.time_utils import TimeUtils
 from infrastructure.utils.id_generator import IdGenerator
 
 
-class RequestsStatementSourceAdapter(StatementSourcePort):
+class RequestsRawStatementSourceAdapter(RawStatementSourcePort):
     """Fetch statement HTML using ``requests``."""
 
     def __init__(
@@ -130,7 +130,7 @@ class RequestsStatementSourceAdapter(StatementSourcePort):
         form = soup.select_one("form[action*='Hash=']")
         if form:
             action_url = form.get("action", "")
-            match = re.search(r"[?&]Hash=([a-zA-Z0-9_-]+)", action_url)
+            match = re.search(r"[?&]Hash=([a-zA-Z0-9_-]+)", str(action_url))
             if match:
                 return match.group(1)
 
