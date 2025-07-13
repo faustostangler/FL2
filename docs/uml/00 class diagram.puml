@@ -174,11 +174,6 @@ package "fly" {
                 +record_processing_bytes(...) : void
                 +get_metrics(...) : MetricsDTO
                 }
-            interface RawStatementRepositoryPort {
-                task: WorkerDTO
-                +fetch() : dict
-                }
-                RawStatementRepositoryPort --> WorkerDTO
             interface DataCleanerPort {
                 +clean_text(text: str, words_to_remove: Optional[List[str]]) : str
                 +clean_number(text: str) : float
@@ -201,6 +196,7 @@ package "fly" {
             interface RawStatementSourcePort {
                 +fetch(task: WorkerTaskDTO) : dict
                 }
+                RawStatementSourcePort --> WorkerTaskDTO
 
         package "fly.domain.dto" {
             class CompanyListingDTO {
@@ -431,6 +427,7 @@ package "fly" {
                 }
                 RequestsRawStatementSourceAdapter --> IdGenerator
                 RequestsRawStatementSourceAdapter --> MetricsCollector
+                RequestsRawStatementSourceAdapter --|> RawStatementSourcePort
                 }
             }
         package "fly.infrastructure.config" {
@@ -523,6 +520,9 @@ package "fly" {
             class DataCleanerFactory <<factory>> {
                 +create_data_cleaner(config: Config, logger: LoggerPort) : DataCleaner
                 }
+                DataCleanerFactory --> DataCleaner : create_data_cleaner()
+                DataCleanerFactory --> Config : uses
+                DataCleanerFactory --> LoggerPort : uses
             }
         package "fly.infrastructure.helpers" {
             class DataCleaner {
@@ -532,6 +532,7 @@ package "fly" {
                 +clean_dict_fields(...) : dict
                 }
                 DataCleaner --> fly.infrastructure.config.Config
+                DataCleaner --|> DataCleanerPort
 
             class MetricsCollector {
                 +self._network_bytes(...) : void
@@ -666,7 +667,7 @@ package "fly" {
                 }
                 SqlAlchemyNsdRepository --|> NSDRepositoryPort
                 SqlAlchemyNsdRepository --|> BaseRepository
-                SqlAlchemyCompanyRepository --> NsdDTO
+                SqlAlchemyNsdRepository --> NsdDTO
 
             class SqlAlchemyRawStatementRepository {
                 +save_all(items: List[StatementDTO]) : void
@@ -674,9 +675,9 @@ package "fly" {
                 +has_item(identifier: int) : bool
                 +get_by_id(id: int) : StatementDTO
                 }
-                SqlAlchemyNsdRepository --|> RawStatementRepositoryPort
-                SqlAlchemyNsdRepository --|> BaseRepository
-                SqlAlchemyCompanyRepository --> StatementDTO
+                SqlAlchemyRawStatementRepository --|> RawStatementRepositoryPort
+                SqlAlchemyRawStatementRepository --|> BaseRepository
+                SqlAlchemyRawStatementRepository --> StatementDTO
 
             abstract class BaseRepository<T> {
                 -config : Config
