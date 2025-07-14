@@ -3,8 +3,8 @@ from unittest.mock import MagicMock
 from application.usecases.fetch_statements import FetchStatementsUseCase
 from domain.dto.nsd_dto import NsdDTO
 from domain.ports import (
-    RawStatementRepositoryPort,
     ParsedStatementRepositoryPort,
+    RawStatementRepositoryPort,
     RawStatementSourcePort,
 )
 from tests.conftest import DummyConfig, DummyLogger
@@ -32,11 +32,16 @@ def test_fetch_statement_rows_skips_existing(monkeypatch):
     stmt_repo = MagicMock(spec=RawStatementRepositoryPort)
     stmt_repo.get_all_primary_keys = MagicMock(return_value={1})
 
+    collector = MagicMock()
+    worker_pool = MagicMock()
+
     usecase = FetchStatementsUseCase(
         logger=DummyLogger(),
         source=source,
         parsed_statements_repo=rows_repo,
         raw_statement_repository=stmt_repo,
+        metrics_collector=collector,
+        worker_pool_executor=worker_pool,
         config=DummyConfig(),
         max_workers=2,
     )

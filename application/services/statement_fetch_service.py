@@ -7,12 +7,14 @@ from domain.dto import NsdDTO, StatementRowsDTO
 from domain.ports import (
     CompanyRepositoryPort,
     LoggerPort,
+    MetricsCollectorPort,
     NSDRepositoryPort,
     ParsedStatementRepositoryPort,
     RawStatementRepositoryPort,
     RawStatementSourcePort,
 )
 from infrastructure.config import Config
+from infrastructure.helpers import WorkerPool
 
 
 class StatementFetchService:
@@ -27,6 +29,8 @@ class StatementFetchService:
         nsd_repo: NSDRepositoryPort,
         raw_statement_repo: RawStatementRepositoryPort,
         config: Config,
+        metrics_collector: MetricsCollectorPort,
+        worker_pool_executor: WorkerPool,
         max_workers: int = 1,
     ) -> None:
         """Store dependencies for the service."""
@@ -37,12 +41,16 @@ class StatementFetchService:
         self.raw_statement_repo = raw_statement_repo
         self.config = config
         self.max_workers = max_workers
+        self.collector = metrics_collector
+        self.worker_pool_executor = worker_pool_executor
 
         self.fetch_usecase = FetchStatementsUseCase(
             logger=self.logger,
             source=source,
             parsed_statements_repo=parsed_statements_repo,
             raw_statement_repository=raw_statement_repo,
+            metrics_collector=self.collector,
+            worker_pool_executor=self.worker_pool_executor,
             config=self.config,
             max_workers=self.max_workers,
         )
