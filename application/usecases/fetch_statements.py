@@ -16,12 +16,7 @@ from domain.ports import (
     RawStatementSourcePort,
 )
 from infrastructure.config import Config
-from infrastructure.helpers import (
-    ByteFormatter,
-    MetricsCollector,
-    SaveStrategy,
-    WorkerPool,
-)
+from infrastructure.helpers import ByteFormatter, SaveStrategy, WorkerPool
 
 
 class FetchStatementsUseCase:
@@ -43,8 +38,9 @@ class FetchStatementsUseCase:
         self.parsed_statements_repo = parsed_statements_repo
         self.raw_statement_repository = raw_statement_repository
         self.config = config
-        self.metrics_collector = metrics_collector
-        self.workder_pool_executor = worker_pool_executor
+        self.max_workers = max_workers
+        self.collector = metrics_collector
+        self.worker_pool_executor = worker_pool_executor
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
@@ -53,8 +49,6 @@ class FetchStatementsUseCase:
         targets: List[NsdDTO],
         save_callback: Optional[Callable[[List[StatementRowsDTO]], None]] = None,
         threshold: Optional[int] = None,
-        metrics_collector = MetricsCollectorPort,
-        worker_pool_executor = WorkerPool,
     ) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
         """Fetch statements for ``targets`` concurrently."""
         # self.logger.log(
@@ -77,6 +71,7 @@ class FetchStatementsUseCase:
         # Pair each target with its index for worker pool processing.
         tasks = list(enumerate(targets))
 
+        collector = self.collector
         start_time = time.perf_counter()
 
         def processor(task: WorkerTaskDTO) -> Tuple[NsdDTO, List[StatementRowsDTO]]:
@@ -154,7 +149,7 @@ class FetchStatementsUseCase:
         #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().worker_pool.run(tasks, processor, handle_batch)",
         #     level="info",
         # )
-        result = worker_pool_executor.run(
+        result = self.worker_pool_executor.run(
             tasks=tasks,
             processor=processor,
             logger=self.logger,
@@ -198,8 +193,6 @@ class FetchStatementsUseCase:
             targets=targets,
             save_callback=save_callback,
             threshold=threshold,
-            metrics_collector-self.metrics_collector,
-            worker_pool_executor=self.work_pool_executor,
         )
         # self.logger.log(
         #     "End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all(save_callback, threshold)",

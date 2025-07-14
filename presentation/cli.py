@@ -48,9 +48,12 @@ class CLIController:
 
         # Worker pool executes scraping tasks concurrently.
         # self.logger.log("Instantiate worker_pool_executor", level="info")
-        self.worker_pool_executor = WorkerPool(self.config, metrics_collector=self.collector, max_workers=self.config.global_settings.max_workers or 1)
+        self.worker_pool_executor = WorkerPool(
+            self.config,
+            metrics_collector=self.collector,
+            max_workers=self.config.global_settings.max_workers or 1,
+        )
         # self.logger.log("End Instance worker_pool_executor", level="info")
-
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
@@ -240,6 +243,8 @@ class CLIController:
             nsd_repo=nsd_repo,
             raw_statement_repo=raw_statement_repo,
             config=self.config,
+            metrics_collector=self.collector,
+            worker_pool_executor=self.worker_pool_executor,
             max_workers=self.config.global_settings.max_workers,
         )
         # self.logger.log(
@@ -257,9 +262,6 @@ class CLIController:
         #     "End Instance statements_fetch_service (source, raw_rows_repo, company_repo, nsd_repo, raw_statement_repo)",
         #     level="info",
         # )
-
-
-
 
         # # UseCase 2: Parse
         # # self.logger.log("Instantiate parse_service (raw_statement_repo)", level="info")
