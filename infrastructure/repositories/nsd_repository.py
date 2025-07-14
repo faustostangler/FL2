@@ -32,8 +32,7 @@ class SqlAlchemyNsdRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
             ]
 
             for dto in valid_items:
-                model = NSDModel.from_dto(dto)
-                session.merge(model)
+                session.merge(NSDModel.from_dto(dto))
             session.commit()
 
             if len(valid_items) > 0:

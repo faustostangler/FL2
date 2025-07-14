@@ -39,8 +39,7 @@ class SqlAlchemyCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryP
             ]
 
             for dto in valid_items:
-                model = CompanyModel.from_dto(dto)
-                session.merge(model)
+                session.merge(CompanyModel.from_dto(dto))
             session.commit()
 
             if len(valid_items) > 0:

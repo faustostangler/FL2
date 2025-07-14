@@ -31,8 +31,7 @@ class SqlAlchemyParsedStatementRepository(
             ]
 
             for dto in valid_items:
-                model = StatementRowsModel.from_dto(dto)
-                session.merge(model)
+                session.merge(StatementRowsModel.from_dto(dto))
             session.commit()
 
             if len(valid_items) > 0:

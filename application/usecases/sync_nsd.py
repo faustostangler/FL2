@@ -44,10 +44,6 @@ class SyncNSDUseCase:
         # )
 
         # self.logger.log("End  Method controller.run()._nsd_service().run().sync_nsd_usecase.run()", level="info")
-        results = self.scraper.fetch_all(
-            skip_codes=existing_ids,
-            save_callback=self._save_batch,
-        )
 
     def _save_batch(self, buffer: list[NsdDTO]) -> None:
         """Persist a batch of raw data after converting to domain DTOs."""
