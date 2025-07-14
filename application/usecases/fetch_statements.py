@@ -31,7 +31,6 @@ class FetchStatementsUseCase:
         metrics_collector: MetricsCollectorPort,
         worker_pool_executor: WorkerPool,
         config: Config,
-        max_workers: int = 1,
     ) -> None:
         """Store dependencies for fetching and saving raw rows."""
         self.logger = logger
