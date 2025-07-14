@@ -202,7 +202,7 @@ class RequestsRawStatementSourceAdapter(RawStatementSourcePort):
         url = self.endpoint.format(nsd=row.nsd)
         start = time.perf_counter()
 
-        response, self.session = self.fetch_utils.fetch_with_retry(self.session, url)
+        response, self.session = self.fetch_utils.fetch_with_retry(self.session, url, cache_bypass=True)
 
         download = len(response.content)
         self.metrics_collector.record_network_bytes(download)
@@ -226,7 +226,10 @@ class RequestsRawStatementSourceAdapter(RawStatementSourcePort):
                 attempt += 1
                 # 1) tentativa de fetch
                 response, self.session = self.fetch_utils.fetch_with_retry(
-                    self.session, url=item["url"], worker_id=task.worker_id
+                    self.session, 
+                    url=item["url"],
+                    cache_bypass=True,
+                    worker_id=task.worker_id
                 )
                 # 2) registra bytes baixados
                 download = len(response.content)
@@ -257,7 +260,7 @@ class RequestsRawStatementSourceAdapter(RawStatementSourcePort):
 
                 # 6) faz um novo fetch para extrair o hash atualizado
                 response_retry, self.session = self.fetch_utils.fetch_with_retry(
-                    self.session, url
+                    self.session, url, cache_bypass=True
                 )
                 download = len(response_retry.content)
                 self.metrics_collector.record_network_bytes(download)

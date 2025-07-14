@@ -82,7 +82,6 @@ class NsdScraper(NSDSourcePort):
         max_nsd = max(max_nsd_existing, max_nsd_probable)
 
         threshold = threshold or self.config.global_settings.threshold or 50
-        max_workers = max_workers or self.config.global_settings.max_workers or 1
 
         self.logger.log("Fetch NSD list", level="info")
 
@@ -93,7 +92,7 @@ class NsdScraper(NSDSourcePort):
         tasks = list(enumerate(range(start, max_nsd + 1)))
         start_time = time.perf_counter()
 
-        def processor(task: WorkerTaskDTO) -> Optional[NsdDTO]:
+        def processor(task: WorkerTaskDTO) -> Optional[dict]:
             # self.logger.log(
             #     "Run  Method controller.run()._nsd_service().run().sync_nsd_usecase.run().processor()",
             #     level="info",
@@ -165,7 +164,7 @@ class NsdScraper(NSDSourcePort):
             #     level="info",
             # )
 
-            return NsdDTO.from_dict(parsed) if parsed else None
+            return parsed
 
         def handle_batch(item: Optional[NsdDTO]) -> None:
             if item is not None:

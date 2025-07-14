@@ -122,7 +122,6 @@ class CompanyExchangeScraper(CompanySourcePort):
         threshold: Optional[int] = None,
         skip_codes: Optional[Set[str]] = None,
         save_callback: Optional[Callable[[List[CompanyRawDTO]], None]] = None,
-        max_workers: Optional[int] = None,
         **kwargs,
     ) -> ExecutionResultDTO[CompanyRawDTO]:
         """Fetch all companies from the exchange.
@@ -143,7 +142,6 @@ class CompanyExchangeScraper(CompanySourcePort):
         # Determine the save threshold (number of companies before saving buffer)
         threshold = threshold or self.config.global_settings.threshold or 50
         # Determine the number of simultaneous process
-        max_workers = max_workers or self.config.global_settings.max_workers or 1
 
         def noop(_buffer: List[Dict]) -> None:
             return None
@@ -154,7 +152,6 @@ class CompanyExchangeScraper(CompanySourcePort):
             skip_codes=skip_codes,
             save_callback=noop,
             threshold=threshold,
-            max_workers=max_workers,
         )
         # self.logger.log("End  Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)._fetch_companies_list(save_callback, max_workers, threshold)", level="info")
 
@@ -165,7 +162,6 @@ class CompanyExchangeScraper(CompanySourcePort):
             skip_codes=skip_codes,
             save_callback=save_callback,
             threshold=threshold,
-            max_workers=max_workers,
         )
         # self.logger.log("End  Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)._fetch_companies_details(save_callback, max_workers, threshold)", level="info")
 
@@ -184,7 +180,6 @@ class CompanyExchangeScraper(CompanySourcePort):
         skip_codes: Optional[Set[str]] = None,
         threshold: Optional[int] = None,
         save_callback: Optional[Callable[[List[Dict]], None]] = None,
-        max_workers: int | None = None,
     ) -> ExecutionResultDTO[Dict]:
         """Busca o conjunto inicial de empresas disponíveis na bolsa.
 
@@ -194,7 +189,6 @@ class CompanyExchangeScraper(CompanySourcePort):
 
         skip_codes = skip_codes or set()
         threshold = threshold or self.config.global_settings.threshold or 50
-        max_workers = max_workers or self.config.global_settings.max_workers or 1
 
         strategy: SaveStrategy[Dict] = SaveStrategy(
             save_callback, threshold, config=self.config
@@ -293,7 +287,6 @@ class CompanyExchangeScraper(CompanySourcePort):
         skip_codes: Optional[Set[str]] = None,
         save_callback: Optional[Callable[[List[CompanyRawDTO]], None]] = None,
         threshold: Optional[int] = None,
-        max_workers: int | None = None,
     ) -> ExecutionResultDTO[CompanyRawDTO]:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
@@ -318,7 +311,6 @@ class CompanyExchangeScraper(CompanySourcePort):
 
         skip_codes = skip_codes or set()
         threshold = threshold or self.config.global_settings.threshold or 50
-        max_workers = max_workers or self.config.global_settings.max_workers or 1
 
         strategy: SaveStrategy[CompanyRawDTO] = SaveStrategy(
             save_callback, threshold, config=self.config

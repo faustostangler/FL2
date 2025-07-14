@@ -5,6 +5,7 @@ from domain.dto import SyncCompaniesResultDTO
 from domain.dto.company_dto import CompanyDTO
 from domain.dto.raw_company_dto import CompanyRawDTO
 from domain.ports import CompanyRepositoryPort, CompanySourcePort, LoggerPort
+from infrastructure.helpers.list_flattener import ListFlattener
 
 
 class SyncCompaniesUseCase:
@@ -66,11 +67,11 @@ class SyncCompaniesUseCase:
 
     def _save_batch(self, buffer: List[CompanyRawDTO]) -> None:
         """Convert raw companies to domain DTOs before saving."""
-        # Debug log for observability of background execution.
-        # self.logger.log("Call Method _save_batch() in SyncCompaniesUseCase in CompanyService", level="info")
+        # primeiro “desembrulha” qualquer nível de listas aninhadas
+        flat_items = ListFlattener.flatten(buffer)  # recebe nested lists, devolve flat list
 
         # Transform raw DTOs from the scraper to domain DTOs.
-        dtos = [CompanyDTO.from_raw(item) for item in buffer]
+        dtos = [CompanyDTO.from_raw(item) for item in flat_items]
 
         # Persist the converted DTOs in bulk for efficiency.
         self.repository.save_all(dtos)

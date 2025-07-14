@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from domain.dto.nsd_dto import NsdDTO
 from domain.ports import LoggerPort, NSDRepositoryPort, NSDSourcePort
+from infrastructure.helpers.list_flattener import ListFlattener
 
 
 class SyncNSDUseCase:
@@ -44,7 +45,13 @@ class SyncNSDUseCase:
 
         # self.logger.log("End  Method controller.run()._nsd_service().run().sync_nsd_usecase.run()", level="info")
 
-    def _save_batch(self, buffer: list[NsdDTO]) -> None:
+    def _save_batch(self, buffer: list[dict]) -> None:
         """Persist a batch of raw data after converting to domain DTOs."""
+
+        flat_items = ListFlattener.flatten(buffer)  # recebe nested lists, devolve flat list
+
+        # Transform raw DTOs from the scraper to domain DTOs.
+        dtos = [NsdDTO.from_dict(item) for item in flat_items]
+
         # Save the batch to the repository in a single call.
-        self.repository.save_all(buffer)
+        self.repository.save_all(dtos)

@@ -38,7 +38,6 @@ class FetchStatementsUseCase:
         self.parsed_statements_repo = parsed_statements_repo
         self.raw_statement_repository = raw_statement_repository
         self.config = config
-        self.max_workers = max_workers
         self.collector = metrics_collector
         self.worker_pool_executor = worker_pool_executor
 

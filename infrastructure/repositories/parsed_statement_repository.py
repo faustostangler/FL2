@@ -7,6 +7,7 @@ from domain.ports import LoggerPort, ParsedStatementRepositoryPort
 from infrastructure.config import Config
 from infrastructure.models.statement_rows_model import StatementRowsModel
 from infrastructure.repositories.base_repository import BaseRepository
+from infrastructure.helpers.list_flattener import ListFlattener
 
 
 class SqlAlchemyParsedStatementRepository(
@@ -18,19 +19,12 @@ class SqlAlchemyParsedStatementRepository(
         super().__init__(config, logger)
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def save_all(self, items: List[StatementRowsDTO]) -> None:
-        def _flatten(seq):
-            for elem in seq:
-                if isinstance(elem, list):
-                    yield from _flatten(elem)
-                else:
-                    yield elem
-
+    def save_all(self, buffer: List[StatementRowsDTO]) -> None:
         session = self.Session()
 
         try:
-            items = list(_flatten(items))
-            for dto in items:
+            flat_items = ListFlattener.flatten(buffer)  # recebe nested lists, devolve flat list
+            for dto in flat_items:
                 session.merge(StatementRowsModel.from_dto(dto))
             session.commit()
             self.logger.log(f"Saved {len(items)} raw statement rows", level="info")

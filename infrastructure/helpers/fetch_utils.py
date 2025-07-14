@@ -146,6 +146,7 @@ class FetchUtils:
         self,
         scraper: Optional[requests.Session],
         url: str,
+        cache_bypass: bool = False,
         timeout: Optional[int] = None,
         insecure: bool = False,
         worker_id: Optional[str] = None,
@@ -160,15 +161,16 @@ class FetchUtils:
 
         while True:
             try:
-                # random parameter for no-cache, encoding is just for fun
-                param_name = self.id_generator.create_id(random.randint(1, 4))
-                digest = self.id_generator.create_id(random.randint(4, 12))
-                no_cache = f"{param_name}={digest}"
-                url_nocache = f"{url}&{no_cache}"
+                if cache_bypass:
+                    # random parameter for no-cache, encoding is just for fun
+                    param_name = self.id_generator.create_id(random.randint(1, 4))
+                    digest = self.id_generator.create_id(random.randint(4, 12))
+                    no_cache = f"{param_name}={digest}"
+                    url = f"{url}&{no_cache}"
 
                 # Perform the request with the current session
                 timeout_wait = timeout + attempt
-                response = scraper.get(url_nocache, timeout=timeout_wait)
+                response = scraper.get(url, timeout=timeout_wait)
                 if response.status_code == 200:
                     # On success, log the total block time if any
                     if block_start:
