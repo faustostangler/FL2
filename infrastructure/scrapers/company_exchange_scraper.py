@@ -145,10 +145,10 @@ class CompanyExchangeScraper(CompanySourcePort):
         # Determine the number of simultaneous process
         max_workers = max_workers or self.config.global_settings.max_workers or 1
 
-        # Fetch the initial list of companies, possibly skipping some CVM codes
         def noop(_buffer: List[Dict]) -> None:
             return None
 
+        # 1 Fetch the initial list of companies, possibly skipping some CVM codes
         # self.logger.log("Call Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)._fetch_companies_list(save_callback, max_workers, threshold)", level="info")
         companies_list = self._fetch_companies_list(
             skip_codes=skip_codes,
@@ -158,7 +158,7 @@ class CompanyExchangeScraper(CompanySourcePort):
         )
         # self.logger.log("End  Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)._fetch_companies_list(save_callback, max_workers, threshold)", level="info")
 
-        # Fetch and parse detailed information for each company, with optional skipping and periodic saving
+        # 2 Fetch and parse detailed information for each company, with optional skipping and periodic saving
         # self.logger.log("Call Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)._fetch_companies_details(save_callback, max_workers, threshold)", level="info")
         companies = self._fetch_companies_details(
             companies_list=companies_list.items,
@@ -286,39 +286,6 @@ class CompanyExchangeScraper(CompanySourcePort):
         # self.logger.log("End  Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)._fetch_companies_list(save_callback, max_workers, threshold)", level="info")
 
         return ExecutionResultDTO(items=results, metrics=page_exec.metrics)
-
-    def _encode_payload(self, payload: dict) -> str:
-        """Codifica um dicionário JSON para o formato base64 usado pela API.
-
-        :param payload: Dicionário de entrada
-        :return: String base64
-        """
-
-        return base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
-
-    def _fetch_page(self, page_number: int) -> PageResultDTO:
-        # self.logger.log("Run  Method CompanyExchangeScraper._fetch_companies_list().processor()_fetch_page()", level="info")
-        payload = {
-            "language": self.language,
-            "pageNumber": page_number,
-            "pageSize": self.PAGE_SIZE,
-        }
-        token = self._encode_payload(payload)
-        url = self.endpoint_companies_list + token
-        response, self.session = self.fetch_utils.fetch_with_retry(self.session, url)
-        bytes_downloaded = len(response.content if response else b"")
-        self.metrics_collector.record_network_bytes(bytes_downloaded)
-        data = response.json()
-        results = data.get("results", [])
-        total_pages = data.get("page", {}).get("totalPages", 1)
-
-        # self.logger.log("End  Method CompanyExchangeScraper._fetch_companies_list().processor()_fetch_page()", level="info")
-
-        return PageResultDTO(
-            items=results,
-            total_pages=total_pages,
-            bytes_downloaded=bytes_downloaded,
-        )
 
     def _fetch_companies_details(
         self,
@@ -452,4 +419,37 @@ class CompanyExchangeScraper(CompanySourcePort):
         # self.logger.log("End  Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)._fetch_companies_details(save_callback, max_workers, threshold)", level="info")
 
         return ExecutionResultDTO(items=results, metrics=detail_exec.metrics)
+
+    def _encode_payload(self, payload: dict) -> str:
+        """Codifica um dicionário JSON para o formato base64 usado pela API.
+
+        :param payload: Dicionário de entrada
+        :return: String base64
+        """
+
+        return base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
+
+    def _fetch_page(self, page_number: int) -> PageResultDTO:
+        # self.logger.log("Run  Method CompanyExchangeScraper._fetch_companies_list().processor()_fetch_page()", level="info")
+        payload = {
+            "language": self.language,
+            "pageNumber": page_number,
+            "pageSize": self.PAGE_SIZE,
+        }
+        token = self._encode_payload(payload)
+        url = self.endpoint_companies_list + token
+        response, self.session = self.fetch_utils.fetch_with_retry(self.session, url)
+        bytes_downloaded = len(response.content if response else b"")
+        self.metrics_collector.record_network_bytes(bytes_downloaded)
+        data = response.json()
+        results = data.get("results", [])
+        total_pages = data.get("page", {}).get("totalPages", 1)
+
+        # self.logger.log("End  Method CompanyExchangeScraper._fetch_companies_list().processor()_fetch_page()", level="info")
+
+        return PageResultDTO(
+            items=results,
+            total_pages=total_pages,
+            bytes_downloaded=bytes_downloaded,
+        )
 

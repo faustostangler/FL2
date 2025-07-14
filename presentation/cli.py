@@ -41,6 +41,17 @@ class CLIController:
         # The data cleaner is injected into scrapers.
         self.data_cleaner = data_cleaner
 
+        # Collector gathers metrics for the worker pool.
+        # self.logger.log("Instantiate collector", level="info")
+        self.collector = MetricsCollector()
+        # self.logger.log("End Instance collector", level="info")
+
+        # Worker pool executes scraping tasks concurrently.
+        # self.logger.log("Instantiate worker_pool_executor", level="info")
+        self.worker_pool_executor = WorkerPool(self.config, metrics_collector=self.collector, max_workers=self.config.global_settings.max_workers or 1)
+        # self.logger.log("End Instance worker_pool_executor", level="info")
+
+
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def start_fly(self):
@@ -53,7 +64,7 @@ class CLIController:
         # self.logger.log("End  Method controller.run()._company_service()", level="info")
 
         # self.logger.log("Call Method controller.run()._nsd_service()", level="info")
-        # self._nsd_service()
+        self._nsd_service()
         # self.logger.log("End  Method controller.run()._nsd_service()", level="info")
 
         # self.logger.log(
@@ -76,16 +87,6 @@ class CLIController:
         mapper = CompanyMapper(self.data_cleaner)
         # self.logger.log("End Instance mapper", level="info")
 
-        # Collector gathers metrics for the worker pool.
-        # self.logger.log("Instantiate collector", level="info")
-        collector = MetricsCollector()
-        # self.logger.log("End Instance collector", level="info")
-
-        # Worker pool executes scraping tasks concurrently.
-        # self.logger.log("Instantiate worker_pool_executor", level="info")
-        worker_pool_executor = WorkerPool(self.config, metrics_collector=collector)
-        # self.logger.log("End Instance worker_pool_executor", level="info")
-
         # Create repository for persistent storage.
         # self.logger.log("Instantiate company_repo", level="info")
         company_repo = SqlAlchemyCompanyRepository(
@@ -103,8 +104,8 @@ class CLIController:
             logger=self.logger,
             data_cleaner=self.data_cleaner,
             mapper=mapper,
-            worker_pool_executor=worker_pool_executor,
-            metrics_collector=collector,
+            worker_pool_executor=self.worker_pool_executor,
+            metrics_collector=self.collector,
         )
         # self.logger.log(
         #     "End Instance company_scraper (mapper, worker_pool_executor, collector)",
@@ -149,16 +150,6 @@ class CLIController:
         nsd_repo = SqlAlchemyNsdRepository(config=self.config, logger=self.logger)
         # self.logger.log("End Instance nsd_repo", level="info")
 
-        # Collector gathers metrics for the worker pool.
-        # self.logger.log("Instantiate collector", level="info")
-        collector = MetricsCollector()
-        # self.logger.log("End Instance collector", level="info")
-
-        # Worker pool executes scraping tasks concurrently.
-        # self.logger.log("Instantiate worker_pool_executor", level="info")
-        worker_pool_executor = WorkerPool(self.config, metrics_collector=collector)
-        # self.logger.log("End Instance worker_pool_executor", level="info")
-
         # Assemble the scraper with all its collaborators.
         # self.logger.log(
         #     "Instantiate nsd_scraper (worker_pool_executor, collector, nsd_repo)",
@@ -168,9 +159,9 @@ class CLIController:
             config=self.config,
             logger=self.logger,
             data_cleaner=self.data_cleaner,
-            worker_pool_executor=worker_pool_executor,
-            metrics_collector=collector,
             repository=nsd_repo,
+            worker_pool_executor=self.worker_pool_executor,
+            metrics_collector=self.collector,
         )
         # self.logger.log(
         #     "End Instance nsd_scraper (worker_pool_executor, collector, nsd_repo)",
@@ -226,16 +217,13 @@ class CLIController:
         )
         # self.logger.log("End Instance parsed_statements_repo", level="info")
 
-        # self.logger.log("Instantiate collector", level="info")
-        collector = MetricsCollector()
-        collector._network_bytes = 12207202367 # 12201796003 # 4508770675  # setup initial value for reloading
-
         # self.logger.log("Instantiate source", level="info")
-        source = RequestsRawStatementSourceAdapter(
+        source_adapter = RequestsRawStatementSourceAdapter(
             config=self.config,
             logger=self.logger,
             data_cleaner=self.data_cleaner,
-            metrics_collector=collector,
+            metrics_collector=self.collector,
+            worker_pool_executor=self.worker_pool_executor,
         )
         # self.logger.log("End Instance source", level="info")
 

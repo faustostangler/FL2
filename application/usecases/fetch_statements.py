@@ -10,6 +10,7 @@ from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.dto.worker_class_dto import WorkerTaskDTO
 from domain.ports import (
     LoggerPort,
+    MetricsCollectorPort,
     ParsedStatementRepositoryPort,
     RawStatementRepositoryPort,
     RawStatementSourcePort,
@@ -32,6 +33,8 @@ class FetchStatementsUseCase:
         source: RawStatementSourcePort,
         parsed_statements_repo: ParsedStatementRepositoryPort,
         raw_statement_repository: RawStatementRepositoryPort,
+        metrics_collector: MetricsCollectorPort,
+        worker_pool_executor: WorkerPool,
         config: Config,
         max_workers: int = 1,
     ) -> None:
@@ -50,6 +53,8 @@ class FetchStatementsUseCase:
         targets: List[NsdDTO],
         save_callback: Optional[Callable[[List[StatementRowsDTO]], None]] = None,
         threshold: Optional[int] = None,
+        metrics_collector = MetricsCollectorPort,
+        worker_pool_executor = WorkerPool,
     ) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
         """Fetch statements for ``targets`` concurrently."""
         # self.logger.log(
@@ -57,22 +62,6 @@ class FetchStatementsUseCase:
         #     level="info",
         # )
 
-        # Set up a metrics collector to track progress. Prefer using the
-        # collector from the source if available so network metrics remain
-        # consistent across the entire workflow.
-        # self.logger.log("Instantiate collector", level="info")
-        collector = getattr(self.source, "metrics_collector", None)
-        if collector is None:
-            collector = MetricsCollector()
-        # self.logger.log("End Instance collector", level="info")
-
-        # Create the worker pool responsible for parallel fetching.
-        # self.logger.log("Instantiate worker_pool", level="info")
-        worker_pool = WorkerPool(
-            config=self.config,
-            metrics_collector=collector,
-            max_workers=self.max_workers,
-        )
         byte_formatter = ByteFormatter()
         # self.logger.log("End Instance worker_pool", level="info")
 
@@ -165,7 +154,7 @@ class FetchStatementsUseCase:
         #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().worker_pool.run(tasks, processor, handle_batch)",
         #     level="info",
         # )
-        result = worker_pool.run(
+        result = worker_pool_executor.run(
             tasks=tasks,
             processor=processor,
             logger=self.logger,
@@ -209,6 +198,8 @@ class FetchStatementsUseCase:
             targets=targets,
             save_callback=save_callback,
             threshold=threshold,
+            metrics_collector: MetricsCollectorPort,
+            worker_pool_executor= WorkerPool,
         )
         # self.logger.log(
         #     "End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all(save_callback, threshold)",

@@ -14,6 +14,7 @@ from domain.dto import StatementRowsDTO, WorkerTaskDTO
 from domain.dto.nsd_dto import NsdDTO
 from domain.ports import LoggerPort, MetricsCollectorPort, RawStatementSourcePort
 from infrastructure.config import Config
+from infrastructure.helpers import WorkerPool
 from infrastructure.helpers.data_cleaner import DataCleaner
 from infrastructure.helpers.fetch_utils import FetchUtils
 from infrastructure.helpers.time_utils import TimeUtils
@@ -29,12 +30,14 @@ class RequestsRawStatementSourceAdapter(RawStatementSourcePort):
         logger: LoggerPort,
         data_cleaner: DataCleaner,
         metrics_collector: MetricsCollectorPort,
+        worker_pool_executor= WorkerPool,
     ) -> None:
         """Create the adapter with its configuration and logger."""
         self.config = config
         self.logger = logger
         self.data_cleaner = data_cleaner
         self._metrics_collector = metrics_collector
+        self.worker_pool_executor = worker_pool_executor
         self.fetch_utils = FetchUtils(config, logger)
         self.time_utils = TimeUtils(self.config)
         self.session = self.fetch_utils.create_scraper()
