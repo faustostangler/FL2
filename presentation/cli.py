@@ -234,7 +234,7 @@ class CLIController:
         # )
         statements_fetch_service = StatementFetchService(
             logger=self.logger,
-            source=source,
+            source=source_adapter,
             parsed_statements_repo=parsed_statements_repo,
             company_repo=company_repo,
             nsd_repo=nsd_repo,

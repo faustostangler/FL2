@@ -36,7 +36,6 @@ class FetchStatementsUseCase:
         metrics_collector: MetricsCollectorPort,
         worker_pool_executor: WorkerPool,
         config: Config,
-        max_workers: int = 1,
     ) -> None:
         """Store dependencies for fetching and saving raw rows."""
         self.logger = logger
@@ -44,7 +43,8 @@ class FetchStatementsUseCase:
         self.parsed_statements_repo = parsed_statements_repo
         self.raw_statement_repository = raw_statement_repository
         self.config = config
-        self.max_workers = max_workers
+        self.metrics_collector = metrics_collector
+        self.workder_pool_executor = worker_pool_executor
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
@@ -198,8 +198,8 @@ class FetchStatementsUseCase:
             targets=targets,
             save_callback=save_callback,
             threshold=threshold,
-            metrics_collector: MetricsCollectorPort,
-            worker_pool_executor= WorkerPool,
+            metrics_collector-self.metrics_collector,
+            worker_pool_executor=self.work_pool_executor,
         )
         # self.logger.log(
         #     "End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all(save_callback, threshold)",

@@ -30,7 +30,7 @@ class RequestsRawStatementSourceAdapter(RawStatementSourcePort):
         logger: LoggerPort,
         data_cleaner: DataCleaner,
         metrics_collector: MetricsCollectorPort,
-        worker_pool_executor= WorkerPool,
+        worker_pool_executor: WorkerPool,
     ) -> None:
         """Create the adapter with its configuration and logger."""
         self.config = config
