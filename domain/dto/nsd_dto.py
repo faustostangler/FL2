@@ -25,7 +25,7 @@ class NsdDTO:
     reason: Optional[str]
 
     @staticmethod
-    def from_dict(raw: dict) -> "NsdDTO":
+    def from_dict(raw: dict) -> NsdDTO:
         """Build an ``NsdDTO`` from scraped raw data."""
 
         try:

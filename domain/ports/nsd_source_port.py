@@ -17,9 +17,10 @@ class NSDSourcePort(BaseSourcePort[NsdDTO]):
         self,
         threshold: Optional[int] = None,
         skip_codes: Optional[Set[str]] = None,
-        save_callback: Optional[Callable[[List[dict]], None]] = None,
+        save_callback: Optional[Callable[[List[NsdDTO]], None]] = None,
         start: int = 1,
         max_nsd: Optional[int] = None,
         **kwargs,
-    ) -> ExecutionResultDTO[dict]:
+    ) -> ExecutionResultDTO[NsdDTO]:
+
         raise NotImplementedError
