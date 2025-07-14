@@ -5,6 +5,7 @@ from typing import List, Set
 from domain.dto.statement_dto import StatementDTO
 from domain.ports import LoggerPort, RawStatementRepositoryPort
 from infrastructure.config import Config
+from infrastructure.helpers.list_flattener import ListFlattener
 from infrastructure.models.statement_model import StatementModel
 from infrastructure.repositories.base_repository import BaseRepository
 
@@ -22,13 +23,26 @@ class SqlAlchemyRawStatementRepository(
     def save_all(self, items: List[StatementDTO]) -> None:
         session = self.Session()
         try:
-            for dto in items:
-                session.merge(StatementModel.from_dto(dto))
+            flat_items = ListFlattener.flatten(items)  # recebe nested lists, devolve flat list
+
+            valid_items = [
+                item for item in flat_items
+                if item is not None
+            ]
+
+            for dto in valid_items:
+                model = StatementModel.from_dto(dto)
+                session.merge(model)
             session.commit()
-            self.logger.log(f"Saved {len(items)} statements", level="info")
+
+            if len(valid_items) > 0:
+                self.logger.log(
+                    f"Saved {len(valid_items)} raw statement rows", 
+                    level="info"
+                )
         except Exception as exc:  # noqa: BLE001
             session.rollback()
-            self.logger.log(f"Failed to save statements: {exc}", level="error")
+            self.logger.log(f"Failed to save raw statements: {exc}", level="error")
             raise
         finally:
             session.close()

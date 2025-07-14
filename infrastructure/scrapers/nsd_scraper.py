@@ -344,7 +344,7 @@ class NsdScraper(NSDSourcePort):
     def _find_next_probable_nsd(
         self,
         start: int = 1,
-        safety_factor: float = 1.5,
+        safety_factor: float = 1.10,
     ) -> int:
         """Estimate next NSD numbers based on historical submission rate.
 

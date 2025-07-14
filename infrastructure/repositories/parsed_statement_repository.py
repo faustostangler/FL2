@@ -5,9 +5,9 @@ from typing import Any, List, Set
 from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.ports import LoggerPort, ParsedStatementRepositoryPort
 from infrastructure.config import Config
+from infrastructure.helpers.list_flattener import ListFlattener
 from infrastructure.models.statement_rows_model import StatementRowsModel
 from infrastructure.repositories.base_repository import BaseRepository
-from infrastructure.helpers.list_flattener import ListFlattener
 
 
 class SqlAlchemyParsedStatementRepository(
@@ -19,18 +19,30 @@ class SqlAlchemyParsedStatementRepository(
         super().__init__(config, logger)
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def save_all(self, buffer: List[StatementRowsDTO]) -> None:
+    def save_all(self, items: List[StatementRowsDTO]) -> None:
         session = self.Session()
 
         try:
-            flat_items = ListFlattener.flatten(buffer)  # recebe nested lists, devolve flat list
-            for dto in flat_items:
-                session.merge(StatementRowsModel.from_dto(dto))
+            flat_items = ListFlattener.flatten(items)  # recebe nested lists, devolve flat list
+
+            valid_items = [
+                item for item in flat_items
+                if item is not None
+            ]
+
+            for dto in valid_items:
+                model = StatementRowsModel.from_dto(dto)
+                session.merge(model)
             session.commit()
-            self.logger.log(f"Saved {len(items)} raw statement rows", level="info")
+
+            if len(valid_items) > 0:
+                self.logger.log(
+                    f"Saved {len(valid_items)} parsed statement rows", 
+                    level="info"
+                )
         except Exception as exc:  # noqa: BLE001
             session.rollback()
-            self.logger.log(f"Failed to save raw statement rows: {exc}", level="error")
+            self.logger.log(f"Failed to save parsed statement rows: {exc}", level="error")
             raise
         finally:
             session.close()

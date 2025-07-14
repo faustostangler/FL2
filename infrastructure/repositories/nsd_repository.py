@@ -7,6 +7,7 @@ from typing import List
 from domain.dto.nsd_dto import NsdDTO
 from domain.ports import LoggerPort, NSDRepositoryPort
 from infrastructure.config import Config
+from infrastructure.helpers.list_flattener import ListFlattener
 from infrastructure.models.nsd_model import NSDModel
 from infrastructure.repositories import BaseRepository
 
@@ -23,14 +24,23 @@ class SqlAlchemyNsdRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
         """Persist a list of ``CompanyDTO`` objects."""
         session = self.Session()
         try:
-            models = [NSDModel.from_dto(dto) for dto in items]
-            for model in models:
+            flat_items = ListFlattener.flatten(items)  # recebe nested lists, devolve flat list
+
+            valid_items = [
+                item for item in flat_items
+                if item.nsd > 0 and item.sent_date is not None
+            ]
+
+            for dto in valid_items:
+                model = NSDModel.from_dto(dto)
                 session.merge(model)
             session.commit()
-            self.logger.log(
-                f"Saved {len(items)} nsd records",
-                level="info",
-            )
+
+            if len(valid_items) > 0:
+                self.logger.log(
+                    f"Saved {len(valid_items)} nsd records",
+                    level="info",
+                )
         except Exception as e:
             session.rollback()
             self.logger.log(
