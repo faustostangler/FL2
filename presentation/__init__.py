@@ -1,5 +1,5 @@
 """Presentation layer containing the CLI entry point for the app."""
 
-from .cli import CLIController
+from .cli import CLIAdapter
 
-__all__ = ["CLIController"]
+__all__ = ["CLIAdapter"]

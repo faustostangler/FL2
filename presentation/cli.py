@@ -23,7 +23,7 @@ from infrastructure.scrapers.statements_source_adapter import (
 )
 
 
-class CLIController:
+class CLIAdapter:
     """Controller that orchestrates FLY via the command line."""
 
     def __init__(self, config: Config, logger: LoggerPort, data_cleaner):
@@ -63,7 +63,7 @@ class CLIController:
 
         # Start the company synchronization workflow.
         # self.logger.log("Call Method controller.run()._company_service()", level="info")
-        self._company_service()
+        # self._company_service()
         # self.logger.log("End  Method controller.run()._company_service()", level="info")
 
         # self.logger.log("Call Method controller.run()._nsd_service()", level="info")

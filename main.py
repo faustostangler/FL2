@@ -3,7 +3,7 @@
 from infrastructure.config import Config
 from infrastructure.factories import create_data_cleaner
 from infrastructure.logging import Logger
-from presentation import CLIController
+from presentation import CLIAdapter
 
 # Executa a aplicação principal se este arquivo for executado diretamente
 if __name__ == "__main__":
@@ -13,7 +13,7 @@ if __name__ == "__main__":
 
     # Load CLI
     logger.log(
-        "Run Project FLY",
+        "Start Project FLY",
         level="info",
     )
 
@@ -22,7 +22,7 @@ if __name__ == "__main__":
 
     # Entry point for the FLY CLI application.
     # logger.log("Instantiate controller", level="info")
-    controller = CLIController(config=config, logger=logger, data_cleaner=data_cleaner)
+    controller = CLIAdapter(config=config, logger=logger, data_cleaner=data_cleaner)
 
     # Run Controller
     # logger.log("Call Method controller.start()", level="info")

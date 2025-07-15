@@ -17,13 +17,11 @@ class SyncCompaniesUseCase:
         logger: LoggerPort,
         repository: CompanyRepositoryPort,
         scraper: CompanySourcePort,
-        max_workers: int,
     ):
         """Store dependencies and configure use case execution."""
         self.logger = logger
         self.repository = repository
         self.scraper = scraper
-        self.max_workers = max_workers
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
@@ -48,7 +46,6 @@ class SyncCompaniesUseCase:
         results = self.scraper.fetch_all(
             skip_codes=existing_company_codes,
             save_callback=self._save_batch,
-            max_workers=self.max_workers,
         )
         # self.logger.log("End  Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)", level="info")
 

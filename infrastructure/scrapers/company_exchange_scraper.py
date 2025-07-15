@@ -10,6 +10,7 @@ from typing import Callable, Dict, List, Optional, Set
 from application import CompanyMapper
 from domain.dto import CompanyRawDTO, ExecutionResultDTO, PageResultDTO, WorkerTaskDTO
 from domain.ports import (
+    BaseSourcePort,
     CompanySourcePort,
     LoggerPort,
     MetricsCollectorPort,
@@ -27,7 +28,7 @@ from infrastructure.scrapers.company_processors import (
 )
 
 
-class CompanyExchangeScraper(CompanySourcePort):
+class CompanyExchangeScraper(CompanySourcePort, BaseSourcePort[CompanyRawDTO]):
     """Scraper adapter responsible for fetching raw company data.
 
     In a real implementation, this could use requests, BeautifulSoup, or
