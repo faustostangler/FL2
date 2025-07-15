@@ -26,3 +26,33 @@ class ContextTracker:
             return " <- ".join(relevant[3:-1])
         except Exception:
             return ""
+
+    def get_import_path(self) -> str:
+        """Return the fully qualified import path of the caller method."""
+        import inspect
+
+        try:
+            stack = inspect.stack()
+            for frame_info in stack[2:]:
+                frame = frame_info.frame
+                func = frame.f_code.co_name
+                cls = self._get_class_from_frame(frame)
+                if cls is not None:
+                    module = inspect.getmodule(cls)
+                    mod = module.__name__ if module else cls.__module__
+                    return f"{mod}.{cls.__name__}.{func}"
+                else:
+                    module = inspect.getmodule(frame)
+                    mod = module.__name__ if module else "<unknown>"
+                    return f"{mod}.{func}"
+            return "<unknown>"
+        except Exception:
+            return "<unknown>"
+
+    def _get_class_from_frame(self, frame) -> type | None:
+        args, _, _, local_vars = inspect.getargvalues(frame)
+        if args:
+            self_obj = local_vars.get(args[0], None)
+            if isinstance(self_obj, object):
+                return self_obj.__class__
+        return None

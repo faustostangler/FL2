@@ -18,13 +18,20 @@ class Logger(LoggerPort):
         self.logger_name = logger_name or self.config.global_settings.app_name or "FLY"
         self.progress_formatter = ProgressFormatter()
         self.context_tracker = ContextTracker(config.paths.root_dir)
+        self.show_import_path = self.config.logging.show_import_path
 
-        self.id_generator = IdGenerator(config=self.config, logger_name=self.logger_name)
+        self.id_generator = IdGenerator(
+            config=self.config, logger_name=self.logger_name
+        )
         self._run_id = self.id_generator.create_id(8)
         self.worker_id = self.id_generator.create_id(8)
 
         self._logger = self._setup_logger(level)
 
+    def enable_import_path(self, enable: bool = True) -> None:
+        """Enable or disable printing the full import path of the calling
+        method."""
+        self.show_import_path = enable
 
     def _setup_logger(self, level: str) -> logging.LoggerAdapter:
         """Configure the underlying ``logging`` logger with console and file
@@ -65,9 +72,14 @@ class Logger(LoggerPort):
         context_msg = (
             self.context_tracker.get_context() if level.lower() == "debug" else ""
         )
+        import_path = (
+            self.context_tracker.get_import_path() if self.show_import_path else ""
+        )
         progress_msg = self.progress_formatter.format(progress) if progress else ""
 
         full_message = message
+        if import_path:
+            full_message = f"{import_path} - {full_message}"
         if progress_msg:
             full_message += f" | {progress_msg}"
         if context_msg:
@@ -111,7 +123,9 @@ class MergedLoggerAdapter(logging.LoggerAdapter):
     """Logger adapter that merges ``extra`` dictionaries from calls and
     defaults."""
 
-    def process(self, msg: str, kwargs: MutableMapping[str, Any]) -> tuple[str, MutableMapping[str, Any]]:
+    def process(
+        self, msg: str, kwargs: MutableMapping[str, Any]
+    ) -> tuple[str, MutableMapping[str, Any]]:
         base = self.extra if isinstance(self.extra, dict) else {}
         extra = kwargs.get("extra") or {}
         if not isinstance(extra, dict):
