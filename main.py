@@ -7,16 +7,16 @@ from presentation import CLIAdapter
 
 
 def main() -> None:
-    """Inicializa e executa a aplicação FLY pela interface de linha de comando (CLI).
+    """Initialize and run the FLY application via the command-line interface (CLI).
 
-    Esta função realiza a sequência de inicialização dos componentes principais:
-    - Instancia o objeto de configuração (`Config`).
-    - Cria o logger principal.
-    - Cria o componente de limpeza de dados.
-    - Instancia o controlador CLI com as dependências injetadas.
-    - Inicia o processo principal da aplicação via `controller.start_fly()`.
+    This function executes the following startup sequence:
+    - Instantiates the configuration object (`Config`).
+    - Creates the main logger.
+    - Creates the data cleaner component.
+    - Instantiates the CLI controller with injected dependencies.
+    - Starts the application logic by calling `controller.start_fly()`.
     """
-    # Inicializa a configuração
+    # Initialize application configuration
     config = Config()
     logger = Logger(config)
 
@@ -29,7 +29,7 @@ def main() -> None:
     # Load data_cleaner
     data_cleaner = create_data_cleaner(config, logger)
 
-    # Entry point for the FLY CLI application.
+    # Entry point for the FLY CLI application
     # logger.log("Instantiate controller", level="info")
     controller = CLIAdapter(config=config, logger=logger, data_cleaner=data_cleaner)
 
@@ -40,12 +40,13 @@ def main() -> None:
 
     # logger.log("End Instance controller", level="info")
 
-    # Finaliza a execução com uma mensagem de confirmação
+    # Finalize execution with a confirmation message
     logger.log(
         "Finish Project FLY",
         level="info",
     )
 
-# Executa a aplicação principal se este arquivo for executado diretamente
+
+# Run main function if this script is executed directly
 if __name__ == "__main__":
     main()

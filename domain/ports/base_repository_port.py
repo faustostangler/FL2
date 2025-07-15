@@ -5,34 +5,72 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Generic, List, Set, TypeVar
 
-T = TypeVar("T")   # DTO
-K = TypeVar("K")   # Key type: str, int, etc.
+T = TypeVar("T")   # DTO type
+K = TypeVar("K")   # Key type (e.g., str, int)
 
 
 class SqlAlchemyRepositoryBasePort(ABC, Generic[T, K]):
-    """Generic repository port for persistence operations."""
+    """Generic interface (port) for basic repository operations.
+
+    This abstract base class defines the standard CRUD-like operations
+    expected from any persistence adapter, without assuming any specific
+    database or storage technology.
+
+    Type Args:
+        T: DTO type being persisted.
+        K: Identifier type for the primary key (e.g., str, int).
+    """
 
     @abstractmethod
     def save_all(self, items: List[T]) -> None:
-        """Persist a batch of DTOs."""
+        """Persist a batch of domain DTOs.
+
+        Args:
+            items (List[T]): A list of DTOs to be saved to the repository.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def get_all(self) -> List[T]:
-        """Retrieve all items from the repository."""
+        """Retrieve all persisted items.
+
+        Returns:
+            List[T]: All items stored in the repository.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def has_item(self, identifier: K) -> bool:
-        """Check if an item exists in the repository."""
+        """Check whether an item with the given identifier exists.
+
+        Args:
+            identifier (K): The key to look up.
+
+        Returns:
+            bool: True if the item exists, False otherwise.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def get_by_id(self, id: K) -> T:
-        """Retrieve an item by its identifier."""
+        """Retrieve a single item by its identifier.
+
+        Args:
+            id (K): The unique key for the item.
+
+        Returns:
+            T: The corresponding DTO.
+
+        Raises:
+            KeyError or ValueError: If the item is not found.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def get_all_primary_keys(self) -> Set[K]:
-        """Retrieve the set of all primary keys already persisted."""
+        """Retrieve the set of all primary keys currently stored.
+
+        Returns:
+            Set[K]: A set of unique identifiers for all stored items.
+        """
         raise NotImplementedError

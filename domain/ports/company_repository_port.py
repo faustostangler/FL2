@@ -8,5 +8,8 @@ from .base_repository_port import SqlAlchemyRepositoryBasePort
 
 
 class SqlAlchemyCompanyRepositoryPort(SqlAlchemyRepositoryBasePort[CompanyDTO, str]):
-    """Port for company persistence operations."""
+    """Interface (port) for persistence operations related to Company entities.
 
+    Acts as an abstraction for the application layer to interact with
+    company-related data storage, decoupling it from the actual database implementation.
+    """
