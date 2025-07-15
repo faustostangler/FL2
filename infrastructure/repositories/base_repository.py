@@ -38,28 +38,3 @@ class BaseRepository(BaseRepositoryPort[T], ABC):
         BaseModel.metadata.create_all(self.engine)
 
         # self.logger.log(f"Create Instance Base Class {self.__class__.__name__}", level="info")
-
-    @abstractmethod
-    def save_all(self, items: List[T]) -> None:
-        """Saves in repository."""
-        pass
-
-    @abstractmethod
-    def get_all(self) -> List[T]:
-        """Get all items from repository."""
-        pass
-
-    @abstractmethod
-    def has_item(self, identifier: str) -> bool:
-        """Check if it is in repository."""
-        pass
-
-    @abstractmethod
-    def get_by_id(self, id: str) -> T:
-        """Recupera uma empresa a partir do ticker."""
-        pass
-
-    @abstractmethod
-    def get_all_primary_keys(self) -> Set[str]:
-        """Retrieve the set of all primary keys already persisted."""
-        raise NotImplementedError

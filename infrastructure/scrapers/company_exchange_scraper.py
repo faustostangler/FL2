@@ -28,7 +28,7 @@ from infrastructure.scrapers.company_processors import (
 )
 
 
-class CompanyExchangeScraper(CompanySourcePort, BaseSourcePort[CompanyRawDTO]):
+class CompanyExchangeScraper(CompanySourcePort):
     """Scraper adapter responsible for fetching raw company data.
 
     In a real implementation, this could use requests, BeautifulSoup, or

@@ -12,7 +12,7 @@ from infrastructure.models.nsd_model import NSDModel
 from infrastructure.repositories import BaseRepository
 
 
-class SqlAlchemyNsdRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
+class SqlAlchemyNsdRepository(NSDRepositoryPort):
     """Concrete repository for NsdDTO using SQLite via SQLAlchemy."""
 
     def __init__(self, config: Config, logger: LoggerPort) -> None:

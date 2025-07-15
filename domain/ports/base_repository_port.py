@@ -5,10 +5,11 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Generic, List, Set, TypeVar
 
-T = TypeVar("T")
+T = TypeVar("T")   # DTO
+K = TypeVar("K")   # Key type: str, int, etc.
 
 
-class BaseRepositoryPort(ABC, Generic[T]):
+class BaseRepositoryPort(ABC, Generic[T, K]):
     """Generic repository port for persistence operations."""
 
     @abstractmethod
@@ -22,16 +23,16 @@ class BaseRepositoryPort(ABC, Generic[T]):
         raise NotImplementedError
 
     @abstractmethod
-    def has_item(self, identifier: str) -> bool:
+    def has_item(self, identifier: K) -> bool:
         """Check if an item exists in the repository."""
         raise NotImplementedError
 
     @abstractmethod
-    def get_by_id(self, id: str) -> T:
+    def get_by_id(self, id: K) -> T:
         """Retrieve an item by its identifier."""
         raise NotImplementedError
 
     @abstractmethod
-    def get_all_primary_keys(self) -> Set[str]:
+    def get_all_primary_keys(self) -> Set[K]:
         """Retrieve the set of all primary keys already persisted."""
         raise NotImplementedError
