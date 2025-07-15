@@ -1,5 +1,5 @@
-from abc import ABC, abstractmethod
-from typing import List, Set, TypeVar
+from abc import ABC
+from typing import Any, TypeVar
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
@@ -12,7 +12,7 @@ from infrastructure.models.base_model import BaseModel
 T = TypeVar("T")  # T pode ser CompanyDTO, StatementDTO, etc.
 
 
-class BaseRepository(BaseRepositoryPort[T], ABC):
+class BaseRepository(BaseRepositoryPort[T, Any], ABC):
     """
     Contract - Interface genérica para repositórios de leitura/escrita.
     Pode ser especializada para qualquer tipo de DTO.

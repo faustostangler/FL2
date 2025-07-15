@@ -7,6 +7,6 @@ from domain.dto.company_dto import CompanyDTO
 from .base_repository_port import BaseRepositoryPort
 
 
-class CompanyRepositoryPort(BaseRepositoryPort[CompanyDTO]):
+class CompanyRepositoryPort(BaseRepositoryPort[CompanyDTO, str]):
     """Port for company persistence operations."""
 

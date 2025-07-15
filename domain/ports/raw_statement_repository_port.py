@@ -7,5 +7,5 @@ from domain.dto.statement_dto import StatementDTO
 from .base_repository_port import BaseRepositoryPort
 
 
-class RawStatementRepositoryPort(BaseRepositoryPort[StatementDTO], ABC):
+class RawStatementRepositoryPort(BaseRepositoryPort[StatementDTO, int], ABC):
     """Port for persisting parsed statements."""

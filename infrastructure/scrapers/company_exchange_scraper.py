@@ -10,7 +10,6 @@ from typing import Callable, Dict, List, Optional, Set
 from application import CompanyMapper
 from domain.dto import CompanyRawDTO, ExecutionResultDTO, PageResultDTO, WorkerTaskDTO
 from domain.ports import (
-    BaseSourcePort,
     CompanySourcePort,
     LoggerPort,
     MetricsCollectorPort,
@@ -337,10 +336,10 @@ class CompanyExchangeScraper(CompanySourcePort):
 
                 # Log and skip already persisted companies
                 extra_info = {
-                "issuingCompany": entry["issuingCompany"],
-                "trading_name": entry["tradingName"],
-                # "Download": self.byte_formatter.format_bytes(download_bytes_pos),
-                # "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
+                    "issuingCompany": entry["issuingCompany"],
+                    "trading_name": entry["tradingName"],
+                    # "Download": self.byte_formatter.format_bytes(download_bytes_pos),
+                    # "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
                     }
                 self.logger.log(
                     f"{code_cvm}",

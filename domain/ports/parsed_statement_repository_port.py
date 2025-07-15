@@ -8,7 +8,7 @@ from domain.dto.statement_rows_dto import StatementRowsDTO
 from .base_repository_port import BaseRepositoryPort
 
 
-class ParsedStatementRepositoryPort(BaseRepositoryPort[StatementRowsDTO], ABC):
+class ParsedStatementRepositoryPort(BaseRepositoryPort[StatementRowsDTO, int], ABC):
     """Port for persisting raw statement rows."""
 
     @abstractmethod

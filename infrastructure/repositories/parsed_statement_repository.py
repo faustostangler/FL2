@@ -2,21 +2,37 @@ from __future__ import annotations
 
 from typing import Any, List, Set
 
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
+
 from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.ports import LoggerPort, ParsedStatementRepositoryPort
 from infrastructure.config import Config
 from infrastructure.helpers.list_flattener import ListFlattener
+from infrastructure.models.base_model import BaseModel
 from infrastructure.models.statement_rows_model import StatementRowsModel
-from infrastructure.repositories.base_repository import BaseRepository
 
 
-class SqlAlchemyParsedStatementRepository(
-    BaseRepository[StatementRowsDTO], ParsedStatementRepositoryPort
-):
+class SqlAlchemyParsedStatementRepository(ParsedStatementRepositoryPort):
     """SQLite-backed repository for ``StatementRowsDTO`` objects."""
 
     def __init__(self, config: Config, logger: LoggerPort) -> None:
-        super().__init__(config, logger)
+        self.config = config
+        self.logger = logger
+
+        self.engine = create_engine(
+            config.database.connection_string,
+            connect_args={"check_same_thread": False},
+            future=True,
+        )
+        with self.engine.connect() as conn:
+            conn.execute(text("PRAGMA journal_mode=WAL"))
+
+        self.Session = sessionmaker(
+            bind=self.engine, autoflush=True, expire_on_commit=True
+        )
+        BaseModel.metadata.create_all(self.engine)
+
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def save_all(self, items: List[StatementRowsDTO]) -> None:
@@ -54,20 +70,20 @@ class SqlAlchemyParsedStatementRepository(
         finally:
             session.close()
 
-    def has_item(self, identifier: str) -> bool:
+    def has_item(self, identifier: int) -> bool:
         session = self.Session()
         try:
             return (
-                session.query(StatementRowsModel).filter_by(id=int(identifier)).first()
+                session.query(StatementRowsModel).filter_by(id=identifier).first()
                 is not None
             )
         finally:
             session.close()
 
-    def get_by_id(self, id: str) -> StatementRowsDTO:
+    def get_by_id(self, id: int) -> StatementRowsDTO:
         session = self.Session()
         try:
-            obj = session.query(StatementRowsModel).filter_by(id=int(id)).first()
+            obj = session.query(StatementRowsModel).filter_by(id=id).first()
             if not obj:
                 raise ValueError(f"Raw statement not found: {id}")
             return obj.to_dto()
@@ -93,21 +109,22 @@ class SqlAlchemyParsedStatementRepository(
         quadro: str,
         account: str,
     ) -> StatementRowsDTO:
-        """
-        Return exactly one raw row matching the full composite key.
+        """Return exactly one raw row matching the full composite key.
         Raises if not found.
         """
         session = self.Session()
         try:
-            model = session.query(StatementRowsModel).get({
-                "nsd": nsd,
-                "company_name": company_name,
-                "quarter": quarter,
-                "version": version,
-                "grupo": grupo,
-                "quadro": quadro,
-                "account": account,
-            })
+            model = session.query(StatementRowsModel).get(
+                {
+                    "nsd": nsd,
+                    "company_name": company_name,
+                    "quarter": quarter,
+                    "version": version,
+                    "grupo": grupo,
+                    "quadro": quadro,
+                    "account": account,
+                }
+            )
             if model is None:
                 raise ValueError(f"No raw statement for key {nsd}, {company_name}, …")
             return model.to_dto()
@@ -128,8 +145,9 @@ class SqlAlchemyParsedStatementRepository(
             session.close()
 
     def get_existing_by_column(self, column_name: str) -> Set[Any]:
-        """
-        Return the distinct values for the given column in tbl_raw_statements.
+        """Return the distinct values for the given column in
+        tbl_raw_statements.
+
         e.g. repo.get_existing_by_column("nsd") -> {94790, 12345, …}
         """
         session = self.Session()

@@ -1,3 +1,5 @@
+"""Service for fetching financial statement rows."""
+
 from __future__ import annotations
 
 from typing import Callable, List, Optional, Tuple
@@ -52,6 +54,7 @@ class StatementFetchService:
             metrics_collector=self.collector,
             worker_pool_executor=self.worker_pool_executor,
             config=self.config,
+            max_workers=self.max_workers,
         )
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")

@@ -1,3 +1,5 @@
+"""Service layer for company-related synchronization operations."""
+
 from application.usecases.sync_companies import SyncCompaniesUseCase
 from domain.dto import SyncCompaniesResultDTO
 from domain.ports import CompanyRepositoryPort, CompanySourcePort, LoggerPort
@@ -23,6 +25,7 @@ class CompanyService:
             logger=self.logger,
             repository=repository,
             scraper=scraper,
+            max_workers=self.config.global_settings.max_workers,
         )
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
@@ -34,7 +37,7 @@ class CompanyService:
         #     "Call Method sync_companies_usecase.synchronize_companies()",
         #     level="info",
         # )
-        result = self.sync_companies_usecase.synchronize_companies()
+            result = self.sync_companies_usecase.synchronize_companies()
         # self.logger.log(
         #     "End  Method sync_companies_usecase.synchronize_companies()",
         #     level="info",

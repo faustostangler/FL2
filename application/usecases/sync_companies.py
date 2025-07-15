@@ -1,3 +1,5 @@
+"""Use case for synchronizing company data between scraper and repository."""
+
 import time
 from typing import List
 
@@ -9,19 +11,20 @@ from infrastructure.helpers.list_flattener import ListFlattener
 
 
 class SyncCompaniesUseCase:
-    """Use case for synchronizing company data from the scraper to the
-    repository."""
+    """Synchronize company data from the scraper to the repository."""
 
     def __init__(
         self,
         logger: LoggerPort,
         repository: CompanyRepositoryPort,
         scraper: CompanySourcePort,
+        max_workers: int = 1,
     ):
         """Store dependencies and configure use case execution."""
         self.logger = logger
         self.repository = repository
         self.scraper = scraper
+        self.max_workers = max_workers
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
