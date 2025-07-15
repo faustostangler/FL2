@@ -52,6 +52,7 @@ class StatementFetchService:
             metrics_collector=self.collector,
             worker_pool_executor=self.worker_pool_executor,
             config=self.config,
+            max_workers=self.max_workers,
         )
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
@@ -92,10 +93,7 @@ class StatementFetchService:
         _full_results = [
             n
             for n in nsd_records
-            if (
-                n.nsd_type in valid_types 
-                and n.company_name in common_company_names
-            )
+            if (n.nsd_type in valid_types and n.company_name in common_company_names)
         ]
         # self.logger.log(f"results: {len(results)} full_results: {len(full_results)}")
         # self.logger.log(

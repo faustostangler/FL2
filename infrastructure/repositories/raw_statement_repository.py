@@ -2,33 +2,47 @@ from __future__ import annotations
 
 from typing import List, Set
 
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import sessionmaker
+
 from domain.dto.statement_dto import StatementDTO
 from domain.ports import LoggerPort, RawStatementRepositoryPort
 from infrastructure.config import Config
 from infrastructure.helpers.list_flattener import ListFlattener
+from infrastructure.models.base_model import BaseModel
 from infrastructure.models.statement_model import StatementModel
-from infrastructure.repositories.base_repository import BaseRepository
 
 
-class SqlAlchemyRawStatementRepository(
-    BaseRepository[StatementDTO], RawStatementRepositoryPort
-):
+class SqlAlchemyRawStatementRepository(RawStatementRepositoryPort):
     """SQLite-backed repository for ``StatementDTO`` objects."""
 
     def __init__(self, config: Config, logger: LoggerPort) -> None:
-        super().__init__(config, logger)
+        self.config = config
+        self.logger = logger
+
+        self.engine = create_engine(
+            config.database.connection_string,
+            connect_args={"check_same_thread": False},
+            future=True,
+        )
+        with self.engine.connect() as conn:
+            conn.execute(text("PRAGMA journal_mode=WAL"))
+
+        self.Session = sessionmaker(
+            bind=self.engine, autoflush=True, expire_on_commit=True
+        )
+        BaseModel.metadata.create_all(self.engine)
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def save_all(self, items: List[StatementDTO]) -> None:
         session = self.Session()
         try:
-            flat_items = ListFlattener.flatten(items)  # recebe nested lists, devolve flat list
+            flat_items = ListFlattener.flatten(
+                items
+            )  # recebe nested lists, devolve flat list
 
-            valid_items = [
-                item for item in flat_items
-                if item is not None
-            ]
+            valid_items = [item for item in flat_items if item is not None]
 
             for dto in valid_items:
                 model = StatementModel.from_dto(dto)
@@ -37,8 +51,7 @@ class SqlAlchemyRawStatementRepository(
 
             if len(valid_items) > 0:
                 self.logger.log(
-                    f"Saved {len(valid_items)} raw statement rows", 
-                    level="info"
+                    f"Saved {len(valid_items)} raw statement rows", level="info"
                 )
         except Exception as exc:  # noqa: BLE001
             session.rollback()

@@ -23,6 +23,7 @@ class CompanyService:
             logger=self.logger,
             repository=repository,
             scraper=scraper,
+            max_workers=self.config.global_settings.max_workers,
         )
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")

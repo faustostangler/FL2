@@ -31,6 +31,7 @@ class FetchStatementsUseCase:
         metrics_collector: MetricsCollectorPort,
         worker_pool_executor: WorkerPool,
         config: Config,
+        max_workers: int | None = None,
     ) -> None:
         """Store dependencies for fetching and saving raw rows."""
         self.logger = logger
@@ -40,6 +41,7 @@ class FetchStatementsUseCase:
         self.config = config
         self.collector = metrics_collector
         self.worker_pool_executor = worker_pool_executor
+        self.max_workers = max_workers
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 

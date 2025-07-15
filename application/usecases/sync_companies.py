@@ -17,11 +17,13 @@ class SyncCompaniesUseCase:
         logger: LoggerPort,
         repository: CompanyRepositoryPort,
         scraper: CompanySourcePort,
+        max_workers: int | None = None,
     ):
         """Store dependencies and configure use case execution."""
         self.logger = logger
         self.repository = repository
         self.scraper = scraper
+        self.max_workers = max_workers
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
@@ -46,6 +48,7 @@ class SyncCompaniesUseCase:
         results = self.scraper.fetch_all(
             skip_codes=existing_company_codes,
             save_callback=self._save_batch,
+            max_workers=self.max_workers,
         )
         # self.logger.log("End  Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)", level="info")
 
@@ -65,7 +68,9 @@ class SyncCompaniesUseCase:
     def _save_batch(self, buffer: List[CompanyRawDTO]) -> None:
         """Convert raw companies to domain DTOs before saving."""
         # primeiro “desembrulha” qualquer nível de listas aninhadas
-        flat_items = ListFlattener.flatten(buffer)  # recebe nested lists, devolve flat list
+        flat_items = ListFlattener.flatten(
+            buffer
+        )  # recebe nested lists, devolve flat list
 
         # Transform raw DTOs from the scraper to domain DTOs.
         dtos = [CompanyDTO.from_raw(item) for item in flat_items]
