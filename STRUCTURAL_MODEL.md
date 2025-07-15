@@ -71,22 +71,28 @@ class CompanyService:
         ...
 ```
 ```python
-class SqlAlchemyCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort):
-    def __init__(self, config: Config, logger: LoggerPort) -> None:
-        super().__init__(config, logger)
+class SqlAlchemyCompanyRepository(CompanyRepositoryPort):
 ```
+
+```python
+class CompanyRepositoryPort(BaseRepositoryPort[CompanyDTO, str]):
+```
+
+```python
+class BaseRepositoryPort(ABC, Generic[T, K]):
+```
+e também 
+
 ```python
 class CompanyExchangeScraper(CompanySourcePort):
-    def __init__(
-        self,
-        config: Config,
-        logger: LoggerPort,
-        data_cleaner: DataCleaner,
-        mapper: CompanyMapper,
-        worker_pool_executor: WorkerPoolPort,
-        metrics_collector: MetricsCollectorPort,
-    ) -> None:
-        ...
+```
+
+```python
+class CompanySourcePort(BaseSourcePort[CompanyRawDTO]):
+```
+
+```python
+class BaseSourcePort(ABC, Generic[T]):
 ```
 
 Dependencies always point inward (scrapers depend on ports and helpers, services depend on use cases and ports).
