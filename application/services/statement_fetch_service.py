@@ -96,7 +96,7 @@ class StatementFetchService:
             n
             for n in nsd_records
             if (
-                n.nsd_type in valid_types 
+                n.nsd_type in valid_types
                 and n.company_name in common_company_names
             )
         ]

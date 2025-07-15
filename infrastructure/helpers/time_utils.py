@@ -14,7 +14,7 @@ class TimeUtils:
         self.config = config
 
     def sleep_dynamic(
-        self, wait: Optional[float] = None, cpu_interval: Optional[float] = None, 
+        self, wait: Optional[float] = None, cpu_interval: Optional[float] = None,
         multiplier: Optional[int] = 1) -> None:
         """Sleep for a dynamically adjusted time based on CPU utilization.
 

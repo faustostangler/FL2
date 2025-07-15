@@ -226,7 +226,7 @@ class RequestsRawStatementSourceAdapter(RawStatementSourcePort):
                 attempt += 1
                 # 1) tentativa de fetch
                 response, self.session = self.fetch_utils.fetch_with_retry(
-                    self.session, 
+                    self.session,
                     url=item["url"],
                     cache_bypass=True,
                     worker_id=task.worker_id
@@ -242,7 +242,7 @@ class RequestsRawStatementSourceAdapter(RawStatementSourcePort):
                 blocked = (
                     "MensagemModal" in response.text
                     or "acesse este conteúdo pela página principal dos documentos"
-                    in soup.get_text() 
+                    in soup.get_text()
                 )
 
                 if not blocked:

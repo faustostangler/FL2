@@ -16,7 +16,6 @@ from infrastructure.repositories import (
     SqlAlchemyParsedStatementRepository,
     SqlAlchemyRawStatementRepository,
 )
-
 from infrastructure.scrapers.company_data_exchange_scraper import CompanyDataScraper
 from infrastructure.scrapers.nsd_scraper import NsdScraper
 from infrastructure.scrapers.statements_source_adapter import (
@@ -66,9 +65,9 @@ class CLIAdapter:
         # self.logger.log("Run  Method controller.run()", level="info")
 
         # Run company scraper and persist logic
-        # self.logger.log("Call Method controller.run()._company_data_service()", level="info")
-        self._company_data_service()
-        # self.logger.log("End  Method controller.run()._company_data_service()", level="info")
+        # self.logger.log("Call Method controller.run()._company_service()", level="info")
+        self._company_service()
+        # self.logger.log("End  Method controller.run()._company_service()", level="info")
 
         # Run NSD fetcher and synchronization
         # self.logger.log("Call Method controller.run()._nsd_service()", level="info")
@@ -82,10 +81,10 @@ class CLIAdapter:
 
         # self.logger.log("End  Method controller.run()", level="info")
 
-    def _company_data_service(self) -> None:
+    def _company_service(self) -> None:
         """Build and execute the company data synchronization flow."""
 
-        # self.logger.log("Run  Method controller.run()._company_data_service()", level="info")
+        # self.logger.log("Run  Method controller.run()._company_service()", level="info")
 
         # Initialize data mapper for company DTO transformation
         # self.logger.log("Instantiate mapper", level="info")
@@ -93,13 +92,13 @@ class CLIAdapter:
         # self.logger.log("End Instance mapper", level="info")
 
         # Set up persistent repository for companies
-        # self.logger.log("Instantiate company_data_repo", level="info")
-        company_data_repo = SqlAlchemyCompanyDataRepository(config=self.config, logger=self.logger)
-        # self.logger.log("End Instance company_data_repo", level="info")
+        # self.logger.log("Instantiate company_repo", level="info")
+        company_repo = SqlAlchemyCompanyDataRepository(config=self.config, logger=self.logger)
+        # self.logger.log("End Instance company_repo", level="info")
 
         # Create scraping engine for company data
-        # self.logger.log("Instantiate company_data_scraper (mapper, worker_pool_executor, collector)", level="info")
-        company_data_scraper = CompanyDataScraper(
+        # self.logger.log("Instantiate company_scraper (mapper, worker_pool_executor, collector)", level="info")
+        company_scraper = CompanyDataScraper(
             config=self.config,
             logger=self.logger,
             data_cleaner=self.data_cleaner,
@@ -107,23 +106,23 @@ class CLIAdapter:
             worker_pool_executor=self.worker_pool_executor,
             metrics_collector=self.collector,
         )
-        # self.logger.log("End Instance company_data_scraper (mapper, worker_pool_executor, collector)", level="info")
+        # self.logger.log("End Instance company_scraper (mapper, worker_pool_executor, collector)", level="info")
 
         # Combine repository and scraper in the application service
-        # self.logger.log("Instantiate company_data_service (company_data_repo, scraper)", level="info")
-        company_data_service = CompanyDataService(
+        # self.logger.log("Instantiate company_service (company_repo, scraper)", level="info")
+        company_service = CompanyDataService(
             config=self.config,
             logger=self.logger,
-            repository=company_data_repo,
-            scraper=company_data_scraper,
+            repository=company_repo,
+            scraper=company_scraper,
         )
 
         # Trigger data sync workflow
-        # self.logger.log("Call Method controller.start().company_data_service.sync_companies()", level="info")
-        company_data_service.sync_companies()
-        # self.logger.log("Finish Method controller.start().company_data_service.sync_companies()", level="info")
+        # self.logger.log("Call Method controller.start().company_service.sync_companies()", level="info")
+        company_service.sync_companies()
+        # self.logger.log("Finish Method controller.start().company_service.sync_companies()", level="info")
 
-        # self.logger.log("End Instance company_data_service (company_data_repo, scraper)", level="info")
+        # self.logger.log("End Instance company_service (company_repo, scraper)", level="info")
 
     def _nsd_service(self) -> None:
         """Build and execute the NSD data synchronization flow."""
@@ -168,9 +167,9 @@ class CLIAdapter:
         # self.logger.log("Run  Method controller.run()._statement_service()", level="info")
 
         # Initialize all required repositories
-        # self.logger.log("Instantiate company_data_repo", level="info")
-        company_data_repo = SqlAlchemyCompanyDataRepository(config=self.config, logger=self.logger)
-        # self.logger.log("End Instance company_data_repo", level="info")
+        # self.logger.log("Instantiate company_repo", level="info")
+        company_repo = SqlAlchemyCompanyDataRepository(config=self.config, logger=self.logger)
+        # self.logger.log("End Instance company_repo", level="info")
 
         # self.logger.log("Instantiate nsd_repo", level="info")
         nsd_repo = SqlAlchemyNsdRepository(config=self.config, logger=self.logger)
@@ -195,52 +194,27 @@ class CLIAdapter:
         )
         # self.logger.log("End Instance source", level="info")
 
-        # # Compose fetch service with all dependencies
-        # # self.logger.log("Instantiate statements_fetch_service (...)", level="info")
-        # statements_fetch_service = StatementFetchService(
-        #     logger=self.logger,
-        #     source=raw_statements_scraper,
-        #     parsed_statements_repo=parsed_statements_repo,
-        #     company_data_repo=company_data_repo,
-        #     nsd_repo=nsd_repo,
-        #     raw_statement_repo=raw_statement_repo,
-        #     config=self.config,
-        #     metrics_collector=self.collector,
-        #     worker_pool_executor=self.worker_pool_executor,
-        #     max_workers=self.config.global_settings.max_workers,
-        # )
+        # Compose fetch service with all dependencies
+        # self.logger.log("Instantiate statements_fetch_service (...)", level="info")
+        statements_fetch_service = StatementFetchService(
+            logger=self.logger,
+            source=raw_statements_scraper,
+            parsed_statements_repo=parsed_statements_repo,
+            company_repo=company_repo,
+            nsd_repo=nsd_repo,
+            raw_statement_repo=raw_statement_repo,
+            config=self.config,
+            metrics_collector=self.collector,
+            worker_pool_executor=self.worker_pool_executor,
+            max_workers=self.config.global_settings.max_workers,
+        )
 
-        # # Execute fetch process and log total rows fetched
-        # # self.logger.log("Call Method controller.run()._statement_service().statements_fetch_service.run()", level="info")
-        # raw_rows = statements_fetch_service.fetch_statements()
-        # self.logger.log(f"total {len(raw_rows)}")
-        # # self.logger.log("End  Method controller.run()._statement_service().statements_fetch_service.run()", level="info")
+        # Execute fetch process and log total rows fetched
+        # self.logger.log("Call Method controller.run()._statement_service().statements_fetch_service.run()", level="info")
+        raw_rows = statements_fetch_service.fetch_statements()
+        self.logger.log(f"total {len(raw_rows)}")
+        # self.logger.log("End  Method controller.run()._statement_service().statements_fetch_service.run()", level="info")
 
         # Parsing step is not yet enabled
         # parse_service = StatementParseService(...)
         # parse_service.parse_statements(raw_rows)
-
-        # # UseCase 2: Parse
-        # # self.logger.log("Instantiate parse_service (raw_statement_repo)", level="info")
-        # parse_service = StatementParseService(
-        #     logger=self.logger,
-        #     repository=raw_statement_repo,
-        #     config=self.config,
-        #     max_workers=self.config.global_settings.max_workers,
-        # )
-
-        # # self.logger.log(
-        # #     "Call Method controller.start()._statement_service().parse_service.parse_statements()",
-        # #     level="info",
-        # # )
-        # parse_service.parse_statements(raw_rows)
-        # # self.logger.log(
-        # #     "End  Method controller.start()._statement_service().parse_service.parse_statements(",
-        # #     level="info",
-        # # )
-
-        # # self.logger.log("End Instance parse_service (raw_statement_repo)", level="info")
-
-        # # self.logger.log(
-        # #     "End  Method controller.run()._statement_service()", level="info"
-        # # )

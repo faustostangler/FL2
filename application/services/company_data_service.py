@@ -2,7 +2,11 @@
 
 from application.usecases.sync_companies import SyncCompaniesUseCase
 from domain.dto import SyncCompaniesResultDTO
-from domain.ports import CompanyDataScraperPort, LoggerPort, SqlAlchemyCompanyDataRepositoryPort
+from domain.ports import (
+    CompanyDataScraperPort,
+    LoggerPort,
+    SqlAlchemyCompanyDataRepositoryPort,
+)
 from infrastructure.config import Config
 
 

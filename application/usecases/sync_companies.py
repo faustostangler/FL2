@@ -6,7 +6,11 @@ from typing import List
 from domain.dto import SyncCompaniesResultDTO
 from domain.dto.company_data_dto import CompanyDataDTO
 from domain.dto.raw_company_data_dto import CompanyDataRawDTO
-from domain.ports import CompanyDataScraperPort, LoggerPort, SqlAlchemyCompanyDataRepositoryPort
+from domain.ports import (
+    CompanyDataScraperPort,
+    LoggerPort,
+    SqlAlchemyCompanyDataRepositoryPort,
+)
 from infrastructure.helpers.list_flattener import ListFlattener
 
 

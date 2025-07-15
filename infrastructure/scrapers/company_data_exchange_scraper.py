@@ -8,7 +8,12 @@ import time
 from typing import Callable, Dict, List, Optional, Set
 
 from application import CompanyDataMapper
-from domain.dto import CompanyDataRawDTO, ExecutionResultDTO, PageResultDTO, WorkerTaskDTO
+from domain.dto import (
+    CompanyDataRawDTO,
+    ExecutionResultDTO,
+    PageResultDTO,
+    WorkerTaskDTO,
+)
 from domain.ports import (
     CompanyDataScraperPort,
     LoggerPort,

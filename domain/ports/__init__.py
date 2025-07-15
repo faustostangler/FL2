@@ -2,8 +2,8 @@
 
 from .base_repository_port import SqlAlchemyRepositoryBasePort
 from .base_scraper_port import BaseScraperPort
-from .company_repository_port import SqlAlchemyCompanyDataRepositoryPort
 from .company_data_scraper_port import CompanyDataScraperPort
+from .company_repository_port import SqlAlchemyCompanyDataRepositoryPort
 from .data_cleaner_port import DataCleanerPort
 from .logger_port import LoggerPort
 from .metrics_collector_port import MetricsCollectorPort

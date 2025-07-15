@@ -52,7 +52,7 @@ class SqlAlchemyRawStatementRepository(RawStatementRepositoryPort):
 
             if len(valid_items) > 0:
                 self.logger.log(
-                    f"Saved {len(valid_items)} raw statement rows", 
+                    f"Saved {len(valid_items)} raw statement rows",
                     level="info"
                 )
         except Exception as exc:  # noqa: BLE001
