@@ -52,7 +52,7 @@ class SqlAlchemyRepositoryBasePort(ABC, Generic[T, K]):
         raise NotImplementedError
 
     @abstractmethod
-    def get_by_id(self, id: K) -> T:
+    def get_by_id(self, identifier: K) -> T:
         """Retrieve a single item by its identifier.
 
         Args:

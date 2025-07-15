@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, List, TypeVar
+from typing import Generic, List, Set, TypeVar
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
@@ -10,10 +10,11 @@ from infrastructure.config import Config
 from infrastructure.helpers.list_flattener import ListFlattener
 from infrastructure.models.base_model import BaseModel
 
-T = TypeVar("T")  # T pode ser CompanyDTO, StatementDTO, etc.
+T = TypeVar("T")  # T any DTO.
+K = TypeVar("K")  # Primary key type (e.g., str, int)
 
 
-class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, Any], ABC):
+class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[T, K]):
     """
     Contract - Interface genérica para repositórios de leitura/escrita.
     Pode ser especializada para qualquer tipo de DTO.
@@ -73,7 +74,6 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, Any], ABC):
         # Must be implemented by subclass to define the ORM mapping
         raise NotImplementedError
 
-
     def save_all(self, items: List[T]) -> None:
         """Persist a list of DTOs in bulk.
 
@@ -123,4 +123,119 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, Any], ABC):
             raise
         finally:
             # Ensure the session is always closed after execution
+            session.close()
+
+    def get_all(self) -> List[T]:
+        """Retrieve all persisted DTOs from the database.
+
+        This method loads all records from the table corresponding to the DTO's
+        associated ORM model and converts them into DTO instances.
+
+        Returns:
+            List[T]: A list of DTOs retrieved from the database.
+        """
+        # Create a new SQLAlchemy session
+        session = self.Session()
+
+        # Get the SQLAlchemy model class linked to the current DTO type
+        model = self.get_model_class()
+
+        try:
+            # Query all rows from the corresponding table
+            results = session.query(model).all()
+
+            # Convert each ORM instance into a DTO
+            return [model.to_dto() for model in results]
+        finally:
+            # Ensure the session is closed even if an error occurs
+            session.close()
+
+    def has_item(self, identifier: K) -> bool:
+        """Check if a record with the given identifier exists in the database.
+
+        This method queries the repository by primary key (e.g., CVM code)
+        to determine if a matching entry is already persisted.
+
+        Args:
+            identifier (str): The unique identifier (e.g., CVM code) to check for existence.
+
+        Returns:
+            bool: True if the record exists, False otherwise.
+        """
+        # Create a new SQLAlchemy session
+        session = self.Session()
+
+        # Get the SQLAlchemy model class linked to the current DTO type
+        model = self.get_model_class()
+
+        try:
+            # Perform a filtered query and check if any result is found
+            return (
+                session.query(model)
+                .filter_by(cvm_code=identifier)
+                .first()
+                is not None
+            )
+        finally:
+            # Always close the session after the query
+            session.close()
+
+    def get_by_id(self, identifier: K) -> T:
+        """Retrieve a DTO by its unique identifier (e.g., CVM code).
+
+        This method performs a lookup in the database using the primary key
+        and returns the corresponding DTO. Raises an error if not found.
+
+        Args:
+            id (str): The unique identifier (e.g., CVM code) of the entity to retrieve.
+
+        Returns:
+            T: The DTO object associated with the given identifier.
+
+        Raises:
+            ValueError: If no record is found with the specified ID.
+        """
+        # Create a new SQLAlchemy session
+        session = self.Session()
+
+        # Get the SQLAlchemy model class linked to the current DTO type
+        model = self.get_model_class()
+
+        try:
+            # Query the database for the entry with the specified ID
+            obj = session.query(model).filter_by(cvm_code=identifier).first()
+
+            # Raise an error if the object is not found
+            if not obj:
+                raise ValueError(f"Company not found: {identifier}")
+
+            # Convert the ORM model to a DTO and return it
+            return obj.to_dto()
+        finally:
+            # Ensure the session is closed in all cases
+            session.close()
+
+    def get_all_primary_keys(self) -> Set[K]:
+        """Retrieve all unique primary keys from the database.
+
+        This method queries the repository for all distinct identifiers
+        (e.g., CVM codes) of the persisted records.
+
+        Returns:
+            Set[str]: A set containing all unique primary keys currently stored.
+        """
+        # Create a new SQLAlchemy session
+        session = self.Session()
+
+        # Get the SQLAlchemy model class linked to the current DTO type
+        model = self.get_model_class()
+
+        try:
+            # Execute a distinct query for the primary key column
+            results = session.query(model.cvm_code).distinct().all()
+
+            # Extract and collect non-null keys into a set
+            return {row[0] for row in results if row[0]}
+        finally:
+            # Ensure session is always closed
             session.close()

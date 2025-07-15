@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from typing import List, Set
-
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
@@ -18,7 +16,7 @@ from infrastructure.repositories.sqlalchemy_repository_base import (
 
 
 class SqlAlchemyCompanyRepository(
-    SqlAlchemyRepositoryBase[CompanyDTO],
+    SqlAlchemyRepositoryBase[CompanyDTO, str],
     SqlAlchemyCompanyRepositoryPort,
 ):
     """Concrete repository implementation for CompanyDTO using SQLite and SQLAlchemy.
@@ -72,69 +70,3 @@ class SqlAlchemyCompanyRepository(
         """
         return CompanyModel
 
-    def get_all(self) -> List[CompanyDTO]:
-        """Retrieve all persisted companies from the database.
-
-        Returns:
-            List[CompanyDTO]: A list of all stored companies as DTOs.
-        """
-        session = self.Session()
-        try:
-            results = session.query(CompanyModel).all()
-            return [model.to_dto() for model in results]
-        finally:
-            session.close()
-
-    def has_item(self, identifier: str) -> bool:
-        """Check if a company exists by CVM code.
-
-        Args:
-            identifier (str): CVM code of the company.
-
-        Returns:
-            bool: True if the company exists, False otherwise.
-        """
-        session = self.Session()
-        try:
-            return (
-                session.query(CompanyModel)
-                .filter_by(cvm_code=identifier)
-                .first()
-                is not None
-            )
-        finally:
-            session.close()
-
-    def get_by_id(self, id: str) -> CompanyDTO:
-        """Retrieve a company by its CVM code.
-
-        Args:
-            id (str): CVM code of the company.
-
-        Returns:
-            CompanyDTO: The matching company DTO.
-
-        Raises:
-            ValueError: If no company with the given CVM code is found.
-        """
-        session = self.Session()
-        try:
-            obj = session.query(CompanyModel).filter_by(cvm_code=id).first()
-            if not obj:
-                raise ValueError(f"Company not found: {id}")
-            return obj.to_dto()
-        finally:
-            session.close()
-
-    def get_all_primary_keys(self) -> Set[str]:
-        """Retrieve all persisted CVM codes (primary keys).
-
-        Returns:
-            Set[str]: A set of distinct CVM codes currently stored.
-        """
-        session = self.Session()
-        try:
-            results = session.query(CompanyModel.cvm_code).distinct().all()
-            return {row[0] for row in results if row[0]}
-        finally:
-            session.close()

@@ -91,7 +91,7 @@ class SqlAlchemyNsdRepository(NSDRepositoryPort):
         finally:
             session.close()
 
-    def get_by_id(self, id: int) -> NsdDTO:
+    def get_by_id(self, identifier: int) -> NsdDTO:
         """Fetches an NSD record from the database by its unique identifier.
 
         Args:
@@ -103,9 +103,9 @@ class SqlAlchemyNsdRepository(NSDRepositoryPort):
         """
         session = self.Session()
         try:
-            obj = session.query(NSDModel).filter_by(nsd=id).first()
+            obj = session.query(NSDModel).filter_by(nsd=identifier).first()
             if not obj:
-                raise ValueError(f"NSD not found: {id}")
+                raise ValueError(f"NSD not found: {identifier}")
             return obj.to_dto()
         finally:
             session.close()
