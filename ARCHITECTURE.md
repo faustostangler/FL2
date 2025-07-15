@@ -7,7 +7,7 @@ Presentation ↔ Application ↔ Domain ↔ Infrastructure
 ```
 
 - **Presentation** – The CLI controller in `presentation/cli.py` starts the application.
-- **Application** – Services and use cases orchestrate domain logic. Examples are `CompanyService` and `SyncCompaniesUseCase`.
+- **Application** – Services and use cases orchestrate domain logic. Examples are `CompanyDataService` and `SyncCompaniesUseCase`.
 - **Domain** – Pure dataclasses and ports defining contracts (`domain/dto`, `domain/ports`).
 - **Infrastructure** – Concrete adapters such as scrapers and repositories.
 
@@ -19,9 +19,9 @@ Dependencies flow inward only: presentation depends on application, which depend
 - **Service** – Coordinates use cases and domain objects.
 - **UseCase** – Encapsulates a single business scenario, e.g. `SyncCompaniesUseCase`.
 - **DTO** – Immutable data container passed across layers. All DTOs live in `domain/dto` and use `@dataclass(frozen=True)`.
-- **Port** – Interface defined in `domain/ports` (e.g., `SqlAlchemyCompanyRepositoryPort`).
+- **Port** – Interface defined in `domain/ports` (e.g., `SqlAlchemyCompanyDataRepositoryPort`).
 - **Repository** – Infrastructure implementation of a port using SQLAlchemy.
-- **Entity** – ORM model mapping a table; converts to/from DTO (see `CompanyModel`).
+- **Entity** – ORM model mapping a table; converts to/from DTO (see `CompanyDataModel`).
 
 Adapters and helper utilities are injected through constructors so that each component remains testable. `BaseProcessor` is used by the scrapers to compose small processing steps.
 
@@ -77,8 +77,8 @@ ConcreteAdapter (implementation, infrastructure)
 
 Example: 
 Layer: Base Port | Element SqlAlchemyRepositoryBasePort(T) | File domain/ports/base_repository_port.py
-Layer: Specific Port | Element SqlAlchemyCompanyRepositoryPort | File domain/ports/company_repository_port.py
-Layer: Implementation | Element SqlAlchemyCompanyRepository | File infrastructure/repositories/company_repository.py
+Layer: Specific Port | Element SqlAlchemyCompanyDataRepositoryPort | File domain/ports/company_repository_port.py
+Layer: Implementation | Element SqlAlchemyCompanyDataRepository | File infrastructure/repositories/company_repository.py
 
 ### 2. Application – The Managers and Project Coordinators
 This layer bridges the domain and the real execution. It doesn't know about technology (no SQL or HTTP) and doesn't contain business rules (no validations), but it coordinates everything.
@@ -90,9 +90,9 @@ Service: The department head. Exposes a run() method and takes the user’s requ
 
 UseCase: A domain-specific specialist. Executes one business operation (e.g., synchronize companies).
 
-The FLY owner never talks to a worker directly. He calls the Head of the Company Data Department (the CompanyService).
+The FLY owner never talks to a worker directly. He calls the Head of the CompanyData Data Department (the CompanyDataService).
 
-The Head turns to the Company Synchronization Specialist (SyncCompaniesUseCase) and gives him tools and instructions:
+The Head turns to the CompanyData Synchronization Specialist (SyncCompaniesUseCase) and gives him tools and instructions:
 
 - Ask the archive (Repository) for the existing company codes.
 - Ask the scout (Source) to fetch new company data from the exchange.
@@ -112,8 +112,8 @@ This is the operational floor of FLY: developers, clerks, file cabinets, scraper
 
 It includes:
 
-- Adapters: e.g., CompanyExchangeScraper implements SourcePort.
-- Repositories: e.g., SqlAlchemyCompanyRepository implements RepositoryPort.
+- Adapters: e.g., CompanyDataScraper implements SourcePort.
+- Repositories: e.g., SqlAlchemyCompanyDataRepository implements RepositoryPort.
 - ORM Models: Define the data schema using SQLAlchemy.
 - Scrapers: Fetch HTML, XML, or JSON from the exchange.
 - Parsers & Cleaners: Normalize raw data.
@@ -143,20 +143,20 @@ The table below maps the main components to their respective layers.
 | Component | Layer | Type |
 |-----------|-------|------|
 | `cli.py` | Presentation | Controller |
-| `CompanyService` | Application | Service |
+| `CompanyDataService` | Application | Service |
 | `SyncCompaniesUseCase` | Application | Use case |
-| `CompanyDTO` | Domain | DTO |
-| `SqlAlchemyCompanyRepositoryPort` | Domain | Port |
-| `SqlAlchemyCompanyRepository` | Infrastructure | Repository |
-| `CompanyExchangeScraper` | Infrastructure | Adapter |
+| `CompanyDataDTO` | Domain | DTO |
+| `SqlAlchemyCompanyDataRepositoryPort` | Domain | Port |
+| `SqlAlchemyCompanyDataRepository` | Infrastructure | Repository |
+| `CompanyDataScraper` | Infrastructure | Adapter |
 
 ### Ports and Adapters
 
 Every external dependency is accessed through a port defined in the domain. The
 infrastructure layer implements these ports. For example:
 
-- `SqlAlchemyCompanyRepositoryPort` ← `SqlAlchemyCompanyRepository`
-- `CompanySourcePort` ← `CompanyExchangeScraper`
+- `SqlAlchemyCompanyDataRepositoryPort` ← `SqlAlchemyCompanyDataRepository`
+- `CompanyDataScraperPort` ← `CompanyDataScraper`
 
 ### Dependency Map
 
@@ -173,13 +173,13 @@ Dependencies always point inward:
 skinparam componentStyle rectangle
 actor User
 User -> CLI : run
-CLI -> CompanyService : run()
-CompanyService -> SyncCompaniesUseCase : execute()
-SyncCompaniesUseCase -> CompanySourcePort : fetch()
-CompanySourcePort <.. CompanyExchangeScraper
-SyncCompaniesUseCase -> SqlAlchemyCompanyRepositoryPort : save()
-SqlAlchemyCompanyRepositoryPort <.. SqlAlchemyCompanyRepository
-SqlAlchemyCompanyRepository -> SQLiteDB : insert/update
+CLI -> CompanyDataService : run()
+CompanyDataService -> SyncCompaniesUseCase : execute()
+SyncCompaniesUseCase -> CompanyDataScraperPort : fetch()
+CompanyDataScraperPort <.. CompanyDataScraper
+SyncCompaniesUseCase -> SqlAlchemyCompanyDataRepositoryPort : save()
+SqlAlchemyCompanyDataRepositoryPort <.. SqlAlchemyCompanyDataRepository
+SqlAlchemyCompanyDataRepository -> SQLiteDB : insert/update
 @enduml
 ```
 

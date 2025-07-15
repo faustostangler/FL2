@@ -1,6 +1,6 @@
 import argparse
 from utils.base_processor import BaseProcessor
-from utils.company_processor import CompanyProcessor
+from utils.company_data_processor import CompanyDataProcessor
 from utils.corporate_events_processor import EventsStatementsProcessor
 from utils.intel_processor import IntelProcessor
 from utils.nsd_processor import NsdProcessor
@@ -20,8 +20,8 @@ def run(args):
 
     try:
         if args.company:
-            print("[PROCESS] CompanyProcessor iniciado...")
-            CompanyProcessor().main(thread=True)
+            print("[PROCESS] CompanyDataProcessor iniciado...")
+            CompanyDataProcessor().main(thread=True)
 
         if args.nsd:
             print("[PROCESS] NsdProcessor iniciado...")
@@ -74,12 +74,12 @@ if __name__ == "__main__":
 #         base = BaseProcessor()
 
 #         # Ask the user if they want to get company information
-#         run_company_processor = "N"
+#         run_company_data_processor = "N"
 #         prompt = "Want to update company information? (YES/NO): "
-#         run_company_processor = base.timed_input(prompt)
-#         if run_company_processor.strip().upper().startswith("Y"):
-#             company_processor = CompanyProcessor()
-#             company_processor.main(thread=True)
+#         run_company_data_processor = base.timed_input(prompt)
+#         if run_company_data_processor.strip().upper().startswith("Y"):
+#             company_data_processor = CompanyDataProcessor()
+#             company_data_processor.main(thread=True)
 
 #         # Ask the user if they want to get nsd information
 #         run_nsd_processor = "N"

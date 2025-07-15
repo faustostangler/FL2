@@ -1,15 +1,15 @@
 """Exports for domain DTO classes."""
 
-from .company_dto import CompanyDTO
+from .company_data_dto import CompanyDataDTO
 from .execution_result_dto import ExecutionResultDTO
 from .metrics_dto import MetricsDTO
 from .nsd_dto import NsdDTO
 from .page_result_dto import PageResultDTO
-from .raw_company_dto import (
+from .raw_company_data_dto import (
     CodeDTO,
-    CompanyDetailDTO,
-    CompanyListingDTO,
-    CompanyRawDTO,
+    CompanyDataDetailDTO,
+    CompanyDataListingDTO,
+    CompanyDataRawDTO,
 )
 from .statement_dto import StatementDTO
 from .statement_rows_dto import StatementRowsDTO
@@ -17,13 +17,13 @@ from .sync_companies_result_dto import SyncCompaniesResultDTO
 from .worker_class_dto import WorkerTaskDTO
 
 __all__ = [
-    "CompanyDTO",
+    "CompanyDataDTO",
     "NsdDTO",
     "StatementDTO",
     "StatementRowsDTO",
-    "CompanyRawDTO",
-    "CompanyListingDTO",
-    "CompanyDetailDTO",
+    "CompanyDataRawDTO",
+    "CompanyDataListingDTO",
+    "CompanyDataDetailDTO",
     "CodeDTO",
     "ExecutionResultDTO",
     "MetricsDTO",

@@ -6,7 +6,7 @@ The **Finance Ledger Yearly (FLY)** project is designed to **capture, process, a
 ## **2. Data Capture Overview**
 The system extracts data from various online sources using **web scraping** and **automated data processing**. It is structured into the following main components:
 
-1. **Company Information Scraping** (Handled by `company_processor.py`)
+1. **CompanyData Information Scraping** (Handled by `company_data_processor.py`)
 2. **NSD Data Scraping** (Handled by `nsd_processor.py`)
 3. **Financial Statements Extraction & Processing** (Handled by `statements_processor.py` and `intel_processor.py`)
 4. **Corporate Events Data Extraction** (Handled by `corporate_events_processor.py`)
@@ -16,14 +16,14 @@ The system extracts data from various online sources using **web scraping** and 
 
 ## **3. Data Collection and Processing Workflow**
 
-### **3.1 Company Data Capture**
-**Modules:** `company_processor.py`
-- **General Company List Extraction:**
+### **3.1 CompanyData Data Capture**
+**Modules:** `company_data_processor.py`
+- **General CompanyData List Extraction:**
   - Navigate paginated company listings.
   - Extract **basic metadata** (e.g., name, ticker, industry).
-  - Store extracted data in the `tbl_company_info` table.
+  - Store extracted data in the `tbl_company_data_info` table.
 
-- **Company Detail Extraction:**
+- **CompanyData Detail Extraction:**
   - Fetch **detailed financial and governance information**.
   - Scrape **CNPJ, sector, subsector, listing type, and trading details**.
   - Merge with existing data, ensuring **no duplication**.
@@ -108,7 +108,7 @@ The system extracts data from various online sources using **web scraping** and 
 
 ### **4.2 Database & Storage Structure**
 #### **Database Schema Highlights**
-- **Company Data:** `tbl_company_info`
+- **CompanyData Data:** `tbl_company_data_info`
 - **NSD Tracking:** `tbl_nsd`
 - **Raw Financial Statements:** `tbl_statements_raw`
 - **Standardized Financial Statements:** `tbl_statements_normalized`
@@ -135,7 +135,7 @@ The system extracts data from various online sources using **web scraping** and 
   - **Logging of unexpected data patterns** (`log_error()` standard).
 
 - **Validation Checks:**
-  - **Company data** is checked against duplicate entries.
+  - **CompanyData data** is checked against duplicate entries.
   - **Financial statements** are validated against expected schema structures.
   - **Stock market data** is compared against previous records to detect anomalies.
 

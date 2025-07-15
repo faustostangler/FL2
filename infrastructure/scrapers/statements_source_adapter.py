@@ -308,7 +308,7 @@ class RequestsRawStatementSourceAdapter(RawStatementSourcePort):
         _elapsed = time.perf_counter() - start
         quarter = row.quarter.strftime("%Y-%m-%d") if row.quarter else None
         # self.logger.log(
-        #     f"{row.nsd} {row.company_name} {quarter} {row.version} in {elapsed:.2f}s",
+        #     f"{row.nsd} {row.company_data_name} {quarter} {row.version} in {elapsed:.2f}s",
         #     level="info",
         # )
         result = {"nsd": row, "statements": statements_rows_dto}

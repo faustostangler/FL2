@@ -4,7 +4,7 @@ Finance Ledger Yearly (FLY) gathers financial documents from companies listed on
 ## How It Works, Behind the Wheels
 The FLY list below outlines the core steps in fetching company data and financial documents.
 
-1. **Company Information Scraping**  
+1. **CompanyData Information Scraping**  
    - Finds company names, tickers, sectors, and registration data.
    - Saves the latest updates to avoid redundant data.
 

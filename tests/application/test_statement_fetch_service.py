@@ -8,7 +8,7 @@ from domain.ports import (
     ParsedStatementRepositoryPort,
     RawStatementRepositoryPort,
     RawStatementSourcePort,
-    SqlAlchemyCompanyRepositoryPort,
+    SqlAlchemyCompanyDataRepositoryPort,
 )
 from tests.conftest import DummyConfig, DummyLogger
 
@@ -24,7 +24,7 @@ def test_fetch_statements_calls_usecase(monkeypatch):
         mock_usecase_cls,
     )
 
-    company_repo = MagicMock(spec=SqlAlchemyCompanyRepositoryPort)
+    company_repo = MagicMock(spec=SqlAlchemyCompanyDataRepositoryPort)
     nsd_repo = MagicMock(spec=NSDRepositoryPort)
     stmt_repo = MagicMock(spec=RawStatementRepositoryPort)
     rows_repo = MagicMock(spec=ParsedStatementRepositoryPort)

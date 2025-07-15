@@ -6,8 +6,8 @@ import base64
 import json
 from typing import Dict, List, Optional, Type, Union, cast
 
-from application import CompanyMapper
-from domain.dto import CompanyDetailDTO, CompanyListingDTO, CompanyRawDTO
+from application import CompanyDataMapper
+from domain.dto import CompanyDataDetailDTO, CompanyDataListingDTO, CompanyDataRawDTO
 from domain.ports import LoggerPort, MetricsCollectorPort
 from infrastructure.helpers import FetchUtils
 from infrastructure.helpers.data_cleaner import DataCleaner
@@ -26,9 +26,9 @@ class EntryCleaner:
         text_keys: List[str],
         date_keys: List[str],
         number_keys: Optional[List[str]],
-        dto_class: Type[Union[CompanyListingDTO, CompanyDetailDTO]],
-    ) -> Union[CompanyListingDTO, CompanyDetailDTO]:
-        """Return a ``CompanyListingDTO`` from the given entry."""
+        dto_class: Type[Union[CompanyDataListingDTO, CompanyDataDetailDTO]],
+    ) -> Union[CompanyDataListingDTO, CompanyDataDetailDTO]:
+        """Return a ``CompanyDataListingDTO`` from the given entry."""
         cleaned = self.data_cleaner.clean_dict_fields(
             entry, text_keys, date_keys, number_keys
         )
@@ -66,10 +66,10 @@ class DetailFetcher:
         return raw
 
 
-class CompanyMerger:
+class CompanyDataMerger:
     """Merge base and detail DTOs."""
 
-    def __init__(self, mapper: CompanyMapper, logger: LoggerPort) -> None:
+    def __init__(self, mapper: CompanyDataMapper, logger: LoggerPort) -> None:
         """Store mapper and logger."""
         self.mapper = mapper
         self.logger = logger
@@ -77,32 +77,32 @@ class CompanyMerger:
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def merge_details(
-        self, listing: CompanyListingDTO, detail: CompanyDetailDTO
-    ) -> Optional[CompanyRawDTO]:
+        self, listing: CompanyDataListingDTO, detail: CompanyDataDetailDTO
+    ) -> Optional[CompanyDataRawDTO]:
         """Merge listing and detail DTOs into a raw DTO."""
         try:
-            return self.mapper.merge_company_dtos(listing, detail)
+            return self.mapper.merge_company_data_dtos(listing, detail)
         except Exception as exc:  # noqa: BLE001
             self.logger.log(f"erro {exc}", level="debug")
             return None
 
 
-class CompanyDetailProcessor:
+class CompanyDataDetailProcessor:
     """Pipeline to process a single company entry."""
 
     def __init__(
-        self, cleaner: EntryCleaner, fetcher: DetailFetcher, merger: CompanyMerger
+        self, cleaner: EntryCleaner, fetcher: DetailFetcher, merger: CompanyDataMerger
     ) -> None:
         """Store dependencies used to process a company entry."""
         self.cleaner = cleaner
         self.fetcher = fetcher
         self.merger = merger
 
-    def process_entry(self, entry: Dict) -> Optional[CompanyRawDTO]:
+    def process_entry(self, entry: Dict) -> Optional[CompanyDataRawDTO]:
         """Clean, fetch details, and merge into a raw DTO."""
         try:
             text_keys = [
-                "issuingCompany",
+                "issuingCompanyData",
                 "companyName",
                 "tradingName",
                 "segment",
@@ -112,19 +112,19 @@ class CompanyDetailProcessor:
             date_keys = ["dateListing"]
             number_keys = []
             listing = cast(
-                CompanyListingDTO,
+                CompanyDataListingDTO,
                 self.cleaner.clean_entry(
                     entry=entry,
                     text_keys=text_keys,
                     date_keys=date_keys,
                     number_keys=number_keys,
-                    dto_class=CompanyListingDTO,
+                    dto_class=CompanyDataListingDTO,
                 ),
             )
 
             detail = self.fetcher.fetch_detail(str(listing.cvm_code))
             text_keys = [
-                "issuingCompany",
+                "issuingCompanyData",
                 "companyName",
                 "tradingName",
                 "IndustryClassificationEng",
@@ -138,13 +138,13 @@ class CompanyDetailProcessor:
             date_keys = ["lastDate", "dateQuotation"]
             number_keys = []
             detail = cast(
-                CompanyDetailDTO,
+                CompanyDataDetailDTO,
                 self.cleaner.clean_entry(
                     entry=detail,
                     text_keys=text_keys,
                     date_keys=date_keys,
                     number_keys=number_keys,
-                    dto_class=CompanyDetailDTO,
+                    dto_class=CompanyDataDetailDTO,
                 ),
             )
 

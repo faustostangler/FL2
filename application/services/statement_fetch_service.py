@@ -13,7 +13,7 @@ from domain.ports import (
     ParsedStatementRepositoryPort,
     RawStatementRepositoryPort,
     RawStatementSourcePort,
-    SqlAlchemyCompanyRepositoryPort,
+    SqlAlchemyCompanyDataRepositoryPort,
 )
 from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
@@ -27,7 +27,7 @@ class StatementFetchService:
         logger: LoggerPort,
         source: RawStatementSourcePort,
         parsed_statements_repo: ParsedStatementRepositoryPort,
-        company_repo: SqlAlchemyCompanyRepositoryPort,
+        company_repo: SqlAlchemyCompanyDataRepositoryPort,
         nsd_repo: NSDRepositoryPort,
         raw_statement_repo: RawStatementRepositoryPort,
         config: Config,

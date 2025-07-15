@@ -1,7 +1,7 @@
 """SQLAlchemy ORM models used for persistence."""
 
 from .base_model import BaseModel
-from .company_model import CompanyModel
+from .company_data_model import CompanyDataModel
 from .nsd_model import NSDModel
 from .statement_model import StatementModel
 from .statement_rows_model import StatementRowsModel
@@ -11,7 +11,7 @@ Base = BaseModel
 
 __all__ = [
     "Base",
-    "CompanyModel",
+    "CompanyDataModel",
     "NSDModel",
     "StatementModel",
     "StatementRowsModel",

@@ -267,7 +267,7 @@ class StockMarketScraper:
 
         Args:
             df_statements (DataFrame): Financial statements data.
-            df_companies (DataFrame): Company data.
+            df_companies (DataFrame): CompanyData data.
 
         Returns:
             DataFrame: Merged DataFrame with financial statements and company data.
@@ -474,7 +474,7 @@ class StockMarketScraper:
 
         Args:
             df_statements_companies (DataFrame): DataFrame containing financial statements.
-            company_name (str): Company name.
+            company_name (str): CompanyData name.
             quarter (str): Quarter identifier.
             ticker (str): Ticker symbol.
             historical_data (dict): Historical data dictionary.

@@ -7,10 +7,10 @@ import json
 import time
 from typing import Callable, Dict, List, Optional, Set
 
-from application import CompanyMapper
-from domain.dto import CompanyRawDTO, ExecutionResultDTO, PageResultDTO, WorkerTaskDTO
+from application import CompanyDataMapper
+from domain.dto import CompanyDataRawDTO, ExecutionResultDTO, PageResultDTO, WorkerTaskDTO
 from domain.ports import (
-    CompanySourcePort,
+    CompanyDataScraperPort,
     LoggerPort,
     MetricsCollectorPort,
     WorkerPoolPort,
@@ -19,15 +19,15 @@ from infrastructure.config import Config
 from infrastructure.helpers import FetchUtils, SaveStrategy
 from infrastructure.helpers.byte_formatter import ByteFormatter
 from infrastructure.helpers.data_cleaner import DataCleaner
-from infrastructure.scrapers.company_processors import (
-    CompanyDetailProcessor,
-    CompanyMerger,
+from infrastructure.scrapers.company_data_processors import (
+    CompanyDataDetailProcessor,
+    CompanyDataMerger,
     DetailFetcher,
     EntryCleaner,
 )
 
 
-class CompanyExchangeScraper(CompanySourcePort):
+class CompanyDataScraper(CompanyDataScraperPort):
     """Scraper adapter responsible for fetching raw company data.
 
     In a real implementation, this could use requests, BeautifulSoup, or
@@ -39,7 +39,7 @@ class CompanyExchangeScraper(CompanySourcePort):
         config: Config,
         logger: LoggerPort,
         data_cleaner: DataCleaner,
-        mapper: CompanyMapper,
+        mapper: CompanyDataMapper,
         worker_pool_executor: WorkerPoolPort,
         metrics_collector: MetricsCollectorPort,
     ):
@@ -78,11 +78,11 @@ class CompanyExchangeScraper(CompanySourcePort):
         # Initialize FetchUtils for HTTP request utilities
         self.fetch_utils = FetchUtils(config, logger)
 
-        # Set language and API company_endpoint from configuration
+        # Set language and API company_data_endpoint from configuration
         self.language = config.exchange.language
-        self.endpoint_companies_list = config.exchange.company_endpoint["initial"]
-        self.endpoint_detail = config.exchange.company_endpoint["detail"]
-        self.endpoint_financial = config.exchange.company_endpoint["financial"]
+        self.endpoint_companies_list = config.exchange.company_data_endpoint["initial"]
+        self.endpoint_detail = config.exchange.company_data_endpoint["detail"]
+        self.endpoint_financial = config.exchange.company_data_endpoint["financial"]
 
         # Initialize a requests session for HTTP requests
         self.session = self.fetch_utils.create_scraper()
@@ -101,29 +101,23 @@ class CompanyExchangeScraper(CompanySourcePort):
             metrics_collector=self.metrics_collector,
             data_cleaner=self.data_cleaner,
         )
-        self.company_merger = CompanyMerger(self.mapper, self.logger)
-        self.detail_processor = CompanyDetailProcessor(
+        self.company_data_merger = CompanyDataMerger(self.mapper, self.logger)
+        self.detail_processor = CompanyDataDetailProcessor(
             cleaner=self.entry_cleaner,
             fetcher=self.detail_fetcher,
-            merger=self.company_merger,
+            merger=self.company_data_merger,
         )
 
         # Log the initialization of the scraper
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    @property
-    def metrics_collector(self) -> MetricsCollectorPort:
-        """Metrics collector used by the scraper."""
-
-        return self._metrics_collector
-
     def fetch_all(
         self,
         threshold: Optional[int] = None,
         skip_codes: Optional[Set[str]] = None,
-        save_callback: Optional[Callable[[List[CompanyRawDTO]], None]] = None,
+        save_callback: Optional[Callable[[List[CompanyDataRawDTO]], None]] = None,
         **kwargs,
-    ) -> ExecutionResultDTO[CompanyRawDTO]:
+    ) -> ExecutionResultDTO[CompanyDataRawDTO]:
         """Fetch all companies from the exchange.
 
         Args:
@@ -232,12 +226,12 @@ class CompanyExchangeScraper(CompanySourcePort):
             tasks = list(enumerate(range(2, total_pages + 1)))
 
             def processor(task: WorkerTaskDTO) -> PageResultDTO:
-                # self.logger.log("Run  Method CompanyExchangeScraper._fetch_companies_list().processor()", level="info")
+                # self.logger.log("Run  Method CompanyDataScraper._fetch_companies_list().processor()", level="info")
                 download_bytes_pre = self._metrics_collector.network_bytes
 
-                # self.logger.log("Call Method CompanyExchangeScraper._fetch_companies_list().processor()_fetch_page()", level="info")
+                # self.logger.log("Call Method CompanyDataScraper._fetch_companies_list().processor()_fetch_page()", level="info")
                 fetch = self._fetch_page(task.data)
-                # self.logger.log("End  Method CompanyExchangeScraper._fetch_companies_list().processor()_fetch_page()", level="info")
+                # self.logger.log("End  Method CompanyDataScraper._fetch_companies_list().processor()_fetch_page()", level="info")
 
                 download_bytes_pos = self._metrics_collector.network_bytes - download_bytes_pre
 
@@ -257,7 +251,7 @@ class CompanyExchangeScraper(CompanySourcePort):
                     worker_id=task.worker_id,
                 )
 
-                # self.logger.log("End  Method CompanyExchangeScraper._fetch_companies_list().processor()", level="info")
+                # self.logger.log("End  Method CompanyDataScraper._fetch_companies_list().processor()", level="info")
                 return fetch
 
             page_exec = self.worker_pool_executor.run(
@@ -285,21 +279,21 @@ class CompanyExchangeScraper(CompanySourcePort):
         self,
         companies_list: List[Dict],
         skip_codes: Optional[Set[str]] = None,
-        save_callback: Optional[Callable[[List[CompanyRawDTO]], None]] = None,
+        save_callback: Optional[Callable[[List[CompanyDataRawDTO]], None]] = None,
         threshold: Optional[int] = None,
-    ) -> ExecutionResultDTO[CompanyRawDTO]:
+    ) -> ExecutionResultDTO[CompanyDataRawDTO]:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
         Args:
             companies_list (List[Dict]): List of company dictionaries, each containing at least a "codeCVM" key.
             skip_codes (Optional[Set[str]], optional): Set of CVM codes to skip during processing. Defaults to None.
-            save_callback (Optional[Callable[[List[CompanyRawDTO]], None]], optional):
+            save_callback (Optional[Callable[[List[CompanyDataRawDTO]], None]], optional):
                 Callback function to save buffered company details periodically.
                 Defaults to None.
             threshold (Optional[int], optional): Number of companies to process before triggering the save_callback. If not provided, uses configuration or defaults to 50.
             max_workers (int | None, optional): Reserved for future parallel fetching.
         Returns:
-            ExecutionResultDTO[CompanyRawDTO]: Parsed company detail DTOs and
+            ExecutionResultDTO[CompanyDataRawDTO]: Parsed company detail DTOs and
             execution metrics.
         Logs:
             - Progress and status information at each step.
@@ -312,10 +306,10 @@ class CompanyExchangeScraper(CompanySourcePort):
         skip_codes = skip_codes or set()
         threshold = threshold or self.config.global_settings.threshold or 50
 
-        strategy: SaveStrategy[CompanyRawDTO] = SaveStrategy(
+        strategy: SaveStrategy[CompanyDataRawDTO] = SaveStrategy(
             save_callback, threshold, config=self.config
         )
-        detail_exec: ExecutionResultDTO[Optional[CompanyRawDTO]] = ExecutionResultDTO(
+        detail_exec: ExecutionResultDTO[Optional[CompanyDataRawDTO]] = ExecutionResultDTO(
             items=[], metrics=self.metrics_collector.get_metrics(0)
         )
 
@@ -323,8 +317,8 @@ class CompanyExchangeScraper(CompanySourcePort):
         tasks = list(enumerate(companies_list))
         start_time = time.perf_counter()
 
-        def processor(task: WorkerTaskDTO) -> Optional[CompanyRawDTO]:
-            # self.logger.log("Run  Method CompanyExchangeScraper._fetch_companies_details().processor()", level="info")
+        def processor(task: WorkerTaskDTO) -> Optional[CompanyDataRawDTO]:
+            # self.logger.log("Run  Method CompanyDataScraper._fetch_companies_details().processor()", level="info")
             index = task.index
             entry = task.data
             worker_id = task.worker_id
@@ -336,7 +330,7 @@ class CompanyExchangeScraper(CompanySourcePort):
 
                 # Log and skip already persisted companies
                 extra_info = {
-                    "issuingCompany": entry["issuingCompany"],
+                    "issuingCompanyData": entry["issuingCompanyData"],
                     "trading_name": entry["tradingName"],
                     # "Download": self.byte_formatter.format_bytes(download_bytes_pos),
                     # "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
@@ -357,16 +351,16 @@ class CompanyExchangeScraper(CompanySourcePort):
 
             download_bytes_pre = self._metrics_collector.network_bytes
 
-            # self.logger.log("Call Method CompanyExchangeScraper._fetch_companies_details().processor().self.detail_processor.run(entry)", level="info")
+            # self.logger.log("Call Method CompanyDataScraper._fetch_companies_details().processor().self.detail_processor.run(entry)", level="info")
             result = self.detail_processor.process_entry(entry)
-            # self.logger.log("End  Method CompanyExchangeScraper._fetch_companies_details().processor().self.detail_processor.run(entry)", level="info")
+            # self.logger.log("End  Method CompanyDataScraper._fetch_companies_details().processor().self.detail_processor.run(entry)", level="info")
 
             download_bytes_pos = self._metrics_collector.network_bytes - download_bytes_pre
 
-            issuingCompany = entry.get("issuingCompany")
+            issuingCompanyData = entry.get("issuingCompanyData")
             tradingName = entry.get("tradingName")
             extra_info = {
-                "issuingCompany": issuingCompany,
+                "issuingCompanyData": issuingCompanyData,
                 "trading_name": tradingName,
                 "Download": self.byte_formatter.format_bytes(download_bytes_pos),
                 "Total download": self.byte_formatter.format_bytes(
@@ -385,11 +379,11 @@ class CompanyExchangeScraper(CompanySourcePort):
                 worker_id=worker_id,
             )
 
-            # self.logger.log("End  Method CompanyExchangeScraper._fetch_companies_details().processor()", level="info")
+            # self.logger.log("End  Method CompanyDataScraper._fetch_companies_details().processor()", level="info")
 
             return result
 
-        def handle_batch(item: Optional[CompanyRawDTO]) -> None:
+        def handle_batch(item: Optional[CompanyDataRawDTO]) -> None:
             # Buffer each parsed company and flush when threshold is hit
             # self.logger.log("Call Method strategy.handle()", level="info")
             if item is not None:
@@ -422,7 +416,7 @@ class CompanyExchangeScraper(CompanySourcePort):
         return base64.b64encode(json.dumps(payload).encode("utf-8")).decode("utf-8")
 
     def _fetch_page(self, page_number: int) -> PageResultDTO:
-        # self.logger.log("Run  Method CompanyExchangeScraper._fetch_companies_list().processor()_fetch_page()", level="info")
+        # self.logger.log("Run  Method CompanyDataScraper._fetch_companies_list().processor()_fetch_page()", level="info")
         payload = {
             "language": self.language,
             "pageNumber": page_number,
@@ -437,11 +431,17 @@ class CompanyExchangeScraper(CompanySourcePort):
         results = data.get("results", [])
         total_pages = data.get("page", {}).get("totalPages", 1)
 
-        # self.logger.log("End  Method CompanyExchangeScraper._fetch_companies_list().processor()_fetch_page()", level="info")
+        # self.logger.log("End  Method CompanyDataScraper._fetch_companies_list().processor()_fetch_page()", level="info")
 
         return PageResultDTO(
             items=results,
             total_pages=total_pages,
             bytes_downloaded=bytes_downloaded,
         )
+
+    @property
+    def metrics_collector(self) -> MetricsCollectorPort:
+        """Metrics collector used by the scraper."""
+
+        return self._metrics_collector
 

@@ -2,16 +2,16 @@ import types
 from unittest.mock import MagicMock
 
 from application.usecases.sync_companies import SyncCompaniesUseCase
-from domain.dto.company_dto import CompanyDTO
+from domain.dto.company_data_dto import CompanyDataDTO
 from domain.dto.execution_result_dto import ExecutionResultDTO
 from domain.dto.metrics_dto import MetricsDTO
 from domain.dto.sync_companies_result_dto import SyncCompaniesResultDTO
-from domain.ports import CompanySourcePort, SqlAlchemyCompanyRepositoryPort
+from domain.ports import CompanyDataScraperPort, SqlAlchemyCompanyDataRepositoryPort
 from tests.conftest import DummyLogger
 
 
 def test_execute_converts_and_saves():
-    repo = MagicMock(spec=SqlAlchemyCompanyRepositoryPort)
+    repo = MagicMock(spec=SqlAlchemyCompanyDataRepositoryPort)
     repo.get_all_primary_keys = MagicMock(return_value={"SKIP"})
 
     raw = types.SimpleNamespace(
@@ -63,7 +63,7 @@ def test_execute_converts_and_saves():
         metrics = MetricsDTO(elapsed_time=0.0, network_bytes=100, processing_bytes=0)
         return ExecutionResultDTO(items=[raw], metrics=metrics)
 
-    scraper = MagicMock(spec=CompanySourcePort)
+    scraper = MagicMock(spec=CompanyDataScraperPort)
     scraper.fetch_all.side_effect = fake_fetch_all
     scraper.metrics_collector = types.SimpleNamespace(network_bytes=100)
 
@@ -80,7 +80,7 @@ def test_execute_converts_and_saves():
     scraper.fetch_all.assert_called_once()
     repo.save_all.assert_called_once()
     saved = repo.save_all.call_args.args[0]
-    assert isinstance(saved[0], CompanyDTO)
+    assert isinstance(saved[0], CompanyDataDTO)
     assert saved[0].cvm_code == "001"
 
     assert isinstance(result, SyncCompaniesResultDTO)

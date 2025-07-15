@@ -7,13 +7,13 @@ from typing import List, Optional
 from sqlalchemy import Boolean, DateTime
 from sqlalchemy.orm import Mapped, mapped_column
 
-from domain.dto.company_dto import CompanyDTO
-from domain.dto.raw_company_dto import CodeDTO, CompanyRawDTO
+from domain.dto.company_data_dto import CompanyDataDTO
+from domain.dto.raw_company_data_dto import CodeDTO, CompanyDataRawDTO
 
 from .base_model import BaseModel
 
 
-class CompanyModel(BaseModel):
+class CompanyDataModel(BaseModel):
     """ORM adapter for the ``tbl_company`` table."""
 
     __tablename__ = "tbl_company"
@@ -61,8 +61,8 @@ class CompanyModel(BaseModel):
     listing_date: Mapped[Optional[datetime]] = mapped_column(DateTime)
 
     @staticmethod
-    def from_dto(dto: CompanyRawDTO | CompanyDTO) -> "CompanyModel":
-        """Convert a ``CompanyRawDTO`` or ``CompanyDTO`` into ``CompanyModel``."""
+    def from_dto(dto: CompanyDataRawDTO | CompanyDataDTO) -> "CompanyDataModel":
+        """Convert a ``CompanyDataRawDTO`` or ``CompanyDataDTO`` into ``CompanyDataModel``."""
 
         def attr(name: str):
             return getattr(dto, name, None)
@@ -93,7 +93,7 @@ class CompanyModel(BaseModel):
                 return value
             return json.dumps([{"code": c.code, "isin": c.isin} for c in value])
 
-        return CompanyModel(
+        return CompanyDataModel(
             cvm_code=attr("cvm_code") or attr("issuing_company") or "",
             issuing_company=attr("issuing_company"),
             trading_name=attr("trading_name"),
@@ -130,8 +130,8 @@ class CompanyModel(BaseModel):
             listing_date=attr("listing_date"),
         )
 
-    def to_dto(self) -> CompanyDTO:
-        """Reconstruct a :class:`CompanyDTO` from this model."""
+    def to_dto(self) -> CompanyDataDTO:
+        """Reconstruct a :class:`CompanyDataDTO` from this model."""
 
         ticker_codes: List[str] = (
             self.ticker_codes.split(",") if self.ticker_codes else []
@@ -142,7 +142,7 @@ class CompanyModel(BaseModel):
             CodeDTO(code=item.get("code"), isin=item.get("isin")) for item in raw_other
         ]
 
-        raw = CompanyRawDTO(
+        raw = CompanyDataRawDTO(
             cvm_code=self.cvm_code,
             issuing_company=self.issuing_company,
             trading_name=self.trading_name,
@@ -179,4 +179,4 @@ class CompanyModel(BaseModel):
             listing_date=self.listing_date,
         )
 
-        return CompanyDTO.from_raw(raw)
+        return CompanyDataDTO.from_raw(raw)

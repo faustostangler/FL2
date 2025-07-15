@@ -6,12 +6,12 @@ from typing import Callable, List, Optional, Set, TypeVar
 
 from domain.dto import ExecutionResultDTO, NsdDTO
 
-from .base_source_port import BaseSourcePort
+from .base_scraper_port import BaseScraperPort
 
 T = TypeVar("T")
 
 
-class NSDSourcePort(BaseSourcePort[NsdDTO]):
+class NSDSourcePort(BaseScraperPort[NsdDTO]):
     """Port for external NSD data providers."""
     def fetch_all(
         self,

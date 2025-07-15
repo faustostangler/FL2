@@ -7,11 +7,11 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import Optional
 
-from .raw_company_dto import CompanyRawDTO
+from .raw_company_data_dto import CompanyDataRawDTO
 
 
 @dataclass(frozen=True)
-class CompanyDTO:
+class CompanyDataDTO:
     """Structured company data extracted from the exchange."""
 
     cvm_code: Optional[str]
@@ -57,14 +57,14 @@ class CompanyDTO:
     listing_date: Optional[datetime]
 
     @staticmethod
-    def from_dict(raw: dict) -> "CompanyDTO":
+    def from_dict(raw: dict) -> "CompanyDataDTO":
         """Build an immutable DTO from a raw dictionary."""
 
         # Map incoming keys to the canonical DTO fields. Alternative names are
         # also handled for backward compatibility with existing scrapers.
-        return CompanyDTO(
+        return CompanyDataDTO(
             cvm_code=raw.get("cvm_code") or raw.get("codeCVM"),
-            issuing_company=raw.get("issuing_company") or raw.get("issuingCompany"),
+            issuing_company=raw.get("issuing_company") or raw.get("issuingCompanyData"),
             trading_name=raw.get("trading_name") or raw.get("tradingName"),
             company_name=raw.get("company_name") or raw.get("companyName"),
             cnpj=raw.get("cnpj"),
@@ -100,8 +100,8 @@ class CompanyDTO:
         )
 
     @staticmethod
-    def from_raw(raw: CompanyRawDTO) -> "CompanyDTO":
-        """Build a ``CompanyDTO`` from a ``CompanyRawDTO`` instance."""
+    def from_raw(raw: CompanyDataRawDTO) -> "CompanyDataDTO":
+        """Build a ``CompanyDataDTO`` from a ``CompanyDataRawDTO`` instance."""
 
         # Encode list of :class:`CodeDTO` objects as a JSON string if present.
         other_codes = (
@@ -111,7 +111,7 @@ class CompanyDTO:
         )
 
         # Instantiate the immutable DTO using the serialized raw values
-        return CompanyDTO(
+        return CompanyDataDTO(
             cvm_code=raw.cvm_code,
             issuing_company=raw.issuing_company,
             trading_name=raw.trading_name,

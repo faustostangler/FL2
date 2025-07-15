@@ -207,7 +207,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
 
             # Raise an error if the object is not found
             if not obj:
-                raise ValueError(f"Company not found: {identifier}")
+                raise ValueError(f"CompanyData not found: {identifier}")
 
             # Convert the ORM model to a DTO and return it
             return obj.to_dto()

@@ -1,21 +1,21 @@
 from sqlalchemy import text
 
-from domain.dto.company_dto import CompanyDTO
+from domain.dto.company_data_dto import CompanyDataDTO
 from infrastructure.models.base_model import Base
-from infrastructure.repositories.company_repository import SqlAlchemyCompanyRepository
+from infrastructure.repositories.company_repository import SqlAlchemyCompanyDataRepository
 from tests.conftest import DummyConfig, DummyLogger
 
 
 def test_save_all(SessionLocal, engine):
-    repo = SqlAlchemyCompanyRepository(config=DummyConfig(), logger=DummyLogger())
+    repo = SqlAlchemyCompanyDataRepository(config=DummyConfig(), logger=DummyLogger())
     # use shared engine
     repo.engine = engine
     repo.Session = SessionLocal
     Base.metadata.create_all(engine)
 
     companies = [
-        CompanyDTO.from_dict({"issuing_company": "AAA", "company_name": "Alpha"}),
-        CompanyDTO.from_dict({"issuing_company": "BBB", "company_name": "Beta"}),
+        CompanyDataDTO.from_dict({"issuing_company": "AAA", "company_name": "Alpha"}),
+        CompanyDataDTO.from_dict({"issuing_company": "BBB", "company_name": "Beta"}),
     ]
     repo.save_all(companies)
 
@@ -25,7 +25,7 @@ def test_save_all(SessionLocal, engine):
 
 
 def test_save_all_json_string(SessionLocal, engine):
-    repo = SqlAlchemyCompanyRepository(config=DummyConfig(), logger=DummyLogger())
+    repo = SqlAlchemyCompanyDataRepository(config=DummyConfig(), logger=DummyLogger())
     repo.engine = engine
     repo.Session = SessionLocal
     Base.metadata.drop_all(engine)
@@ -33,7 +33,7 @@ def test_save_all_json_string(SessionLocal, engine):
 
     json_codes = '[{"code": "AAA", "isin": "123"}]'
     companies = [
-        CompanyDTO.from_dict({"issuing_company": "AAA", "other_codes": json_codes})
+        CompanyDataDTO.from_dict({"issuing_company": "AAA", "other_codes": json_codes})
     ]
 
     repo.save_all(companies)
@@ -45,17 +45,17 @@ def test_save_all_json_string(SessionLocal, engine):
 
 
 def test_save_all_upserts(SessionLocal, engine):
-    repo = SqlAlchemyCompanyRepository(config=DummyConfig(), logger=DummyLogger())
+    repo = SqlAlchemyCompanyDataRepository(config=DummyConfig(), logger=DummyLogger())
     repo.engine = engine
     repo.Session = SessionLocal
     Base.metadata.drop_all(engine)
     Base.metadata.create_all(engine)
 
-    first = [CompanyDTO.from_dict({"issuing_company": "AAA", "company_name": "Alpha"})]
+    first = [CompanyDataDTO.from_dict({"issuing_company": "AAA", "company_name": "Alpha"})]
     repo.save_all(first)
 
     second = [
-        CompanyDTO.from_dict({"issuing_company": "AAA", "company_name": "Updated"})
+        CompanyDataDTO.from_dict({"issuing_company": "AAA", "company_name": "Updated"})
     ]
     repo.save_all(second)
 

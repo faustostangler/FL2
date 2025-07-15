@@ -111,7 +111,7 @@ class MarketProcessor(BaseProcessor):
 
         Args:
             targets (DataFrame): DataFrame containing financial statements.
-            company_name (str): Company name.
+            company_name (str): CompanyData name.
             quarter (str): Quarter identifier.
             ticker (str): Ticker symbol.
             historical_data (dict): Historical data dictionary.

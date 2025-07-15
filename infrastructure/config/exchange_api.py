@@ -4,11 +4,11 @@ from typing import Mapping
 LANGUAGE = "pt-br"
 COMPANY_ENDPOINT = {
     "initial":   "https://sistemaswebb3-listados.b3.com.br/"
-                    "listedCompaniesProxy/CompanyCall/GetInitialCompanies/",
+                    "listedCompaniesProxy/CompanyDataCall/GetInitialCompanies/",
     "detail":    "https://sistemaswebb3-listados.b3.com.br/"
-                    "listedCompaniesProxy/CompanyCall/GetDetail/",
+                    "listedCompaniesProxy/CompanyDataCall/GetDetail/",
     "financial": "https://sistemaswebb3-listados.b3.com.br/"
-                    "listedCompaniesProxy/CompanyCall/GetListedFinancial/"
+                    "listedCompaniesProxy/CompanyDataCall/GetListedFinancial/"
 }
 NSD_ENDPOINT = (
     "https://www.rad.cvm.gov.br/ENET/frmGerenciaPaginaFRE.aspx?"
@@ -22,11 +22,11 @@ class ExchangeApiConfig:
 
     Attributes:
         language: Language code for requests (fixed to ``"pt-br"``).
-        company_endpoint: Mapping of logical names to exchange URLs.
+        company_data_endpoint: Mapping of logical names to exchange URLs.
     """
 
     language: str = field(default=LANGUAGE)
-    company_endpoint: Mapping[str, str] = field(
+    company_data_endpoint: Mapping[str, str] = field(
         default_factory=lambda: COMPANY_ENDPOINT
     )
     nsd_endpoint: str = field(default=NSD_ENDPOINT)
@@ -37,6 +37,6 @@ def load_exchange_api_config() -> ExchangeApiConfig:
 
     return ExchangeApiConfig(
         language=LANGUAGE,
-        company_endpoint=COMPANY_ENDPOINT,
+        company_data_endpoint=COMPANY_ENDPOINT,
         nsd_endpoint=NSD_ENDPOINT,
     )

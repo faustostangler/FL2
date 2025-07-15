@@ -16,9 +16,9 @@ package "fly" {
             -_company_service() : void
             }
             CLIController --> fly.infrastructure.config.Config
-            CLIController --> CompanyService
+            CLIController --> CompanyDataService
             CLIController --> NsdService
-            CLIController --> fly.infrastructure.repositories.SqlAlchemyCompanyRepository : uses
+            CLIController --> fly.infrastructure.repositories.SqlAlchemyCompanyDataRepository : uses
             CLIController --> SqlAlchemyNsdRepository : uses
             CLIController --> SqlAlchemyRawStatementRepository : uses
             CLIController --> SqlAlchemyParsedStatementRepository : uses
@@ -29,50 +29,50 @@ package "fly" {
     package "fly.application" {
         package "fly.application.processors" {
             class EntryCleaner {
-                +clean_entry(...) : CompanyListingDTO | CompanyDetailDTO
+                +clean_entry(...) : CompanyDataListingDTO | CompanyDataDetailDTO
                 }
 
             class DetailFetcher {
                 +fetch_detail(cvm_code: str) : dict
                 }
 
-            class CompanyMerger {
-                +merge_details(listing: CompanyListingDTO, detail: CompanyDetailDTO) : CompanyRawDTO
+            class CompanyDataMerger {
+                +merge_details(listing: CompanyDataListingDTO, detail: CompanyDataDetailDTO) : CompanyDataRawDTO
                 }
 
-            class CompanyDetailProcessor {
-                +process_entry(entry: dict) : CompanyRawDTO
+            class CompanyDataDetailProcessor {
+                +process_entry(entry: dict) : CompanyDataRawDTO
                 }
-                CompanyDetailProcessor --> EntryCleaner
-                CompanyDetailProcessor --> DetailFetcher
-                CompanyDetailProcessor --> CompanyMerger
+                CompanyDataDetailProcessor --> EntryCleaner
+                CompanyDataDetailProcessor --> DetailFetcher
+                CompanyDataDetailProcessor --> CompanyDataMerger
                 EntryCleaner --> DataCleaner
                 DetailFetcher --> FetchUtils
                 DetailFetcher --> MetricsCollectorPort
                 DetailFetcher --> DataCleaner
-                CompanyMerger --> CompanyMapper
-                CompanyMerger --> LoggerPort
+                CompanyDataMerger --> CompanyDataMapper
+                CompanyDataMerger --> LoggerPort
             }
 
         package "fly.application.services" {
-            class CompanyService {
-                +__init__(config: Config, logger: LoggerPort, repository: SqlAlchemyCompanyRepositoryPort, scraper: CompanySourcePort)
+            class CompanyDataService {
+                +__init__(config: Config, logger: LoggerPort, repository: SqlAlchemyCompanyDataRepositoryPort, scraper: CompanyDataScraperPort)
                 +sync_companies() : SyncCompaniesResultDTO
                 }
-                CompanyService --> SyncCompaniesUseCase
-                CompanyService --> LoggerPort
-                CompanyService --> SqlAlchemyCompanyRepositoryPort
-                CompanyService --> CompanySourcePort
-                CompanyService --> Config
-                CompanyService --> SyncCompaniesResultDTO
+                CompanyDataService --> SyncCompaniesUseCase
+                CompanyDataService --> LoggerPort
+                CompanyDataService --> SqlAlchemyCompanyDataRepositoryPort
+                CompanyDataService --> CompanyDataScraperPort
+                CompanyDataService --> Config
+                CompanyDataService --> SyncCompaniesResultDTO
 
-            class CompanyMapper {
-                +merge_company_dtos(listing: CompanyListingDTO, detail: CompanyDetailDTO) : CompanyRawDTO
+            class CompanyDataMapper {
+                +merge_company_dtos(listing: CompanyDataListingDTO, detail: CompanyDataDetailDTO) : CompanyDataRawDTO
                 }
-                CompanyMapper --> DataCleanerPort
-                CompanyMapper --> CompanyListingDTO
-                CompanyMapper --> CompanyDetailDTO
-                CompanyMapper --> CompanyRawDTO
+                CompanyDataMapper --> DataCleanerPort
+                CompanyDataMapper --> CompanyDataListingDTO
+                CompanyDataMapper --> CompanyDataDetailDTO
+                CompanyDataMapper --> CompanyDataRawDTO
             class NsdService {
                 +sync_nsd() : void
                 }
@@ -89,7 +89,7 @@ package "fly" {
                 StatementFetchService --> LoggerPort
                 StatementFetchService --> RawStatementSourcePort
                 StatementFetchService --> ParsedStatementRepositoryPort
-                StatementFetchService --> SqlAlchemyCompanyRepositoryPort
+                StatementFetchService --> SqlAlchemyCompanyDataRepositoryPort
                 StatementFetchService --> NSDRepositoryPort
                 StatementFetchService --> RawStatementRepositoryPort
             }
@@ -97,14 +97,14 @@ package "fly" {
         package "fly.application.usecases" {
             class SyncCompaniesUseCase {
                 +synchronize_companies() : SyncCompaniesResultDTO
-                -_save_batch(buffer: List[CompanyRawDTO]) : void
+                -_save_batch(buffer: List[CompanyDataRawDTO]) : void
                 }
                 SyncCompaniesUseCase --> LoggerPort
-                SyncCompaniesUseCase --> SqlAlchemyCompanyRepositoryPort
-                SyncCompaniesUseCase --> CompanySourcePort
+                SyncCompaniesUseCase --> SqlAlchemyCompanyDataRepositoryPort
+                SyncCompaniesUseCase --> CompanyDataScraperPort
                 SyncCompaniesUseCase --> SyncCompaniesResultDTO
-                SyncCompaniesUseCase --> CompanyDTO
-                SyncCompaniesUseCase --> CompanyRawDTO
+                SyncCompaniesUseCase --> CompanyDataDTO
+                SyncCompaniesUseCase --> CompanyDataRawDTO
             class SyncNSDUseCase {
                 +synchronize_nsd() : void
                 -_save_batch(buffer: list[NsdDTO]) : void
@@ -128,13 +128,13 @@ package "fly" {
             }
     package "fly.domain" {
         package "fly.domain.ports" {
-            interface BaseSourcePort<T> {
+            interface BaseScraperPort<T> {
                 +fetch_all(...) : ExecutionResultDTO<T>
                 +metrics_collector : MetricsCollectorPort
                 }
-            interface CompanySourcePort {
+            interface CompanyDataScraperPort {
                 }
-                CompanySourcePort --|> BaseSourcePort
+                CompanyDataScraperPort --|> BaseScraperPort
             interface NSDSourcePort {
                 +fetch_all(...) : ExecutionResultDTO<NsdDTO>
                 }
@@ -158,8 +158,8 @@ package "fly" {
                 +get_by_id(id: str) : T
                 }
 
-            interface SqlAlchemyCompanyRepositoryPort
-                SqlAlchemyCompanyRepositoryPort --|> SqlAlchemyRepositoryBasePort        
+            interface SqlAlchemyCompanyDataRepositoryPort
+                SqlAlchemyCompanyDataRepositoryPort --|> SqlAlchemyRepositoryBasePort        
 
             interface NSDRepositoryPort {
                 }
@@ -199,7 +199,7 @@ package "fly" {
                 RawStatementSourcePort --> WorkerTaskDTO
 
         package "fly.domain.dto" {
-            class CompanyListingDTO {
+            class CompanyDataListingDTO {
                 +cvm_code: str
                 +issuing_company: str
                 +company_name: str
@@ -213,9 +213,9 @@ package "fly" {
                 +segment_eng: str
                 +company_type: str
                 +market: str
-                +from_dict() : CompanyListingDTO
+                +from_dict() : CompanyDataListingDTO
                 }
-            class CompanyDetailDTO {
+            class CompanyDataDetailDTO {
                 issuing_company: str
                 company_name: str
                 trading_name: str
@@ -241,15 +241,15 @@ package "fly" {
                 date_quotation: datetime
                 listing_segment: str
                 registrar: str
-                +from_dict() : CompanyDetailDTO
+                +from_dict() : CompanyDataDetailDTO
                 }
-                CompanyDetailDTO --> CodeDTO
-                CompanyRawDTO --> CodeDTO
+                CompanyDataDetailDTO --> CodeDTO
+                CompanyDataRawDTO --> CodeDTO
             class CodeDTO {
                 +code: str
                 +isin: str
                 }
-            class CompanyDTO {
+            class CompanyDataDTO {
                 +cvm_code: str
                 +issuing_company: str
                 +trading_name: str
@@ -284,12 +284,12 @@ package "fly" {
                 +date_quotation: datetime
                 +last_date: datetime
                 +listing_date: datetime
-                +from_dict(raw: dict) : CompanyDTO
-                +from_raw(raw: CompanyRawDTO) : CompanyDTO
+                +from_dict(raw: dict) : CompanyDataDTO
+                +from_raw(raw: CompanyDataRawDTO) : CompanyDataDTO
                 }
-                CompanyDTO --> CompanyRawDTO
+                CompanyDataDTO --> CompanyDataRawDTO
 
-            class CompanyRawDTO {
+            class CompanyDataRawDTO {
                 -cvm_code: str
                 -issuing_company: str
                 -trading_name: str
@@ -325,7 +325,7 @@ package "fly" {
                 -last_date: datetime
                 -listing_date: datetime
                 }
-                ExecutionResultDTO --> CompanyRawDTO
+                ExecutionResultDTO --> CompanyDataRawDTO
 
             class NsdDTO {
                 +nsd: int
@@ -362,7 +362,7 @@ package "fly" {
                 +total_pages: int
                 +bytes_downloaded: int
                 }
-                CompanyExchangeScraper --> PageResultDTO
+                CompanyDataScraper --> PageResultDTO
             class SyncCompaniesResultDTO {
                 +processed_count: int
                 +skipped_count: int
@@ -375,26 +375,26 @@ package "fly" {
         }
     package "fly.infrastructure" {
         package "fly.infrastructure.scrapers" {
-            class CompanyExchangeScraper {
+            class CompanyDataScraper {
                 +fetch_all(...) : ExecutionResultDTO
                 -_fetch_companies_list(...) : ExecutionResultDTO
                 -_fetch_companies_details(...) : ExecutionResultDTO
                 -_fetch_page(page_number: int) : PageResultDTO
                 -_encode_payload(payload: dict) : str
                 }
-                CompanyExchangeScraper --|> CompanySourcePort
-                CompanyExchangeScraper --> ExecutionResultDTO
-                CompanyExchangeScraper --> WorkerPoolPort
-                CompanyExchangeScraper --> LoggerPort
-                CompanyExchangeScraper --> MetricsCollectorPort
-                CompanyExchangeScraper --> CompanyMapper
-                CompanyExchangeScraper --> SaveStrategy
-                CompanyExchangeScraper --> ByteFormatter
-                CompanyExchangeScraper --> DetailFetcher
-                CompanyExchangeScraper --> EntryCleaner
-                CompanyExchangeScraper --> CompanyMerger
-                CompanyExchangeScraper --> CompanyDetailProcessor
-                CompanyExchangeScraper --> FetchUtils
+                CompanyDataScraper --|> CompanyDataScraperPort
+                CompanyDataScraper --> ExecutionResultDTO
+                CompanyDataScraper --> WorkerPoolPort
+                CompanyDataScraper --> LoggerPort
+                CompanyDataScraper --> MetricsCollectorPort
+                CompanyDataScraper --> CompanyDataMapper
+                CompanyDataScraper --> SaveStrategy
+                CompanyDataScraper --> ByteFormatter
+                CompanyDataScraper --> DetailFetcher
+                CompanyDataScraper --> EntryCleaner
+                CompanyDataScraper --> CompanyDataMerger
+                CompanyDataScraper --> CompanyDataDetailProcessor
+                CompanyDataScraper --> FetchUtils
 
             class NsdScraper {
                 +fetch_all(...) : ExecutionResultDTO<NsdDTO>
@@ -633,30 +633,30 @@ package "fly" {
                 <<ORM base>>
                 }
 
-            class CompanyModel {
-                +from_dto(dto: CompanyRawDTO | CompanyDTO) : CompanyModel
-                +to_dto() : CompanyDTO
+            class CompanyDataModel {
+                +from_dto(dto: CompanyDataRawDTO | CompanyDataDTO) : CompanyDataModel
+                +to_dto() : CompanyDataDTO
                 }
-                CompanyModel --|> BaseModel
-                CompanyModel --> CompanyDTO : to_dto()
-                CompanyModel --> CompanyRawDTO : to_dto()
-                CompanyModel <-- CompanyDTO : from_dto()
-                CompanyModel <-- CompanyRawDTO : from_dto()
-                SqlAlchemyCompanyRepository --> CompanyModel : uses
+                CompanyDataModel --|> BaseModel
+                CompanyDataModel --> CompanyDataDTO : to_dto()
+                CompanyDataModel --> CompanyDataRawDTO : to_dto()
+                CompanyDataModel <-- CompanyDataDTO : from_dto()
+                CompanyDataModel <-- CompanyDataRawDTO : from_dto()
+                SqlAlchemyCompanyDataRepository --> CompanyDataModel : uses
             }
 
         package "fly.infrastructure.repositories" {
-            class SqlAlchemyCompanyRepository {
-                CompanyDTO : CompanyDTO
-                +save_all(items: List[CompanyDTO]) : void
-                +get_all() : List[CompanyDTO]
+            class SqlAlchemyCompanyDataRepository {
+                CompanyDataDTO : CompanyDataDTO
+                +save_all(items: List[CompanyDataDTO]) : void
+                +get_all() : List[CompanyDataDTO]
                 +has_item(identifier: str) : bool
-                +get_by_id(id: str) : CompanyDTO
+                +get_by_id(id: str) : CompanyDataDTO
                 +get_all_primary_keys() : Set[str>
                 }
-                SqlAlchemyCompanyRepository --|> SqlAlchemyCompanyRepositoryPort
-                SqlAlchemyCompanyRepository --|> SqlAlchemyRepositoryBase
-                SqlAlchemyCompanyRepository --> CompanyDTO
+                SqlAlchemyCompanyDataRepository --|> SqlAlchemyCompanyDataRepositoryPort
+                SqlAlchemyCompanyDataRepository --|> SqlAlchemyRepositoryBase
+                SqlAlchemyCompanyDataRepository --> CompanyDataDTO
 
             class SqlAlchemyNsdRepository {
                 +save_all(items: List[NsdDTO]) : void

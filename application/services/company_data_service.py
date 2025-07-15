@@ -2,19 +2,19 @@
 
 from application.usecases.sync_companies import SyncCompaniesUseCase
 from domain.dto import SyncCompaniesResultDTO
-from domain.ports import CompanySourcePort, LoggerPort, SqlAlchemyCompanyRepositoryPort
+from domain.ports import CompanyDataScraperPort, LoggerPort, SqlAlchemyCompanyDataRepositoryPort
 from infrastructure.config import Config
 
 
-class CompanyService:
+class CompanyDataService:
     """Coordinate company-related use cases within the application."""
 
     def __init__(
         self,
         config: Config,
         logger: LoggerPort,
-        repository: SqlAlchemyCompanyRepositoryPort,
-        scraper: CompanySourcePort,
+        repository: SqlAlchemyCompanyDataRepositoryPort,
+        scraper: CompanyDataScraperPort,
     ):
         """Initialize dependencies for company synchronization."""
         self.logger = logger

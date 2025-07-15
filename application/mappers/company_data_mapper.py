@@ -1,25 +1,25 @@
 from __future__ import annotations
 
 from domain.dto import (
-    CompanyDetailDTO,
-    CompanyListingDTO,
-    CompanyRawDTO,
+    CompanyDataDetailDTO,
+    CompanyDataListingDTO,
+    CompanyDataRawDTO,
 )
 from domain.ports import DataCleanerPort
 
 
-class CompanyMapper:
+class CompanyDataMapper:
     """Merge base and detail company data into a parsed DTO."""
 
     def __init__(self, data_cleaner: DataCleanerPort) -> None:
         """Create a new mapper using the provided data cleaner utility."""
         self.data_cleaner = data_cleaner
 
-    def merge_company_dtos(
+    def merge_company_data_dtos(
         self,
-        listing: CompanyListingDTO,
-        detail: CompanyDetailDTO,
-    ) -> CompanyRawDTO:
+        listing: CompanyDataListingDTO,
+        detail: CompanyDataDetailDTO,
+    ) -> CompanyDataRawDTO:
         """Combine listing and detail information into a single DTO."""
         # Extract the list of extra codes, falling back to an empty list.
         codes = detail.other_codes or []
@@ -38,7 +38,7 @@ class CompanyMapper:
         )
 
         # Build the raw company DTO with all collected information.
-        return CompanyRawDTO(
+        return CompanyDataRawDTO(
             cvm_code=detail.cvm_code or listing.cvm_code,
             issuing_company=detail.issuing_company or listing.issuing_company,
             trading_name=detail.trading_name or listing.trading_name,

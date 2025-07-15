@@ -1,9 +1,9 @@
 from unittest.mock import MagicMock
 
-# from application.services.company_services import CompanyService
-from application.services.company_service import CompanyService
+# from application.services.company_services import CompanyDataService
+from application.services.company_data_service import CompanyDataService
 from application.usecases.sync_companies import SyncCompaniesUseCase
-from domain.ports import CompanySourcePort, SqlAlchemyCompanyRepositoryPort
+from domain.ports import CompanyDataScraperPort, SqlAlchemyCompanyDataRepositoryPort
 from tests.conftest import DummyConfig, DummyLogger
 
 
@@ -20,10 +20,10 @@ def test_sync_companies_calls_usecase(monkeypatch):
         mock_usecase_cls,
     )
 
-    repo = MagicMock(spec=SqlAlchemyCompanyRepositoryPort)
-    scraper = MagicMock(spec=CompanySourcePort)
+    repo = MagicMock(spec=SqlAlchemyCompanyDataRepositoryPort)
+    scraper = MagicMock(spec=CompanyDataScraperPort)
 
-    service = CompanyService(
+    service = CompanyDataService(
         config=dummy_config,
         logger=DummyLogger(),
         repository=repo,

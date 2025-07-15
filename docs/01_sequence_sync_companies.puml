@@ -9,9 +9,9 @@ RUN -> CLI : start_fly()
 activate CLI
 
 == Aplicação ==
-participant "CompanyService" as CS
+participant "CompanyDataService" as CS
 participant "SyncCompaniesUseCase" as SCUC
-participant "SqlAlchemyCompanyRepositoryPort" as CRP
+participant "SqlAlchemyCompanyDataRepositoryPort" as CRP
 
 CLI -> CS : _company_service()
 activate CS
@@ -19,7 +19,7 @@ CS -> SCUC : synchronize_companies()
 activate SCUC
 
 == Infraestrutura de Scraping ==
-participant "CompanyExchangeScraper" as SCR
+participant "CompanyDataScraper" as SCR
 
 SCUC -> SCR : fetch_companies_list()
 activate SCR
@@ -29,19 +29,19 @@ SCR --> SCUC : raw_details
 deactivate SCR
 
 == Domínio ==
-participant "CompanyFactory\n(mapper de domínio)" as CF
-participant "CompanyDTO\n(entidade imutável)" as CD
+participant "CompanyDataFactory\n(mapper de domínio)" as CF
+participant "CompanyDataDTO\n(entidade imutável)" as CD
 
 SCUC -> CF : create_from_raw(raw_details)
 activate CF
-CF --> SCUC : CompanyDTO
+CF --> SCUC : CompanyDataDTO
 deactivate CF
 
 SCUC -> CRP : save(companyDTO)
 activate CRP
 
 == Infraestrutura de Persistência ==
-participant "SQLAlchemyCompanyRepository\n(implementa SqlAlchemyCompanyRepositoryPort)" as SCRepo
+participant "SQLAlchemyCompanyDataRepository\n(implementa SqlAlchemyCompanyDataRepositoryPort)" as SCRepo
 participant "SQLiteDB" as DB
 
 CRP -> SCRepo : insert_or_update(companyDTO)

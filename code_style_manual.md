@@ -6,7 +6,7 @@ This project adopts a clean and sustainable code style, aligned with modern arch
 
 ## 1. General Principles
 
-- Compose processor classes by responsibility (e.g., `EntryCleaner`, `DetailFetcher`, `CompanyMerger`).
+- Compose processor classes by responsibility (e.g., `EntryCleaner`, `DetailFetcher`, `CompanyDataMerger`).
 - Favor the pipeline method pattern: `run()`, `load()`, `transform()`, and `persist()`.
 - Write functions and methods that serve one purpose only.
 - Inject all collaborators through constructors (e.g., `Logger`, `Scraper`, `Repository`).

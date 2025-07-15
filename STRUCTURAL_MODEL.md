@@ -7,7 +7,7 @@ This document summarizes the class relationships and dependencies in the FLY pro
 
 ## Application Layer
 - **Services**
-  - `CompanyService` – orchestrates company synchronization using `SyncCompaniesUseCase`.
+  - `CompanyDataService` – orchestrates company synchronization using `SyncCompaniesUseCase`.
   - `NsdService` – orchestrates NSD synchronization via `SyncNSDUseCase`.
   - `StatementFetchService` – fetches raw statement pages with `FetchStatementsUseCase`.
   - `StatementParseService` – parses and persists rows using `ParseAndClassifyStatementsUseCase` and a `WorkerPool`.
@@ -18,19 +18,19 @@ This document summarizes the class relationships and dependencies in the FLY pro
   - `FetchStatementsUseCase` – retrieves raw statement rows concurrently.
   - `ParseAndClassifyStatementsUseCase` – converts rows to `StatementDTO` and persists them.
 - **Mappers**
-  - `CompanyMapper` – merges listing and detail DTOs using a `DataCleaner`.
+  - `CompanyDataMapper` – merges listing and detail DTOs using a `DataCleaner`.
 
 Dependencies are injected through constructors and point inward to domain ports and DTOs.
 
 ## Domain Layer
 - **DTOs** (`domain/dto`)
-  - `CompanyDTO`, `CompanyRawDTO`, `CompanyListingDTO`, `CompanyDetailDTO`
+  - `CompanyDataDTO`, `CompanyDataRawDTO`, `CompanyDataListingDTO`, `CompanyDataDetailDTO`
   - `NsdDTO`
   - `StatementDTO`, `StatementRowsDTO`
   - `ExecutionResultDTO`, `PageResultDTO`, `MetricsDTO`, `SyncCompaniesResultDTO`, `WorkerTaskDTO`
 - **Ports** (`domain/ports`)
-  - Repository ports: `SqlAlchemyCompanyRepositoryPort`, `NSDRepositoryPort`, `RawStatementRepositoryPort`, `ParsedStatementRepositoryPort`.
-  - Source ports: `CompanySourcePort`, `NSDSourcePort`, `RawStatementSourcePort`.
+  - Repository ports: `SqlAlchemyCompanyDataRepositoryPort`, `NSDRepositoryPort`, `RawStatementRepositoryPort`, `ParsedStatementRepositoryPort`.
+  - Source ports: `CompanyDataScraperPort`, `NSDSourcePort`, `RawStatementSourcePort`.
   - `LoggerPort`, `WorkerPoolPort`, `MetricsCollectorPort`, `DataCleanerPort`.
 - **Utilities**
   - `statement_processing.classify_section` – maps account names to statement sections.
@@ -39,10 +39,10 @@ The domain contains no infrastructure references and consists only of dataclasse
 
 ## Infrastructure Layer
 - **Repositories** (`infrastructure/repositories`)
-  - `SqlAlchemyCompanyRepository`, `SqlAlchemyNSDRepository`, `SqlAlchemyRawStatementRepository`, `SqlAlchemyParsedStatementRepository` – implement respective repository ports and manage database persistence using SQLAlchemy.
+  - `SqlAlchemyCompanyDataRepository`, `SqlAlchemyNSDRepository`, `SqlAlchemyRawStatementRepository`, `SqlAlchemyParsedStatementRepository` – implement respective repository ports and manage database persistence using SQLAlchemy.
   - `SqlAlchemyRepositoryBase` – shared connection logic used by concrete repositories.
 - **Scrapers & Adapters** (`infrastructure/scrapers`)
-  - `CompanyExchangeScraper` – implements `CompanySourcePort` using `FetchUtils`, `DataCleaner`, and several processor classes (`EntryCleaner`, `DetailFetcher`, `CompanyMerger`, `CompanyDetailProcessor`).
+  - `CompanyDataScraper` – implements `CompanyDataScraperPort` using `FetchUtils`, `DataCleaner`, and several processor classes (`EntryCleaner`, `DetailFetcher`, `CompanyDataMerger`, `CompanyDataDetailProcessor`).
   - `NsdScraper` – implements `NSDSourcePort` and fetches sequential documents.
   - `StatementsSourceAdapter` – implements `RawStatementSourcePort` for statement pages.
 - **Helpers** (`infrastructure/helpers`)
@@ -60,22 +60,22 @@ Infrastructure classes depend only on interfaces defined in the domain/applicati
 
 ## Example Constructor Signatures
 ```python
-class CompanyService:
+class CompanyDataService:
     def __init__(
         self,
         config: Config,
         logger: LoggerPort,
-        repository: SqlAlchemyCompanyRepositoryPort,
-        scraper: CompanySourcePort,
+        repository: SqlAlchemyCompanyDataRepositoryPort,
+        scraper: CompanyDataScraperPort,
     ) -> None:
         ...
 ```
 ```python
-class SqlAlchemyCompanyRepository(SqlAlchemyCompanyRepositoryPort):
+class SqlAlchemyCompanyDataRepository(SqlAlchemyCompanyDataRepositoryPort):
 ```
 
 ```python
-class SqlAlchemyCompanyRepositoryPort(SqlAlchemyRepositoryBasePort[CompanyDTO, str]):
+class SqlAlchemyCompanyDataRepositoryPort(SqlAlchemyRepositoryBasePort[CompanyDataDTO, str]):
 ```
 
 ```python
@@ -84,15 +84,15 @@ class SqlAlchemyRepositoryBasePort(ABC, Generic[T, K]):
 e também 
 
 ```python
-class CompanyExchangeScraper(CompanySourcePort):
+class CompanyDataScraper(CompanyDataScraperPort):
 ```
 
 ```python
-class CompanySourcePort(BaseSourcePort[CompanyRawDTO]):
+class CompanyDataScraperPort(BaseScraperPort[CompanyDataRawDTO]):
 ```
 
 ```python
-class BaseSourcePort(ABC, Generic[T]):
+class BaseScraperPort(ABC, Generic[T]):
 ```
 
 Dependencies always point inward (scrapers depend on ports and helpers, services depend on use cases and ports).

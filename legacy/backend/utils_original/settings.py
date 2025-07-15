@@ -123,7 +123,7 @@ LANGUAGES = [
     "id-ID;q=0.6",
 ]
 
-# Company Info from B3
+# CompanyData Info from B3
 companies_url = "https://sistemaswebb3-listados.b3.com.br/listedCompaniesPage/search?language=pt-br"  # URL for the B3 companies search page
 company_url = (
     "https://sistemaswebb3-listados.b3.com.br/listedCompaniesPage/?language=pt-br"  # URL for the B3 company detail page

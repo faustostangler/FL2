@@ -17,7 +17,7 @@ class CodeDTO:
 
 
 @dataclass(frozen=True)
-class CompanyListingDTO:
+class CompanyDataListingDTO:
     """DTO for base company data from the list endpoint."""
 
     cvm_code: Optional[str]
@@ -35,13 +35,13 @@ class CompanyListingDTO:
     market: Optional[str]
 
     @staticmethod
-    def from_dict(raw: dict) -> "CompanyListingDTO":
+    def from_dict(raw: dict) -> "CompanyDataListingDTO":
         """Create a listing DTO from a raw dictionary."""
 
         # Directly map the expected keys from the raw payload.
-        return CompanyListingDTO(
+        return CompanyDataListingDTO(
             cvm_code=raw.get("codeCVM"),
-            issuing_company=raw.get("issuingCompany"),
+            issuing_company=raw.get("issuingCompanyData"),
             company_name=raw.get("companyName"),
             trading_name=raw.get("tradingName"),
             cnpj=raw.get("cnpj"),
@@ -57,7 +57,7 @@ class CompanyListingDTO:
 
 
 @dataclass(frozen=True)
-class CompanyDetailDTO:
+class CompanyDataDetailDTO:
     """DTO for detailed company data from the detail endpoint."""
 
     issuing_company: Optional[str]
@@ -88,7 +88,7 @@ class CompanyDetailDTO:
     registrar: Optional[str]
 
     @staticmethod
-    def from_dict(raw: dict) -> "CompanyDetailDTO":
+    def from_dict(raw: dict) -> "CompanyDataDetailDTO":
         """Parse a detailed company payload into a DTO."""
 
         # ``otherCodes`` may come as a serialized JSON string; normalize to list
@@ -102,8 +102,8 @@ class CompanyDetailDTO:
         ]
 
         # Populate the DTO using values from the payload
-        company_detail_dto = CompanyDetailDTO(
-            issuing_company=raw.get("issuingCompany"),
+        company_data_detail_dto = CompanyDataDetailDTO(
+            issuing_company=raw.get("issuingCompanyData"),
             company_name=raw.get("companyName"),
             trading_name=raw.get("tradingName"),
             cnpj=raw.get("cnpj"),
@@ -130,11 +130,11 @@ class CompanyDetailDTO:
             registrar=raw.get("registrar"),
         )
         # Return the populated DTO instance
-        return company_detail_dto
+        return company_data_detail_dto
 
 
 @dataclass(frozen=True)
-class CompanyRawDTO:
+class CompanyDataRawDTO:
     """Raw parsed data returned by the scraper before mapping to the domain."""
 
     cvm_code: Optional[str]

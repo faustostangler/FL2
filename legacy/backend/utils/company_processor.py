@@ -11,7 +11,7 @@ from selenium.webdriver.common.keys import Keys
 from utils.base_processor import BaseProcessor
 
 
-class CompanyProcessor(BaseProcessor):
+class CompanyDataProcessor(BaseProcessor):
     """Processar dados de empresas."""
 
     def __init__(self):
@@ -45,7 +45,7 @@ class CompanyProcessor(BaseProcessor):
                 f"Starting batch {progress['batch_index']+1}/{progress['total_batches']} {100 * (progress['batch_index']+1) / progress['total_batches']:.02f}%"
             )
 
-            batch_processor = CompanyProcessor()
+            batch_processor = CompanyDataProcessor()
 
             # Injetar o controle compartilhado
             batch_processor.shared_total_bytes = self.shared_total_bytes
@@ -200,16 +200,16 @@ class CompanyProcessor(BaseProcessor):
             # Prepare payloads, tokens and endpoints
             payload1 = {"language": "pt-br", "pageNumber": 1, "pageSize": 120, "company": ticker}
             token1   = self.base64_payload(payload1)
-            endpoint1 = "https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyCall/GetInitialCompanies/"
-            endpoint2 = "https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyCall/GetDetail/"
-            endpoint3 = "https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyCall/GetListedFinancial/"
+            endpoint1 = "https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyDataCall/GetInitialCompanies/"
+            endpoint2 = "https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyDataCall/GetDetail/"
+            endpoint3 = "https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyDataCall/GetListedFinancial/"
 
             # Fire off the three requests, with automatic retry on blocks
             r1 = self._fetch_with_retry(scraper, endpoint1 + token1)
 
             # parse r1 first so we can build token2
             results = r1.json().get("results", [])
-            row     = next((i for i in results if i.get("issuingCompany") == ticker), None)
+            row     = next((i for i in results if i.get("issuingCompanyData") == ticker), None)
             if not row:
                 return pd.DataFrame()  # retorna vazio para essa empresa
 
@@ -231,9 +231,9 @@ class CompanyProcessor(BaseProcessor):
                 company_details = self._split_industry_classification(company_details)
 
                 # Define the real key
-                merge_key = ["issuingCompany"]
+                merge_key = ["issuingCompanyData"]
 
-                # Merge based only on issuingCompany
+                # Merge based only on issuingCompanyData
                 df = pd.merge(
                     company,
                     company_details,
@@ -320,7 +320,7 @@ class CompanyProcessor(BaseProcessor):
             # First request: page 1
             payload = {"language": "pt-br", "pageNumber": 1, "pageSize": 120}
             token = self.base64_payload(payload)
-            endpoint = 'https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyCall/GetInitialCompanies/'
+            endpoint = 'https://sistemaswebb3-listados.b3.com.br/listedCompaniesProxy/CompanyDataCall/GetInitialCompanies/'
 
             r1 = self._fetch_with_retry(scraper, endpoint + token)
             r1_json = r1.json()
@@ -331,7 +331,7 @@ class CompanyProcessor(BaseProcessor):
             all_companies.extend(companies)
 
             # Log progress for page 1
-            extra_info = [f"page 1, from {companies[0]['issuingCompany']} to {companies[-1]['issuingCompany']}"]
+            extra_info = [f"page 1, from {companies[0]['issuingCompanyData']} to {companies[-1]['issuingCompanyData']}"]
             self.print_info(0, total_pages, start_time, extra_info)
 
             # Loop through remaining pages: page 2 onwards
@@ -349,7 +349,7 @@ class CompanyProcessor(BaseProcessor):
                         all_companies.extend(companies)
 
                         # Log progress
-                        extra_info = [f"page {i}, from {companies[0]['issuingCompany']} to {companies[-1]['issuingCompany']}"]
+                        extra_info = [f"page {i}, from {companies[0]['issuingCompanyData']} to {companies[-1]['issuingCompanyData']}"]
                         self.print_info(i - 1, total_pages, start_time, extra_info)
 
                         success = True  # Only mark as success if no exception occurs
@@ -362,8 +362,8 @@ class CompanyProcessor(BaseProcessor):
             # Convert the list of companies into a DataFrame
             df = pd.DataFrame(all_companies)
 
-            # Rename 'issuingCompany' to 'ticker' and keep only the 'ticker' column
-            df = df.rename(columns={"issuingCompany": "ticker"})
+            # Rename 'issuingCompanyData' to 'ticker' and keep only the 'ticker' column
+            df = df.rename(columns={"issuingCompanyData": "ticker"})
             df = df[["ticker"]]
 
         except Exception as e:
@@ -393,7 +393,7 @@ class CompanyProcessor(BaseProcessor):
             shared_bytes = {"total": 0, "threads": {}}  # inclui total + subtotais por thread
             shared_lock = Lock()
 
-            batch_processor = CompanyProcessor()
+            batch_processor = CompanyDataProcessor()
             batch_processor.shared_total_bytes = shared_bytes
             batch_processor.shared_lock = shared_lock
 

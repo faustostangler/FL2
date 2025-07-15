@@ -38,7 +38,7 @@ class SqlAlchemyNsdRepository(NSDRepositoryPort):
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def save_all(self, items: List[NsdDTO]) -> None:
-        """Persist a list of ``CompanyDTO`` objects."""
+        """Persist a list of ``CompanyDataDTO`` objects."""
         session = self.Session()
         try:
             flat_items = ListFlattener.flatten(items)  # recebe nested lists, devolve flat list

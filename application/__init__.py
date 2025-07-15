@@ -1,5 +1,5 @@
 """Public interface for the application layer."""
 
-from .mappers.company_mapper import CompanyMapper
+from .mappers import CompanyDataMapper
 
-__all__ = ["CompanyMapper"]
+__all__ = ["CompanyDataMapper"]

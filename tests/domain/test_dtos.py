@@ -1,13 +1,13 @@
 import pytest
 
-from domain.dto.company_dto import CompanyDTO
+from domain.dto.company_data_dto import CompanyDataDTO
 from domain.dto.nsd_dto import NsdDTO
 from domain.dto.statement_rows_dto import StatementRowsDTO
 
 
 def test_company_dto_from_dict():
     raw = {"issuing_company": "XYZ", "company_name": "Xyz Corp"}
-    dto = CompanyDTO.from_dict(raw)
+    dto = CompanyDataDTO.from_dict(raw)
     assert dto.issuing_company == "XYZ"
     assert dto.company_name == "Xyz Corp"
 

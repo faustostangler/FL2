@@ -4,9 +4,9 @@ import time
 from typing import List
 
 from domain.dto import SyncCompaniesResultDTO
-from domain.dto.company_dto import CompanyDTO
-from domain.dto.raw_company_dto import CompanyRawDTO
-from domain.ports import CompanySourcePort, LoggerPort, SqlAlchemyCompanyRepositoryPort
+from domain.dto.company_data_dto import CompanyDataDTO
+from domain.dto.raw_company_data_dto import CompanyDataRawDTO
+from domain.ports import CompanyDataScraperPort, LoggerPort, SqlAlchemyCompanyDataRepositoryPort
 from infrastructure.helpers.list_flattener import ListFlattener
 
 
@@ -16,8 +16,8 @@ class SyncCompaniesUseCase:
     def __init__(
         self,
         logger: LoggerPort,
-        repository: SqlAlchemyCompanyRepositoryPort,
-        scraper: CompanySourcePort,
+        repository: SqlAlchemyCompanyDataRepositoryPort,
+        scraper: CompanyDataScraperPort,
         max_workers: int = 1,
     ):
         """Store dependencies and configure use case execution."""
@@ -33,7 +33,7 @@ class SyncCompaniesUseCase:
 
         Steps:
             1. Fetch data from the scraper.
-            2. Convert results into ``CompanyDTO`` objects.
+            2. Convert results into ``CompanyDataDTO`` objects.
             3. Persist them using the repository.
         """
         # self.logger.log("Run  Method sync_companies_usecase.run()", level="info")
@@ -65,15 +65,15 @@ class SyncCompaniesUseCase:
             elapsed_time=elapsed,
         )
 
-    def _save_batch(self, buffer: List[CompanyRawDTO]) -> None:
+    def _save_batch(self, buffer: List[CompanyDataRawDTO]) -> None:
         """Convert raw companies to domain DTOs before saving."""
         # primeiro “desembrulha” qualquer nível de listas aninhadas
         flat_items = ListFlattener.flatten(buffer)  # recebe nested lists, devolve flat list
 
         # Transform raw DTOs from the scraper to domain DTOs.
-        dtos = [CompanyDTO.from_raw(item) for item in flat_items]
+        dtos = [CompanyDataDTO.from_raw(item) for item in flat_items]
 
         # Persist the converted DTOs in bulk for efficiency.
         self.repository.save_all(dtos)
 
-        # self.logger.log("End  Method _save_batch() in SyncCompaniesUseCase in CompanyService", level="info")
+        # self.logger.log("End  Method _save_batch() in SyncCompaniesUseCase in CompanyDataService", level="info")

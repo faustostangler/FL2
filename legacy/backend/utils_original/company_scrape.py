@@ -11,7 +11,7 @@ from selenium.webdriver.common.keys import Keys
 from utils_original import selenium_driver, settings, system
 
 
-class CompanyScraper:
+class CompanyDataScraper:
     # Configuração de cache
     cache = TTLCache(maxsize=3000, ttl=60 * 5)
 
@@ -336,7 +336,7 @@ class CompanyScraper:
 
 if __name__ == "__main__":
     try:
-        scraper = CompanyScraper()
+        scraper = CompanyDataScraper()
         scraper.run()
     except Exception as e:
         system.log_error(e)

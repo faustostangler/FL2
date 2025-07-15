@@ -111,9 +111,9 @@ class FinancialDataPlotter:
             x="company_name",
             y="value",
             title=f"Comparison of {description} on {date}",
-            labels={"company_name": "Company Name", "value": description},
+            labels={"company_name": "CompanyData Name", "value": description},
         )
-        fig.update_layout(xaxis_title="Company Name", yaxis_title=description)
+        fig.update_layout(xaxis_title="CompanyData Name", yaxis_title=description)
         fig.show()
 
     def plot_indicator_comparison(self, company_name, descriptions, start_date=None, end_date=None):
