@@ -7,7 +7,7 @@ Presentation ↔ Application ↔ Domain ↔ Infrastructure
 ```
 
 - **Presentation** – The CLI controller in `presentation/cli.py` starts the application.
-- **Application** – Services and use cases orchestrate domain logic. Examples are `CompanyDataService` and `SyncCompaniesUseCase`.
+- **Application** – Services and use cases orchestrate domain logic. Examples are `CompanyDataService` and `SyncCompanyDataUseCase`.
 - **Domain** – Pure dataclasses and ports defining contracts (`domain/dto`, `domain/ports`).
 - **Infrastructure** – Concrete adapters such as scrapers and repositories.
 
@@ -17,7 +17,7 @@ Dependencies flow inward only: presentation depends on application, which depend
 
 - **Controller** – Triggers execution (CLI).
 - **Service** – Coordinates use cases and domain objects.
-- **UseCase** – Encapsulates a single business scenario, e.g. `SyncCompaniesUseCase`.
+- **UseCase** – Encapsulates a single business scenario, e.g. `SyncCompanyDataUseCase`.
 - **DTO** – Immutable data container passed across layers. All DTOs live in `domain/dto` and use `@dataclass(frozen=True)`.
 - **Port** – Interface defined in `domain/ports` (e.g., `SqlAlchemyCompanyDataRepositoryPort`).
 - **Repository** – Infrastructure implementation of a port using SQLAlchemy.
@@ -92,7 +92,7 @@ UseCase: A domain-specific specialist. Executes one business operation (e.g., sy
 
 The FLY owner never talks to a worker directly. He calls the Head of the CompanyData Data Department (the CompanyDataService).
 
-The Head turns to the CompanyData Synchronization Specialist (SyncCompaniesUseCase) and gives him tools and instructions:
+The Head turns to the CompanyData Synchronization Specialist (SyncCompanyDataUseCase) and gives him tools and instructions:
 
 - Ask the archive (Repository) for the existing company codes.
 - Ask the scout (Source) to fetch new company data from the exchange.
@@ -144,7 +144,7 @@ The table below maps the main components to their respective layers.
 |-----------|-------|------|
 | `cli.py` | Presentation | Controller |
 | `CompanyDataService` | Application | Service |
-| `SyncCompaniesUseCase` | Application | Use case |
+| `SyncCompanyDataUseCase` | Application | Use case |
 | `CompanyDataDTO` | Domain | DTO |
 | `SqlAlchemyCompanyDataRepositoryPort` | Domain | Port |
 | `SqlAlchemyCompanyDataRepository` | Infrastructure | Repository |
@@ -174,10 +174,10 @@ skinparam componentStyle rectangle
 actor User
 User -> CLI : run
 CLI -> CompanyDataService : run()
-CompanyDataService -> SyncCompaniesUseCase : execute()
-SyncCompaniesUseCase -> CompanyDataScraperPort : fetch()
+CompanyDataService -> SyncCompanyDataUseCase : execute()
+SyncCompanyDataUseCase -> CompanyDataScraperPort : fetch()
 CompanyDataScraperPort <.. CompanyDataScraper
-SyncCompaniesUseCase -> SqlAlchemyCompanyDataRepositoryPort : save()
+SyncCompanyDataUseCase -> SqlAlchemyCompanyDataRepositoryPort : save()
 SqlAlchemyCompanyDataRepositoryPort <.. SqlAlchemyCompanyDataRepository
 SqlAlchemyCompanyDataRepository -> SQLiteDB : insert/update
 @enduml

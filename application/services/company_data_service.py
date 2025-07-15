@@ -1,7 +1,7 @@
 """Service layer for company-related synchronization operations."""
 
-from application.usecases.sync_companies import SyncCompaniesUseCase
-from domain.dto import SyncCompaniesResultDTO
+from application.usecases.sync_companies import SyncCompanyDataUseCase
+from domain.dto import SyncCompanyDataResultDTO
 from domain.ports import (
     CompanyDataScraperPort,
     LoggerPort,
@@ -25,7 +25,7 @@ class CompanyDataService:
         self.config = config
 
         # Create the use case responsible for performing the sync operation.
-        self.sync_companies_usecase = SyncCompaniesUseCase(
+        self.sync_companies_usecase = SyncCompanyDataUseCase(
             logger=self.logger,
             repository=repository,
             scraper=scraper,
@@ -34,7 +34,7 @@ class CompanyDataService:
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def sync_companies(self) -> SyncCompaniesResultDTO:
+    def sync_companies(self) -> SyncCompanyDataResultDTO:
         """Execute company synchronization using the injected use case."""
         # Delegate execution to the underlying use case and return the result.
         # self.logger.log(

@@ -7,13 +7,13 @@ This document summarizes the class relationships and dependencies in the FLY pro
 
 ## Application Layer
 - **Services**
-  - `CompanyDataService` – orchestrates company synchronization using `SyncCompaniesUseCase`.
+  - `CompanyDataService` – orchestrates company synchronization using `SyncCompanyDataUseCase`.
   - `NsdService` – orchestrates NSD synchronization via `SyncNSDUseCase`.
   - `StatementFetchService` – fetches raw statement pages with `FetchStatementsUseCase`.
   - `StatementParseService` – parses and persists rows using `ParseAndClassifyStatementsUseCase` and a `WorkerPool`.
   - `NsdPredictionService` – computes missing NSD numbers from repository data.
 - **Use Cases**
-  - `SyncCompaniesUseCase` – fetches companies and saves them to the repository.
+  - `SyncCompanyDataUseCase` – fetches companies and saves them to the repository.
   - `SyncNSDUseCase` – downloads NSD documents and persists them.
   - `FetchStatementsUseCase` – retrieves raw statement rows concurrently.
   - `ParseAndClassifyStatementsUseCase` – converts rows to `StatementDTO` and persists them.
@@ -27,7 +27,7 @@ Dependencies are injected through constructors and point inward to domain ports 
   - `CompanyDataDTO`, `CompanyDataRawDTO`, `CompanyDataListingDTO`, `CompanyDataDetailDTO`
   - `NsdDTO`
   - `StatementDTO`, `StatementRowsDTO`
-  - `ExecutionResultDTO`, `PageResultDTO`, `MetricsDTO`, `SyncCompaniesResultDTO`, `WorkerTaskDTO`
+  - `ExecutionResultDTO`, `PageResultDTO`, `MetricsDTO`, `SyncCompanyDataResultDTO`, `WorkerTaskDTO`
 - **Ports** (`domain/ports`)
   - Repository ports: `SqlAlchemyCompanyDataRepositoryPort`, `NSDRepositoryPort`, `RawStatementRepositoryPort`, `ParsedStatementRepositoryPort`.
   - Source ports: `CompanyDataScraperPort`, `NSDSourcePort`, `RawStatementSourcePort`.

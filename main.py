@@ -20,32 +20,35 @@ def main() -> None:
     config = Config()
     logger = Logger(config)
 
-    # Load CLI
-    logger.log(
-        "Start Project FLY",
-        level="info",
-    )
+    try:
 
-    # Load data_cleaner
-    data_cleaner = create_data_cleaner(config, logger)
+        # Load CLI
+        logger.log(
+            "Start Project FLY",
+            level="info",
+        )
 
-    # Entry point for the FLY CLI application
-    # logger.log("Instantiate controller", level="info")
-    controller = CLIAdapter(config=config, logger=logger, data_cleaner=data_cleaner)
+        # Load data_cleaner
+        data_cleaner = create_data_cleaner(config, logger)
 
-    # Run Controller
-    # logger.log("Call Method controller.start()", level="info")
-    controller.start_fly()
-    # logger.log("End  Method controller.start()", level="info")
+        # Entry point for the FLY CLI application
+        # logger.log("Instantiate controller", level="info")
+        controller = CLIAdapter(config=config, logger=logger, data_cleaner=data_cleaner)
 
-    # logger.log("End Instance controller", level="info")
+        # Run Controller
+        # logger.log("Call Method controller.start()", level="info")
+        controller.start_fly()
+        # logger.log("End  Method controller.start()", level="info")
 
-    # Finalize execution with a confirmation message
-    logger.log(
-        "Finish Project FLY",
-        level="info",
-    )
+        # logger.log("End Instance controller", level="info")
 
+        # Finalize execution with a confirmation message
+        logger.log(
+            "Finish Project FLY",
+            level="info",
+        )
+    except Exception as e:
+        logger.log(f"Erro: {e}", )
 
 # Run main function if this script is executed directly
 if __name__ == "__main__":

@@ -10,7 +10,7 @@ activate CLI
 
 == Aplicação ==
 participant "CompanyDataService" as CS
-participant "SyncCompaniesUseCase" as SCUC
+participant "SyncCompanyDataUseCase" as SCUC
 participant "SqlAlchemyCompanyDataRepositoryPort" as CRP
 
 CLI -> CS : _company_service()

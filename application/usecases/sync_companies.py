@@ -3,7 +3,7 @@
 import time
 from typing import List
 
-from domain.dto import SyncCompaniesResultDTO
+from domain.dto import SyncCompanyDataResultDTO
 from domain.dto.company_data_dto import CompanyDataDTO
 from domain.dto.raw_company_data_dto import CompanyDataRawDTO
 from domain.ports import (
@@ -14,7 +14,7 @@ from domain.ports import (
 from infrastructure.helpers.list_flattener import ListFlattener
 
 
-class SyncCompaniesUseCase:
+class SyncCompanyDataUseCase:
     """Synchronize company data from the scraper to the repository."""
 
     def __init__(
@@ -32,7 +32,7 @@ class SyncCompaniesUseCase:
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def synchronize_companies(self) -> SyncCompaniesResultDTO:
+    def synchronize_companies(self) -> SyncCompanyDataResultDTO:
         """Start the full synchronization pipeline.
 
         Steps:
@@ -62,7 +62,7 @@ class SyncCompaniesUseCase:
 
         # self.logger.log("End  Method sync_companies_usecase.run()", level="info")
 
-        return SyncCompaniesResultDTO(
+        return SyncCompanyDataResultDTO(
             processed_count=len(results.items),
             skipped_count=len(existing_company_codes),
             bytes_downloaded=bytes_downloaded,
@@ -80,4 +80,4 @@ class SyncCompaniesUseCase:
         # Persist the converted DTOs in bulk for efficiency.
         self.repository.save_all(dtos)
 
-        # self.logger.log("End  Method _save_batch() in SyncCompaniesUseCase in CompanyDataService", level="info")
+        # self.logger.log("End  Method _save_batch() in SyncCompanyDataUseCase in CompanyDataService", level="info")

@@ -7,8 +7,8 @@ from typing import List, Optional
 
 
 @dataclass(frozen=True)
-class SyncCompaniesResultDTO:
-    """Summary information returned by :class:`SyncCompaniesUseCase`."""
+class SyncCompanyDataResultDTO:
+    """Summary information returned by :class:`SyncCompanyDataUseCase`."""
 
     processed_count: int
     skipped_count: int

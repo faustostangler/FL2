@@ -2,7 +2,7 @@ from unittest.mock import MagicMock
 
 # from application.services.company_services import CompanyDataService
 from application.services.company_data_service import CompanyDataService
-from application.usecases.sync_companies import SyncCompaniesUseCase
+from application.usecases.sync_companies import SyncCompanyDataUseCase
 from domain.ports import CompanyDataScraperPort, SqlAlchemyCompanyDataRepositoryPort
 from tests.conftest import DummyConfig, DummyLogger
 
@@ -11,12 +11,12 @@ def test_sync_companies_calls_usecase(monkeypatch):
     dummy_config = DummyConfig()
     dummy_config.global_settings.max_workers = 3
 
-    mock_usecase_cls = MagicMock(spec=SyncCompaniesUseCase)
+    mock_usecase_cls = MagicMock(spec=SyncCompanyDataUseCase)
     mock_usecase_inst = MagicMock()
     mock_usecase_cls.return_value = mock_usecase_inst
     monkeypatch.setattr(
-        # "application.services.company_services.SyncCompaniesUseCase",
-        "application.services.company_service.SyncCompaniesUseCase",
+        # "application.services.company_services.SyncCompanyDataUseCase",
+        "application.services.company_service.SyncCompanyDataUseCase",
         mock_usecase_cls,
     )
 

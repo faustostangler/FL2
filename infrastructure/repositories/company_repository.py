@@ -34,6 +34,8 @@ class SqlAlchemyCompanyDataRepository(
             config (Config): Application configuration with database connection details.
             logger (LoggerPort): Logging adapter used for tracking internal behavior.
         """
+        super().__init__(config, logger) 
+
         self.config = config
         self.logger = logger
 

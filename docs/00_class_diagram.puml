@@ -57,14 +57,14 @@ package "fly" {
         package "fly.application.services" {
             class CompanyDataService {
                 +__init__(config: Config, logger: LoggerPort, repository: SqlAlchemyCompanyDataRepositoryPort, scraper: CompanyDataScraperPort)
-                +sync_companies() : SyncCompaniesResultDTO
+                +sync_companies() : SyncCompanyDataResultDTO
                 }
-                CompanyDataService --> SyncCompaniesUseCase
+                CompanyDataService --> SyncCompanyDataUseCase
                 CompanyDataService --> LoggerPort
                 CompanyDataService --> SqlAlchemyCompanyDataRepositoryPort
                 CompanyDataService --> CompanyDataScraperPort
                 CompanyDataService --> Config
-                CompanyDataService --> SyncCompaniesResultDTO
+                CompanyDataService --> SyncCompanyDataResultDTO
 
             class CompanyDataMapper {
                 +merge_company_dtos(listing: CompanyDataListingDTO, detail: CompanyDataDetailDTO) : CompanyDataRawDTO
@@ -95,16 +95,16 @@ package "fly" {
             }
         }
         package "fly.application.usecases" {
-            class SyncCompaniesUseCase {
-                +synchronize_companies() : SyncCompaniesResultDTO
+            class SyncCompanyDataUseCase {
+                +synchronize_companies() : SyncCompanyDataResultDTO
                 -_save_batch(buffer: List[CompanyDataRawDTO]) : void
                 }
-                SyncCompaniesUseCase --> LoggerPort
-                SyncCompaniesUseCase --> SqlAlchemyCompanyDataRepositoryPort
-                SyncCompaniesUseCase --> CompanyDataScraperPort
-                SyncCompaniesUseCase --> SyncCompaniesResultDTO
-                SyncCompaniesUseCase --> CompanyDataDTO
-                SyncCompaniesUseCase --> CompanyDataRawDTO
+                SyncCompanyDataUseCase --> LoggerPort
+                SyncCompanyDataUseCase --> SqlAlchemyCompanyDataRepositoryPort
+                SyncCompanyDataUseCase --> CompanyDataScraperPort
+                SyncCompanyDataUseCase --> SyncCompanyDataResultDTO
+                SyncCompanyDataUseCase --> CompanyDataDTO
+                SyncCompanyDataUseCase --> CompanyDataRawDTO
             class SyncNSDUseCase {
                 +synchronize_nsd() : void
                 -_save_batch(buffer: list[NsdDTO]) : void
@@ -363,7 +363,7 @@ package "fly" {
                 +bytes_downloaded: int
                 }
                 CompanyDataScraper --> PageResultDTO
-            class SyncCompaniesResultDTO {
+            class SyncCompanyDataResultDTO {
                 +processed_count: int
                 +skipped_count: int
                 +bytes_downloaded: int

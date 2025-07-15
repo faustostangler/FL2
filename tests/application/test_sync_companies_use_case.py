@@ -1,11 +1,11 @@
 import types
 from unittest.mock import MagicMock
 
-from application.usecases.sync_companies import SyncCompaniesUseCase
+from application.usecases.sync_companies import SyncCompanyDataUseCase
 from domain.dto.company_data_dto import CompanyDataDTO
 from domain.dto.execution_result_dto import ExecutionResultDTO
 from domain.dto.metrics_dto import MetricsDTO
-from domain.dto.sync_companies_result_dto import SyncCompaniesResultDTO
+from domain.dto.sync_companies_result_dto import SyncCompanyDataResultDTO
 from domain.ports import CompanyDataScraperPort, SqlAlchemyCompanyDataRepositoryPort
 from tests.conftest import DummyLogger
 
@@ -67,7 +67,7 @@ def test_execute_converts_and_saves():
     scraper.fetch_all.side_effect = fake_fetch_all
     scraper.metrics_collector = types.SimpleNamespace(network_bytes=100)
 
-    usecase = SyncCompaniesUseCase(
+    usecase = SyncCompanyDataUseCase(
         logger=DummyLogger(),
         repository=repo,
         scraper=scraper,
@@ -83,7 +83,7 @@ def test_execute_converts_and_saves():
     assert isinstance(saved[0], CompanyDataDTO)
     assert saved[0].cvm_code == "001"
 
-    assert isinstance(result, SyncCompaniesResultDTO)
+    assert isinstance(result, SyncCompanyDataResultDTO)
     assert result.processed_count == 1
     assert result.skipped_count == 1
     assert result.bytes_downloaded == 100
