@@ -7,13 +7,13 @@ from typing import Callable, List, Optional, Tuple
 from application.usecases.fetch_statements import FetchStatementsUseCase
 from domain.dto import NsdDTO, StatementRowsDTO
 from domain.ports import (
-    CompanyRepositoryPort,
     LoggerPort,
     MetricsCollectorPort,
     NSDRepositoryPort,
     ParsedStatementRepositoryPort,
     RawStatementRepositoryPort,
     RawStatementSourcePort,
+    SqlAlchemyCompanyRepositoryPort,
 )
 from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
@@ -27,7 +27,7 @@ class StatementFetchService:
         logger: LoggerPort,
         source: RawStatementSourcePort,
         parsed_statements_repo: ParsedStatementRepositoryPort,
-        company_repo: CompanyRepositoryPort,
+        company_repo: SqlAlchemyCompanyRepositoryPort,
         nsd_repo: NSDRepositoryPort,
         raw_statement_repo: RawStatementRepositoryPort,
         config: Config,

@@ -11,7 +11,7 @@ start_fly() é chamado e executa três serviços, em sequência: os métodos _co
 ## O método _company_service() 
 Primeiro instancia Mapper, Repository e Scraper, com a seguintes características. 
 Mapper: CompanyMapper
-Repository: SqlAlchemyCompanyRepository, que implementa os métodos do contrato CompanyRepositoryPort, o qual herda de BaseRepositoryPort (com os métodos save_all(), get_all(), has_item(), get_by_id() e get_all_primary_keys()), e também do BaseRepository, via BaseRepositoryPort. A implementação respeita o princípio de substituição de Liskov.
+Repository: SqlAlchemyCompanyRepository, que implementa os métodos do contrato SqlAlchemyCompanyRepositoryPort, o qual herda de SqlAlchemyRepositoryBasePort (com os métodos save_all(), get_all(), has_item(), get_by_id() e get_all_primary_keys()), e também do SqlAlchemyRepositoryBase, via SqlAlchemyRepositoryBasePort. A implementação respeita o princípio de substituição de Liskov.
 Scraper: CompanyExchangeScraper, que implementa o contrato CompanySourcePort, derivado de BaseSourcePort (com o método fetch_all()). Sua construção recebe as dependências criadas CompanyMapper e injetadas WorkerPoolExecutor e MetricsCollector, e também segue o princípio de substituição de Liskov. Além disso, o construtor do CompanyExchangeScraper cria instâncias de EntryCleaner e DetailFetcher (e seu método fetch_detail()), que vão ser injetados na instanciação de CompanyDetailProcessor. O CompanyDetailProcessor contém o método process_entry, que vai realizar a implantação concreta do código. 
 
 Então o método _company_service() instancia o serviço CompanyService com a injeção do Repository e do Scraper, e chama o método sync_companies()
@@ -41,7 +41,7 @@ O resultado é um ExecutionResultDTO contendo os dados e as métricas do process
 
 
 ## O método _nsd_service()
-Repository: SqlAlchemyNsdRepository, que implementa os métodos do contrato NSDRepositoryPort, o qual herda de BaseRepositoryPort (com os métodos save_all(), get_all(), has_item(), get_by_id() e get_all_primary_keys()), e também do BaseRepository, via BaseRepositoryPort. A implementação respeita o princípio de substituição de Liskov.
+Repository: SqlAlchemyNsdRepository, que implementa os métodos do contrato NSDRepositoryPort, o qual herda de SqlAlchemyRepositoryBasePort (com os métodos save_all(), get_all(), has_item(), get_by_id() e get_all_primary_keys()), e também do SqlAlchemyRepositoryBase, via SqlAlchemyRepositoryBasePort. A implementação respeita o princípio de substituição de Liskov.
 Scraper: NsdScraper, que implementa o contrato NSDSourcePort, derivado de BaseSourcePort (com o método fetch_all()). Sua construção recebe as dependências criadas FetchUtils e injetadas WorkerPoolExecutor e MetricsCollector, e também segue o princípio de substituição de Liskov. 
 
 Então o método _nsd_service() instancia o serviço NsdService com a injeção do Repository e do Scraper, e chama o método sync_nsd()

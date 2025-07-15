@@ -5,10 +5,10 @@ from typing import Any, Set
 
 from domain.dto.statement_rows_dto import StatementRowsDTO
 
-from .base_repository_port import BaseRepositoryPort
+from .base_repository_port import SqlAlchemyRepositoryBasePort
 
 
-class ParsedStatementRepositoryPort(BaseRepositoryPort[StatementRowsDTO, int], ABC):
+class ParsedStatementRepositoryPort(SqlAlchemyRepositoryBasePort[StatementRowsDTO, int], ABC):
     """Port for persisting raw statement rows."""
 
     @abstractmethod

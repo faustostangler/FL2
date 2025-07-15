@@ -9,7 +9,7 @@ T = TypeVar("T")   # DTO
 K = TypeVar("K")   # Key type: str, int, etc.
 
 
-class BaseRepositoryPort(ABC, Generic[T, K]):
+class SqlAlchemyRepositoryBasePort(ABC, Generic[T, K]):
     """Generic repository port for persistence operations."""
 
     @abstractmethod

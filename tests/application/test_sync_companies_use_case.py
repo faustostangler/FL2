@@ -6,12 +6,12 @@ from domain.dto.company_dto import CompanyDTO
 from domain.dto.execution_result_dto import ExecutionResultDTO
 from domain.dto.metrics_dto import MetricsDTO
 from domain.dto.sync_companies_result_dto import SyncCompaniesResultDTO
-from domain.ports import CompanyRepositoryPort, CompanySourcePort
+from domain.ports import CompanySourcePort, SqlAlchemyCompanyRepositoryPort
 from tests.conftest import DummyLogger
 
 
 def test_execute_converts_and_saves():
-    repo = MagicMock(spec=CompanyRepositoryPort)
+    repo = MagicMock(spec=SqlAlchemyCompanyRepositoryPort)
     repo.get_all_primary_keys = MagicMock(return_value={"SKIP"})
 
     raw = types.SimpleNamespace(

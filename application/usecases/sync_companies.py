@@ -6,7 +6,7 @@ from typing import List
 from domain.dto import SyncCompaniesResultDTO
 from domain.dto.company_dto import CompanyDTO
 from domain.dto.raw_company_dto import CompanyRawDTO
-from domain.ports import CompanyRepositoryPort, CompanySourcePort, LoggerPort
+from domain.ports import CompanySourcePort, LoggerPort, SqlAlchemyCompanyRepositoryPort
 from infrastructure.helpers.list_flattener import ListFlattener
 
 
@@ -16,7 +16,7 @@ class SyncCompaniesUseCase:
     def __init__(
         self,
         logger: LoggerPort,
-        repository: CompanyRepositoryPort,
+        repository: SqlAlchemyCompanyRepositoryPort,
         scraper: CompanySourcePort,
         max_workers: int = 1,
     ):

@@ -8,14 +8,16 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from domain.dto.company_dto import CompanyDTO
-from domain.ports import CompanyRepositoryPort, LoggerPort
+from domain.ports import LoggerPort, SqlAlchemyCompanyRepositoryPort
 from infrastructure.config import Config
 from infrastructure.models.base_model import BaseModel
 from infrastructure.models.company_model import CompanyModel
-from infrastructure.repositories.base_repository import BaseRepository
+from infrastructure.repositories.sqlalchemy_repository_base import (
+    SqlAlchemyRepositoryBase,
+)
 
 
-class SqlAlchemyCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort):
+class SqlAlchemyCompanyRepository(SqlAlchemyRepositoryBase[CompanyDTO], SqlAlchemyCompanyRepositoryPort):
     """Concrete implementation of the repository using SQLite.
 
     Note:

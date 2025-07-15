@@ -11,7 +11,7 @@ activate CLI
 == Aplicação ==
 participant "CompanyService" as CS
 participant "SyncCompaniesUseCase" as SCUC
-participant "CompanyRepositoryPort" as CRP
+participant "SqlAlchemyCompanyRepositoryPort" as CRP
 
 CLI -> CS : _company_service()
 activate CS
@@ -41,7 +41,7 @@ SCUC -> CRP : save(companyDTO)
 activate CRP
 
 == Infraestrutura de Persistência ==
-participant "SQLAlchemyCompanyRepository\n(implementa CompanyRepositoryPort)" as SCRepo
+participant "SQLAlchemyCompanyRepository\n(implementa SqlAlchemyCompanyRepositoryPort)" as SCRepo
 participant "SQLiteDB" as DB
 
 CRP -> SCRepo : insert_or_update(companyDTO)

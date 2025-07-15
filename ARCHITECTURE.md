@@ -19,7 +19,7 @@ Dependencies flow inward only: presentation depends on application, which depend
 - **Service** – Coordinates use cases and domain objects.
 - **UseCase** – Encapsulates a single business scenario, e.g. `SyncCompaniesUseCase`.
 - **DTO** – Immutable data container passed across layers. All DTOs live in `domain/dto` and use `@dataclass(frozen=True)`.
-- **Port** – Interface defined in `domain/ports` (e.g., `CompanyRepositoryPort`).
+- **Port** – Interface defined in `domain/ports` (e.g., `SqlAlchemyCompanyRepositoryPort`).
 - **Repository** – Infrastructure implementation of a port using SQLAlchemy.
 - **Entity** – ORM model mapping a table; converts to/from DTO (see `CompanyModel`).
 
@@ -76,8 +76,8 @@ SpecificPort (typed, domain)
 ConcreteAdapter (implementation, infrastructure)
 
 Example: 
-Layer: Base Port | Element BaseRepositoryPort(T) | File domain/ports/base_repository_port.py
-Layer: Specific Port | Element CompanyRepositoryPort | File domain/ports/company_repository_port.py
+Layer: Base Port | Element SqlAlchemyRepositoryBasePort(T) | File domain/ports/base_repository_port.py
+Layer: Specific Port | Element SqlAlchemyCompanyRepositoryPort | File domain/ports/company_repository_port.py
 Layer: Implementation | Element SqlAlchemyCompanyRepository | File infrastructure/repositories/company_repository.py
 
 ### 2. Application – The Managers and Project Coordinators
@@ -146,7 +146,7 @@ The table below maps the main components to their respective layers.
 | `CompanyService` | Application | Service |
 | `SyncCompaniesUseCase` | Application | Use case |
 | `CompanyDTO` | Domain | DTO |
-| `CompanyRepositoryPort` | Domain | Port |
+| `SqlAlchemyCompanyRepositoryPort` | Domain | Port |
 | `SqlAlchemyCompanyRepository` | Infrastructure | Repository |
 | `CompanyExchangeScraper` | Infrastructure | Adapter |
 
@@ -155,7 +155,7 @@ The table below maps the main components to their respective layers.
 Every external dependency is accessed through a port defined in the domain. The
 infrastructure layer implements these ports. For example:
 
-- `CompanyRepositoryPort` ← `SqlAlchemyCompanyRepository`
+- `SqlAlchemyCompanyRepositoryPort` ← `SqlAlchemyCompanyRepository`
 - `CompanySourcePort` ← `CompanyExchangeScraper`
 
 ### Dependency Map
@@ -177,8 +177,8 @@ CLI -> CompanyService : run()
 CompanyService -> SyncCompaniesUseCase : execute()
 SyncCompaniesUseCase -> CompanySourcePort : fetch()
 CompanySourcePort <.. CompanyExchangeScraper
-SyncCompaniesUseCase -> CompanyRepositoryPort : save()
-CompanyRepositoryPort <.. SqlAlchemyCompanyRepository
+SyncCompaniesUseCase -> SqlAlchemyCompanyRepositoryPort : save()
+SqlAlchemyCompanyRepositoryPort <.. SqlAlchemyCompanyRepository
 SqlAlchemyCompanyRepository -> SQLiteDB : insert/update
 @enduml
 ```

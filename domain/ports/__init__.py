@@ -1,8 +1,8 @@
 """Exports for domain port interfaces."""
 
-from .base_repository_port import BaseRepositoryPort
+from .base_repository_port import SqlAlchemyRepositoryBasePort
 from .base_source_port import BaseSourcePort
-from .company_repository_port import CompanyRepositoryPort
+from .company_repository_port import SqlAlchemyCompanyRepositoryPort
 from .company_source_port import CompanySourcePort
 from .data_cleaner_port import DataCleanerPort
 from .logger_port import LoggerPort
@@ -18,9 +18,9 @@ __all__ = [
     "WorkerPoolPort",
     "LoggerPort",
     "DataCleanerPort",
-    "BaseRepositoryPort",
+    "SqlAlchemyRepositoryBasePort",
     "BaseSourcePort",
-    "CompanyRepositoryPort",
+    "SqlAlchemyCompanyRepositoryPort",
     "CompanySourcePort",
     "MetricsCollectorPort",
     "NSDRepositoryPort",

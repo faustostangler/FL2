@@ -5,8 +5,17 @@ from infrastructure.factories import create_data_cleaner
 from infrastructure.logging import Logger
 from presentation import CLIAdapter
 
-# Executa a aplicação principal se este arquivo for executado diretamente
-if __name__ == "__main__":
+
+def main() -> None:
+    """Inicializa e executa a aplicação FLY pela interface de linha de comando (CLI).
+
+    Esta função realiza a sequência de inicialização dos componentes principais:
+    - Instancia o objeto de configuração (`Config`).
+    - Cria o logger principal.
+    - Cria o componente de limpeza de dados.
+    - Instancia o controlador CLI com as dependências injetadas.
+    - Inicia o processo principal da aplicação via `controller.start_fly()`.
+    """
     # Inicializa a configuração
     config = Config()
     logger = Logger(config)
@@ -36,3 +45,7 @@ if __name__ == "__main__":
         "Finish Project FLY",
         level="info",
     )
+
+# Executa a aplicação principal se este arquivo for executado diretamente
+if __name__ == "__main__":
+    main()

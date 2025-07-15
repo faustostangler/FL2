@@ -2,7 +2,7 @@
 
 from application.usecases.sync_companies import SyncCompaniesUseCase
 from domain.dto import SyncCompaniesResultDTO
-from domain.ports import CompanyRepositoryPort, CompanySourcePort, LoggerPort
+from domain.ports import CompanySourcePort, LoggerPort, SqlAlchemyCompanyRepositoryPort
 from infrastructure.config import Config
 
 
@@ -13,7 +13,7 @@ class CompanyService:
         self,
         config: Config,
         logger: LoggerPort,
-        repository: CompanyRepositoryPort,
+        repository: SqlAlchemyCompanyRepositoryPort,
         scraper: CompanySourcePort,
     ):
         """Initialize dependencies for company synchronization."""

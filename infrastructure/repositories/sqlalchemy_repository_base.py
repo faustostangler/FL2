@@ -5,7 +5,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from domain.ports import LoggerPort
-from domain.ports.base_repository_port import BaseRepositoryPort
+from domain.ports.base_repository_port import SqlAlchemyRepositoryBasePort
 from infrastructure.config import Config
 from infrastructure.helpers.list_flattener import ListFlattener
 from infrastructure.models.base_model import BaseModel
@@ -13,7 +13,7 @@ from infrastructure.models.base_model import BaseModel
 T = TypeVar("T")  # T pode ser CompanyDTO, StatementDTO, etc.
 
 
-class BaseRepository(BaseRepositoryPort[T, Any], ABC):
+class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, Any], ABC):
     """
     Contract - Interface genérica para repositórios de leitura/escrita.
     Pode ser especializada para qualquer tipo de DTO.

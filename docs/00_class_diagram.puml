@@ -56,12 +56,12 @@ package "fly" {
 
         package "fly.application.services" {
             class CompanyService {
-                +__init__(config: Config, logger: LoggerPort, repository: CompanyRepositoryPort, scraper: CompanySourcePort)
+                +__init__(config: Config, logger: LoggerPort, repository: SqlAlchemyCompanyRepositoryPort, scraper: CompanySourcePort)
                 +sync_companies() : SyncCompaniesResultDTO
                 }
                 CompanyService --> SyncCompaniesUseCase
                 CompanyService --> LoggerPort
-                CompanyService --> CompanyRepositoryPort
+                CompanyService --> SqlAlchemyCompanyRepositoryPort
                 CompanyService --> CompanySourcePort
                 CompanyService --> Config
                 CompanyService --> SyncCompaniesResultDTO
@@ -89,7 +89,7 @@ package "fly" {
                 StatementFetchService --> LoggerPort
                 StatementFetchService --> RawStatementSourcePort
                 StatementFetchService --> ParsedStatementRepositoryPort
-                StatementFetchService --> CompanyRepositoryPort
+                StatementFetchService --> SqlAlchemyCompanyRepositoryPort
                 StatementFetchService --> NSDRepositoryPort
                 StatementFetchService --> RawStatementRepositoryPort
             }
@@ -100,7 +100,7 @@ package "fly" {
                 -_save_batch(buffer: List[CompanyRawDTO]) : void
                 }
                 SyncCompaniesUseCase --> LoggerPort
-                SyncCompaniesUseCase --> CompanyRepositoryPort
+                SyncCompaniesUseCase --> SqlAlchemyCompanyRepositoryPort
                 SyncCompaniesUseCase --> CompanySourcePort
                 SyncCompaniesUseCase --> SyncCompaniesResultDTO
                 SyncCompaniesUseCase --> CompanyDTO
@@ -151,23 +151,23 @@ package "fly" {
                 -worker_id : str
                 }
 
-            interface BaseRepositoryPort<T> {
+            interface SqlAlchemyRepositoryBasePort<T> {
                 +save_all(items: List<T>) : void
                 +get_all() : List<T>
                 +has_item(identifier: str) : bool
                 +get_by_id(id: str) : T
                 }
 
-            interface CompanyRepositoryPort
-                CompanyRepositoryPort --|> BaseRepositoryPort        
+            interface SqlAlchemyCompanyRepositoryPort
+                SqlAlchemyCompanyRepositoryPort --|> SqlAlchemyRepositoryBasePort        
 
             interface NSDRepositoryPort {
                 }
-                NSDRepositoryPort --|> BaseRepositoryPort
+                NSDRepositoryPort --|> SqlAlchemyRepositoryBasePort
 
             interface StatementsRepositoryPort {
                 }
-                StatementsRepositoryPort --|> BaseRepositoryPort
+                StatementsRepositoryPort --|> SqlAlchemyRepositoryBasePort
 
             interface MetricsCollectorPort {
                 +record_network_bytes(...) : void
@@ -654,8 +654,8 @@ package "fly" {
                 +get_by_id(id: str) : CompanyDTO
                 +get_all_primary_keys() : Set[str>
                 }
-                SqlAlchemyCompanyRepository --|> CompanyRepositoryPort
-                SqlAlchemyCompanyRepository --|> BaseRepository
+                SqlAlchemyCompanyRepository --|> SqlAlchemyCompanyRepositoryPort
+                SqlAlchemyCompanyRepository --|> SqlAlchemyRepositoryBase
                 SqlAlchemyCompanyRepository --> CompanyDTO
 
             class SqlAlchemyNsdRepository {
@@ -666,7 +666,7 @@ package "fly" {
                 +get_all_primary_keys() : Set[int]
                 }
                 SqlAlchemyNsdRepository --|> NSDRepositoryPort
-                SqlAlchemyNsdRepository --|> BaseRepository
+                SqlAlchemyNsdRepository --|> SqlAlchemyRepositoryBase
                 SqlAlchemyNsdRepository --> NsdDTO
 
             class SqlAlchemyRawStatementRepository {
@@ -676,10 +676,10 @@ package "fly" {
                 +get_by_id(id: int) : StatementDTO
                 }
                 SqlAlchemyRawStatementRepository --|> RawStatementRepositoryPort
-                SqlAlchemyRawStatementRepository --|> BaseRepository
+                SqlAlchemyRawStatementRepository --|> SqlAlchemyRepositoryBase
                 SqlAlchemyRawStatementRepository --> StatementDTO
 
-            abstract class BaseRepository<T> {
+            abstract class SqlAlchemyRepositoryBase<T> {
                 -config : Config
                 -logger : LoggerPort
                 -engine
@@ -690,10 +690,10 @@ package "fly" {
                 +has_item(identifier: str) : bool
                 +get_by_id(id: str) : T
                 }
-                BaseRepository --|> domain.ports.BaseRepositoryPort
-                BaseRepository --> fly.infrastructure.config.Config
-                BaseRepository --> domain.ports.LoggerPort
-                BaseRepository --> fly.infrastructure.models.BaseModel
+                SqlAlchemyRepositoryBase --|> domain.ports.SqlAlchemyRepositoryBasePort
+                SqlAlchemyRepositoryBase --> fly.infrastructure.config.Config
+                SqlAlchemyRepositoryBase --> domain.ports.LoggerPort
+                SqlAlchemyRepositoryBase --> fly.infrastructure.models.BaseModel
 
         }
     }

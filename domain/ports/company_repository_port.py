@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from domain.dto.company_dto import CompanyDTO
 
-from .base_repository_port import BaseRepositoryPort
+from .base_repository_port import SqlAlchemyRepositoryBasePort
 
 
-class CompanyRepositoryPort(BaseRepositoryPort[CompanyDTO, str]):
+class SqlAlchemyCompanyRepositoryPort(SqlAlchemyRepositoryBasePort[CompanyDTO, str]):
     """Port for company persistence operations."""
 
