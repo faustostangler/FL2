@@ -63,7 +63,7 @@ class CLIAdapter:
 
         # Start the company synchronization workflow.
         # self.logger.log("Call Method controller.run()._company_service()", level="info")
-        # self._company_service()
+        self._company_service()
         # self.logger.log("End  Method controller.run()._company_service()", level="info")
 
         # self.logger.log("Call Method controller.run()._nsd_service()", level="info")
