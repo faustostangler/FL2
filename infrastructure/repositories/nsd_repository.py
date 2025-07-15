@@ -4,47 +4,32 @@ from __future__ import annotations
 
 from typing import List
 
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-
 from domain.dto.nsd_dto import NsdDTO
 from domain.ports import LoggerPort, NSDRepositoryPort
 from infrastructure.config import Config
 from infrastructure.helpers.list_flattener import ListFlattener
-from infrastructure.models.base_model import BaseModel
 from infrastructure.models.nsd_model import NSDModel
 
+from .base_repository import BaseRepository
 
-class SqlAlchemyNsdRepository(NSDRepositoryPort):
+
+class SqlAlchemyNsdRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
     """Concrete repository for NsdDTO using SQLite via SQLAlchemy."""
 
     def __init__(self, config: Config, logger: LoggerPort) -> None:
-        self.config = config
-        self.logger = logger
-
-        self.engine = create_engine(
-            config.database.connection_string,
-            connect_args={"check_same_thread": False},
-            future=True,
-        )
-        with self.engine.connect() as conn:
-            conn.execute(text("PRAGMA journal_mode=WAL"))
-
-        self.Session = sessionmaker(
-            bind=self.engine, autoflush=True, expire_on_commit=True
-        )
-        BaseModel.metadata.create_all(self.engine)
-
-        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
+        super().__init__(config, logger)
 
     def save_all(self, items: List[NsdDTO]) -> None:
         """Persist a list of ``CompanyDTO`` objects."""
         session = self.Session()
         try:
-            flat_items = ListFlattener.flatten(items)  # recebe nested lists, devolve flat list
+            flat_items = ListFlattener.flatten(
+                items
+            )  # recebe nested lists, devolve flat list
 
             valid_items = [
-                item for item in flat_items
+                item
+                for item in flat_items
                 if item.nsd > 0 and item.sent_date is not None
             ]
 

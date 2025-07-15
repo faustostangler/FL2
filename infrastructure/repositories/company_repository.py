@@ -4,18 +4,16 @@ from __future__ import annotations
 
 from typing import List, Set
 
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-
 from domain.dto.company_dto import CompanyDTO
 from domain.ports import CompanyRepositoryPort, LoggerPort
 from infrastructure.config import Config
 from infrastructure.helpers.list_flattener import ListFlattener
-from infrastructure.models.base_model import BaseModel
 from infrastructure.models.company_model import CompanyModel
 
+from .base_repository import BaseRepository
 
-class SqlAlchemyCompanyRepository(CompanyRepositoryPort):
+
+class SqlAlchemyCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort):
     """Concrete implementation of the repository using SQLite.
 
     Note:
@@ -26,34 +24,17 @@ class SqlAlchemyCompanyRepository(CompanyRepositoryPort):
     """
 
     def __init__(self, config: Config, logger: LoggerPort) -> None:
-        self.config = config
-        self.logger = logger
-
-        self.engine = create_engine(
-            config.database.connection_string,
-            connect_args={"check_same_thread": False},
-            future=True,
-        )
-        with self.engine.connect() as conn:
-            conn.execute(text("PRAGMA journal_mode=WAL"))
-
-        self.Session = sessionmaker(
-            bind=self.engine, autoflush=True, expire_on_commit=True
-        )
-        BaseModel.metadata.create_all(self.engine)
-
-        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
+        super().__init__(config, logger)
 
     def save_all(self, items: List[CompanyDTO]) -> None:
         """Persist a list of ``CompanyDTO`` objects."""
         session = self.Session()
         try:
-            flat_items = ListFlattener.flatten(items)  # recebe nested lists, devolve flat list
+            flat_items = ListFlattener.flatten(
+                items
+            )  # recebe nested lists, devolve flat list
 
-            valid_items = [
-                item for item in flat_items
-                if item is not None
-            ]
+            valid_items = [item for item in flat_items if item is not None]
 
             for dto in valid_items:
                 session.merge(CompanyModel.from_dto(dto))

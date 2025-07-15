@@ -2,49 +2,32 @@ from __future__ import annotations
 
 from typing import Any, List, Set
 
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-
 from domain.dto.statement_rows_dto import StatementRowsDTO
 from domain.ports import LoggerPort, ParsedStatementRepositoryPort
 from infrastructure.config import Config
 from infrastructure.helpers.list_flattener import ListFlattener
-from infrastructure.models.base_model import BaseModel
 from infrastructure.models.statement_rows_model import StatementRowsModel
 
+from .base_repository import BaseRepository
 
-class SqlAlchemyParsedStatementRepository(ParsedStatementRepositoryPort):
+
+class SqlAlchemyParsedStatementRepository(
+    BaseRepository[StatementRowsDTO], ParsedStatementRepositoryPort
+):
     """SQLite-backed repository for ``StatementRowsDTO`` objects."""
 
     def __init__(self, config: Config, logger: LoggerPort) -> None:
-        self.config = config
-        self.logger = logger
-
-        self.engine = create_engine(
-            config.database.connection_string,
-            connect_args={"check_same_thread": False},
-            future=True,
-        )
-        with self.engine.connect() as conn:
-            conn.execute(text("PRAGMA journal_mode=WAL"))
-
-        self.Session = sessionmaker(
-            bind=self.engine, autoflush=True, expire_on_commit=True
-        )
-        BaseModel.metadata.create_all(self.engine)
-
-        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
+        super().__init__(config, logger)
 
     def save_all(self, items: List[StatementRowsDTO]) -> None:
         session = self.Session()
 
         try:
-            flat_items = ListFlattener.flatten(items)  # recebe nested lists, devolve flat list
+            flat_items = ListFlattener.flatten(
+                items
+            )  # recebe nested lists, devolve flat list
 
-            valid_items = [
-                item for item in flat_items
-                if item is not None
-            ]
+            valid_items = [item for item in flat_items if item is not None]
 
             for dto in valid_items:
                 session.merge(StatementRowsModel.from_dto(dto))
@@ -52,12 +35,13 @@ class SqlAlchemyParsedStatementRepository(ParsedStatementRepositoryPort):
 
             if len(valid_items) > 0:
                 self.logger.log(
-                    f"Saved {len(valid_items)} parsed statement rows", 
-                    level="info"
+                    f"Saved {len(valid_items)} parsed statement rows", level="info"
                 )
         except Exception as exc:  # noqa: BLE001
             session.rollback()
-            self.logger.log(f"Failed to save parsed statement rows: {exc}", level="error")
+            self.logger.log(
+                f"Failed to save parsed statement rows: {exc}", level="error"
+            )
             raise
         finally:
             session.close()
@@ -110,6 +94,7 @@ class SqlAlchemyParsedStatementRepository(ParsedStatementRepositoryPort):
         account: str,
     ) -> StatementRowsDTO:
         """Return exactly one raw row matching the full composite key.
+
         Raises if not found.
         """
         session = self.Session()
@@ -132,14 +117,14 @@ class SqlAlchemyParsedStatementRepository(ParsedStatementRepositoryPort):
             session.close()
 
     def get_by_column(self, column_name: str, value: Any) -> List[StatementRowsDTO]:
-        """
-        Return all raw rows where `column_name == value`.
-        """
+        """Return all raw rows where `column_name == value`."""
         session = self.Session()
         try:
             # Dynamically get the column attribute from the model
             column_attr = getattr(StatementRowsModel, column_name)
-            models = session.query(StatementRowsModel).filter(column_attr == value).all()
+            models = (
+                session.query(StatementRowsModel).filter(column_attr == value).all()
+            )
             return [m.to_dto() for m in models]
         finally:
             session.close()

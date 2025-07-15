@@ -37,7 +37,7 @@ class CompanyService:
         #     "Call Method sync_companies_usecase.synchronize_companies()",
         #     level="info",
         # )
-            result = self.sync_companies_usecase.synchronize_companies()
+        result = self.sync_companies_usecase.synchronize_companies()
         # self.logger.log(
         #     "End  Method sync_companies_usecase.synchronize_companies()",
         #     level="info",
