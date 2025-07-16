@@ -4,8 +4,9 @@ from application.services.statement_parse_service import StatementParseService
 from application.usecases.parse_and_classify_statements import (
     ParseAndClassifyStatementsUseCase,
 )
-from domain.dto import NsdDTO, StatementRowsDTO
-from domain.ports import SqlAlchemyRawStatementRepository
+from domain.dto import NsdDTO
+from domain.dto.raw_statement_dto import RawStatementDTO
+from infrastructure.repositories import SqlAlchemyRawStatementRepository
 from tests.conftest import DummyConfig, DummyLogger
 
 
@@ -36,7 +37,7 @@ def test_parse_statements_invokes_usecase_and_finalize(monkeypatch):
     parse_all = MagicMock()
     monkeypatch.setattr(service, "_parse_all", parse_all)
 
-    fetched = [(MagicMock(spec=NsdDTO), [MagicMock(spec=StatementRowsDTO)])]
+    fetched = [(MagicMock(spec=NsdDTO), [MagicMock(spec=RawStatementDTO)])]
 
     service.parse_statements(fetched)
 

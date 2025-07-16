@@ -18,13 +18,14 @@ from infrastructure.repositories import (
 )
 from infrastructure.scrapers.company_data_exchange_scraper import CompanyDataScraper
 from infrastructure.scrapers.nsd_scraper import NsdScraper
-from infrastructure.scrapers.raw_statements_scraper import (
+from infrastructure.scrapers.requests_raw_statement_scraper import (
     RawStatementScraper,
 )
 
 
 class CLIAdapter:
-    """Primary CLI controller responsible for orchestrating FLY application flows."""
+    """Primary CLI controller responsible for orchestrating FLY application
+    flows."""
 
     def __init__(self, config: Config, logger: LoggerPort, data_cleaner):
         """Initialize CLIAdapter and its supporting infrastructure.
@@ -93,7 +94,9 @@ class CLIAdapter:
 
         # Set up persistent repository for companies
         # self.logger.log("Instantiate company_repo", level="info")
-        company_repo = SqlAlchemyCompanyDataRepository(config=self.config, logger=self.logger)
+        company_repo = SqlAlchemyCompanyDataRepository(
+            config=self.config, logger=self.logger
+        )
         # self.logger.log("End Instance company_repo", level="info")
 
         # Create scraping engine for company data
@@ -168,7 +171,9 @@ class CLIAdapter:
 
         # Initialize all required repositories
         # self.logger.log("Instantiate company_repo", level="info")
-        company_repo = SqlAlchemyCompanyDataRepository(config=self.config, logger=self.logger)
+        company_repo = SqlAlchemyCompanyDataRepository(
+            config=self.config, logger=self.logger
+        )
         # self.logger.log("End Instance company_repo", level="info")
 
         # self.logger.log("Instantiate nsd_repo", level="info")
@@ -176,11 +181,15 @@ class CLIAdapter:
         # self.logger.log("End Instance nsd_repo", level="info")
 
         # self.logger.log("Instantiate raw_statement_repo", level="info")
-        raw_statement_repo = SqlAlchemyRawStatementRepository(config=self.config, logger=self.logger)
+        raw_statement_repo = SqlAlchemyRawStatementRepository(
+            config=self.config, logger=self.logger
+        )
         # self.logger.log("End Instance raw_statement_repo", level="info")
 
         # self.logger.log("Instantiate parsed_statements_repo", level="info")
-        parsed_statements_repo = SqlAlchemyParsedStatementRepository(config=self.config, logger=self.logger)
+        parsed_statements_repo = SqlAlchemyParsedStatementRepository(
+            config=self.config, logger=self.logger
+        )
         # self.logger.log("End Instance parsed_statements_repo", level="info")
 
         # Set up the raw statements scraper (adapter)

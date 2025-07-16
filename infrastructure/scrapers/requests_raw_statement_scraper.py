@@ -10,8 +10,9 @@ from urllib.parse import quote_plus
 # import pandas as pd
 from bs4 import BeautifulSoup, Tag
 
-from domain.dto import StatementRowsDTO, WorkerTaskDTO
+from domain.dto import WorkerTaskDTO
 from domain.dto.nsd_dto import NsdDTO
+from domain.dto.raw_statement_dto import RawStatementDTO
 from domain.ports import LoggerPort, MetricsCollectorPort, RawStatementScraperPort
 from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
@@ -21,7 +22,7 @@ from infrastructure.helpers.time_utils import TimeUtils
 from infrastructure.utils.id_generator import IdGenerator
 
 
-class RawStatementScraperPort(RawStatementScraperPort):
+class RawStatementScraper(RawStatementScraperPort):
     """Fetch statement HTML using ``requests``."""
 
     def __init__(
@@ -202,7 +203,9 @@ class RawStatementScraperPort(RawStatementScraperPort):
         url = self.endpoint.format(nsd=row.nsd)
         start = time.perf_counter()
 
-        response, self.session = self.fetch_utils.fetch_with_retry(self.session, url, cache_bypass=True)
+        response, self.session = self.fetch_utils.fetch_with_retry(
+            self.session, url, cache_bypass=True
+        )
 
         download = len(response.content)
         self.metrics_collector.record_network_bytes(download)
@@ -213,7 +216,7 @@ class RawStatementScraperPort(RawStatementScraperPort):
         statements_urls = self._build_urls(row, statement_items, hash_value)
 
         # Parse all statement pages
-        statements_rows_dto: List[StatementRowsDTO] = []
+        statements_rows_dto: List[RawStatementDTO] = []
 
         # for i, item in enumerate(statements_urls):
         for i in range(len(statements_urls)):
@@ -229,7 +232,7 @@ class RawStatementScraperPort(RawStatementScraperPort):
                     self.session,
                     url=item["url"],
                     cache_bypass=True,
-                    worker_id=task.worker_id
+                    worker_id=task.worker_id,
                 )
                 # 2) registra bytes baixados
                 download = len(response.content)
@@ -238,7 +241,7 @@ class RawStatementScraperPort(RawStatementScraperPort):
                 # 3) parse do HTML
                 soup = BeautifulSoup(response.text, "html.parser")
 
-               # 4) checa se houve bloqueio
+                # 4) checa se houve bloqueio
                 blocked = (
                     "MensagemModal" in response.text
                     or "acesse este conteúdo pela página principal dos documentos"
@@ -270,7 +273,9 @@ class RawStatementScraperPort(RawStatementScraperPort):
 
                 # 8) reconstrói as URLs de statements
                 if hash_value != hash_retry_value:
-                    statements_urls = self._build_urls(row, statement_items, hash_retry_value or hash_value)
+                    statements_urls = self._build_urls(
+                        row, statement_items, hash_retry_value or hash_value
+                    )
                     item = statements_urls[i]
 
                 # self.logger.log(
@@ -290,7 +295,7 @@ class RawStatementScraperPort(RawStatementScraperPort):
             parsed_rows = []
 
             for r in rows:
-                dto = StatementRowsDTO(
+                dto = RawStatementDTO(
                     nsd=row.nsd,
                     company_name=row.company_name,
                     quarter=quarter,

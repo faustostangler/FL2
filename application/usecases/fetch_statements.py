@@ -6,7 +6,7 @@ import time
 from typing import Callable, Iterable, List, Optional, Tuple
 
 from domain.dto.nsd_dto import NsdDTO
-from domain.dto.statement_rows_dto import StatementRowsDTO
+from domain.dto.raw_statement_dto import RawStatementDTO
 from domain.dto.worker_class_dto import WorkerTaskDTO
 from domain.ports import (
     LoggerPort,
@@ -48,9 +48,9 @@ class FetchStatementsUseCase:
     def fetch_all(
         self,
         targets: List[NsdDTO],
-        save_callback: Optional[Callable[[List[StatementRowsDTO]], None]] = None,
+        save_callback: Optional[Callable[[List[RawStatementDTO]], None]] = None,
         threshold: Optional[int] = None,
-    ) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
+    ) -> List[Tuple[NsdDTO, List[RawStatementDTO]]]:
         """Fetch statements for ``targets`` concurrently."""
         # self.logger.log(
         #     "Run  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all(save_callback, threshold)",
@@ -62,7 +62,7 @@ class FetchStatementsUseCase:
 
         # Initialize the saving strategy that buffers results.
         # self.logger.log("Instantiate strategy", level="info")
-        strategy: SaveStrategy[StatementRowsDTO] = SaveStrategy(
+        strategy: SaveStrategy[RawStatementDTO] = SaveStrategy(
             save_callback or self.parsed_statements_repo.save_all,
             threshold,
             config=self.config,
@@ -75,7 +75,7 @@ class FetchStatementsUseCase:
         collector = self.collector
         start_time = time.perf_counter()
 
-        def processor(task: WorkerTaskDTO) -> Tuple[NsdDTO, List[StatementRowsDTO]]:
+        def processor(task: WorkerTaskDTO) -> Tuple[NsdDTO, List[RawStatementDTO]]:
             # self.logger.log(
             #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all().processor().source.fetch()",
             #     level="info",
@@ -139,7 +139,7 @@ class FetchStatementsUseCase:
 
             return fetched["nsd"], fetched["statements"]
 
-        def handle_batch(item: Tuple[NsdDTO, List[StatementRowsDTO]]) -> None:
+        def handle_batch(item: Tuple[NsdDTO, List[RawStatementDTO]]) -> None:
             """Buffer fetched statement rows via ``strategy``."""
 
             # ``SaveStrategy.handle`` can accept an iterable of rows, so pass
@@ -173,9 +173,9 @@ class FetchStatementsUseCase:
     def fetch_statement_rows(
         self,
         batch_rows: Iterable[NsdDTO],
-        save_callback: Optional[Callable[[List[StatementRowsDTO]], None]] = None,
+        save_callback: Optional[Callable[[List[RawStatementDTO]], None]] = None,
         threshold: Optional[int] = None,
-    ) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
+    ) -> List[Tuple[NsdDTO, List[RawStatementDTO]]]:
         """Execute the use case for ``batch_rows``."""
         # self.logger.log(
         #     "Run  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",

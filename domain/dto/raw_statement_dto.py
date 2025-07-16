@@ -5,8 +5,8 @@ from typing import Optional
 
 
 @dataclass(frozen=True)
-class StatementDTO:
-    """Immutable representation of a financial statement row."""
+class RawStatementDTO:
+    """Immutable DTO representing a scraped statement row."""
 
     nsd: int
     company_name: Optional[str]
@@ -19,15 +19,15 @@ class StatementDTO:
     value: float
 
     @staticmethod
-    def from_dict(raw: dict) -> "StatementDTO":
-        """Create ``StatementDTO`` from a raw dictionary."""
+    def from_dict(raw: dict) -> "RawStatementDTO":
+        """Create a ``RawStatementDTO`` from a raw dictionary."""
 
         try:
             nsd_value = int(raw.get("nsd", 0))
         except (TypeError, ValueError) as exc:
             raise ValueError("Invalid NSD value") from exc
 
-        return StatementDTO(
+        return RawStatementDTO(
             nsd=nsd_value,
             company_name=raw.get("company_name"),
             quarter=raw.get("quarter"),

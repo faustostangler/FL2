@@ -3,7 +3,7 @@ from __future__ import annotations
 from sqlalchemy import Integer, PrimaryKeyConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
-from domain.dto.statement_rows_dto import StatementRowsDTO
+from domain.dto.raw_statement_dto import RawStatementDTO
 
 from .base_model import BaseModel
 
@@ -36,7 +36,7 @@ class StatementRowsModel(BaseModel):
     value: Mapped[float] = mapped_column()
 
     @staticmethod
-    def from_dto(dto: StatementRowsDTO) -> "StatementRowsModel":
+    def from_dto(dto: RawStatementDTO) -> "StatementRowsModel":
         return StatementRowsModel(
             nsd=dto.nsd,
             company_name=dto.company_name,
@@ -49,8 +49,8 @@ class StatementRowsModel(BaseModel):
             value=dto.value,
         )
 
-    def to_dto(self) -> StatementRowsDTO:
-        return StatementRowsDTO(
+    def to_dto(self) -> RawStatementDTO:
+        return RawStatementDTO(
             nsd=self.nsd,
             company_name=self.company_name,
             quarter=self.quarter,

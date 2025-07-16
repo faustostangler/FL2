@@ -5,11 +5,11 @@ from application.usecases.fetch_statements import FetchStatementsUseCase
 from domain.dto.nsd_dto import NsdDTO
 from domain.ports import (
     NSDRepositoryPort,
-    ParsedStatementRepositoryPort,
-    SqlAlchemyRawStatementRepository,
     RawStatementScraperPort,
     SqlAlchemyCompanyDataRepositoryPort,
+    SqlAlchemyParsedStatementRepositoryPort,
 )
+from infrastructure.repositories import SqlAlchemyRawStatementRepository
 from tests.conftest import DummyConfig, DummyLogger
 
 
@@ -27,7 +27,7 @@ def test_fetch_statements_calls_usecase(monkeypatch):
     company_repo = MagicMock(spec=SqlAlchemyCompanyDataRepositoryPort)
     nsd_repo = MagicMock(spec=NSDRepositoryPort)
     stmt_repo = MagicMock(spec=SqlAlchemyRawStatementRepository)
-    rows_repo = MagicMock(spec=ParsedStatementRepositoryPort)
+    rows_repo = MagicMock(spec=SqlAlchemyParsedStatementRepositoryPort)
     source = MagicMock(spec=RawStatementScraperPort)
     collector = MagicMock()
     worker_pool = MagicMock()
