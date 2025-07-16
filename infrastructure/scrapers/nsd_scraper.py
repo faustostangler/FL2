@@ -130,7 +130,7 @@ class NsdScraper(NSDSourcePort):
                     str(len(response.content)),
                 ]
             else:
-                extra_info = [ ]
+                extra_info = []
 
             self.logger.log(
                 "NSD",
@@ -175,7 +175,7 @@ class NsdScraper(NSDSourcePort):
 
         # from DTO
         data: Dict[str, str | int | datetime | None] = {
-            "nsd": nsd,
+            "nsd": str(nsd),
             "company_name": self.data_cleaner.clean_text(text_of("#lblNomeCompanhia")),
             # quarter e sent_date serão preenchidos depois
             "quarter": None,
@@ -275,7 +275,9 @@ class NsdScraper(NSDSourcePort):
         nsd_high = nsd - 1
 
         while nsd_low < nsd_high:
-            nsd_mid = (nsd_low + nsd_high + 1) // 2  # arredonda para cima para evitar loop infinito
+            nsd_mid = (
+                nsd_low + nsd_high + 1
+            ) // 2  # arredonda para cima para evitar loop infinito
             parsed = self._try_nsd(nsd_mid)
 
             if parsed:
@@ -300,10 +302,10 @@ class NsdScraper(NSDSourcePort):
             return None
 
     def _find_next_probable_nsd(
-            self,
-            start: int=1,
-            safety_factor: float=1.5,
-        ) -> int:
+        self,
+        start: int = 1,
+        safety_factor: float = 1.5,
+    ) -> int:
         """Estimate next NSD numbers based on historical submission rate.
 
         The prediction is calculated from the most recent ``window_days`` worth
@@ -324,28 +326,30 @@ class NsdScraper(NSDSourcePort):
         self.logger.log("Finding next probable NSD", level="info")
 
         # Get all nsd with valid sent_date
-        all_nsds = self.repository.get_all_primary_keys()
-        if not all_nsds:
+        all_nsds_str = self.repository.get_all_primary_keys()
+        if not all_nsds_str:
             return start
+
+        all_nsds = [int(n) for n in all_nsds_str]
 
         # First and last nsd records
         first_nsd = min(all_nsds)
-        last_nsd  = max(all_nsds)
-        first_record = self.repository.get_by_id(first_nsd)
-        last_record  = self.repository.get_by_id(last_nsd)
+        last_nsd = max(all_nsds)
+        first_record = self.repository.get_by_id(str(first_nsd))
+        last_record = self.repository.get_by_id(str(last_nsd))
 
         # First and last date from first and last date
-        first_date   = first_record.sent_date
+        first_date = first_record.sent_date
         last_date = last_record.sent_date
 
         # Days span between dates
-        total_span_days = (last_date - first_date).days or 1   # type: ignore[assignment]
+        total_span_days = (last_date - first_date).days or 1  # type: ignore[assignment]
 
         # Daily nsd per day Average
         daily_avg = len(all_nsds) / total_span_days
 
         # days elapsed since last_date
-        days_elapsed = max((datetime.now() - last_date).days, 0)   # type: ignore[assignment]
+        days_elapsed = max((datetime.now() - last_date).days, 0)  # type: ignore[assignment]
 
         # Estimated nsd
         last_estimated_nsd = int(daily_avg * days_elapsed * safety_factor)
