@@ -5,7 +5,7 @@ from application.usecases.parse_and_classify_statements import (
     ParseAndClassifyStatementsUseCase,
 )
 from domain.dto import NsdDTO, StatementRowsDTO
-from domain.ports import RawStatementRepositoryPort
+from domain.ports import SqlAlchemyRawStatementRepository
 from tests.conftest import DummyConfig, DummyLogger
 
 
@@ -20,7 +20,7 @@ def test_parse_statements_invokes_usecase_and_finalize(monkeypatch):
         mock_usecase_cls,
     )
 
-    repository = MagicMock(spec=RawStatementRepositoryPort)
+    repository = MagicMock(spec=SqlAlchemyRawStatementRepository)
 
     service = StatementParseService(
         logger=DummyLogger(),

@@ -3,6 +3,7 @@ from __future__ import annotations
 from domain.dto.nsd_dto import NsdDTO
 from domain.ports import LoggerPort, NSDRepositoryPort, NSDSourcePort
 from infrastructure.helpers.list_flattener import ListFlattener
+from typing import Set, Union
 
 
 class SyncNSDUseCase:
@@ -28,6 +29,7 @@ class SyncNSDUseCase:
 
         # Retrieve any previously stored document IDs to avoid duplicates.
         existing_ids = self.repository.get_all_primary_keys()
+        existing_ids = {str(code) for code in existing_ids} if existing_ids else set()
 
         # Fetch all documents from the scraper, persisting them in batches.
         # self.logger.log("Call Method controller.run()._nsd_service().run().sync_nsd_usecase.run().fetch_all()", level="info")

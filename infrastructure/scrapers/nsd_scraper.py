@@ -72,9 +72,9 @@ class NsdScraper(NSDSourcePort):
         #     level="info",
         # )
 
-        skip_codes = skip_codes or set()
-        skip_codes_int = {int(code) for code in skip_codes} if skip_codes else set()
-        start = max(start, max(skip_codes_int, default=0) + 1)
+        self.skip_codes = {int(code) for code in skip_codes} if skip_codes else set()
+
+        start = max(start, max(self.skip_codes, default=0) + 1)
 
         max_nsd_existing = max_nsd or self._find_last_existing_nsd(start=start) or 50
         max_nsd_probable = max_nsd or self._find_next_probable_nsd(start=start) or 50
@@ -103,7 +103,7 @@ class NsdScraper(NSDSourcePort):
                 "start_time": start_time,
             }
 
-            if nsd in skip_codes_int:
+            if nsd in self.skip_codes:
                 self.logger.log(
                     f"{nsd}", level="info", progress=progress, worker_id=task.worker_id
                 )
@@ -300,7 +300,7 @@ class NsdScraper(NSDSourcePort):
             parsed = self._try_nsd(nsd)
             if parsed:
                 last_valid = nsd
-                nsd *= 2
+                nsd += 2 ** int(nsd - start + 1)
             else:
                 break
 

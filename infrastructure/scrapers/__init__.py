@@ -1,3 +1,6 @@
+from scrapers.nsd_scraper import NsdScraper
+from scrapers.raw_statements_scraper import RawStatementScraper
+from repositories.raw_statement_repository import  
 from .company_data_exchange_scraper import CompanyDataScraper
 from .company_data_processors import (
     CompanyDataDetailProcessor,
@@ -5,8 +8,6 @@ from .company_data_processors import (
     DetailFetcher,
     EntryCleaner,
 )
-from .nsd_scraper import NsdScraper
-from .statements_source_adapter import RequestsRawStatementSourceAdapter
 
 __all__ = [
     "CompanyDataScraper",
@@ -15,5 +16,5 @@ __all__ = [
     "DetailFetcher",
     "CompanyDataMerger",
     "CompanyDataDetailProcessor",
-    "RequestsRawStatementSourceAdapter",
+    "RawStatementScraper",
 ]

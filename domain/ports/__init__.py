@@ -9,9 +9,9 @@ from .logger_port import LoggerPort
 from .metrics_collector_port import MetricsCollectorPort
 from .nsd_repository_port import NSDRepositoryPort
 from .nsd_source_port import NSDSourcePort
-from .parsed_statement_repository_port import ParsedStatementRepositoryPort
-from .raw_statement_repository_port import RawStatementRepositoryPort
-from .raw_statement_source_port import RawStatementSourcePort
+from .parsed_statement_repository_port import SqlAlchemyParsedStatementRepositoryPort
+from .raw_statement_repository_port import SqlAlchemyRawStatementRepositoryPort
+from .raw_statement_scraper_port import RawStatementScraperPort
 from .worker_pool_port import WorkerPoolPort
 
 __all__ = [
@@ -25,7 +25,7 @@ __all__ = [
     "MetricsCollectorPort",
     "NSDRepositoryPort",
     "NSDSourcePort",
-    "RawStatementSourcePort",
-    "RawStatementRepositoryPort",
-    "ParsedStatementRepositoryPort",
+    "RawStatementScraperPort",
+    "SqlAlchemyRawStatementRepositoryPort",
+    "SqlAlchemyParsedStatementRepositoryPort",
 ]

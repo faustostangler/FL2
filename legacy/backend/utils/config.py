@@ -637,7 +637,7 @@ class Config:
 
         web_company_columns_mapping = {
             "codeCVM": "cvm_code",
-            "issuingCompanyData": "ticker",
+            "issuingCompany": "ticker",
             "companyName": "company_name",
             "tradingName": "trading_name",
             "market": "listing",

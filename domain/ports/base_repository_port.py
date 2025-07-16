@@ -74,3 +74,13 @@ class SqlAlchemyRepositoryBasePort(ABC, Generic[T, K]):
             Set[K]: A set of unique identifiers for all stored items.
         """
         raise NotImplementedError
+
+    @abstractmethod
+    def get_existing_by_column(self, column_name: str) -> Set[K]:
+        """Retrieve the set of all primary keys currently stored by column.
+
+        Returns:
+            Set[K]: A set of unique identifiers for all stored items.
+        """
+        raise NotImplementedError
+

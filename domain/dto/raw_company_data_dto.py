@@ -41,7 +41,7 @@ class CompanyDataListingDTO:
         # Directly map the expected keys from the raw payload.
         return CompanyDataListingDTO(
             cvm_code=raw.get("codeCVM"),
-            issuing_company=raw.get("issuingCompanyData"),
+            issuing_company=raw.get("issuingCompany"),
             company_name=raw.get("companyName"),
             trading_name=raw.get("tradingName"),
             cnpj=raw.get("cnpj"),
@@ -103,7 +103,7 @@ class CompanyDataDetailDTO:
 
         # Populate the DTO using values from the payload
         company_data_detail_dto = CompanyDataDetailDTO(
-            issuing_company=raw.get("issuingCompanyData"),
+            issuing_company=raw.get("issuingCompany"),
             company_name=raw.get("companyName"),
             trading_name=raw.get("tradingName"),
             cnpj=raw.get("cnpj"),

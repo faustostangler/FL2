@@ -18,8 +18,8 @@ from infrastructure.repositories import (
 )
 from infrastructure.scrapers.company_data_exchange_scraper import CompanyDataScraper
 from infrastructure.scrapers.nsd_scraper import NsdScraper
-from infrastructure.scrapers.statements_source_adapter import (
-    RequestsRawStatementSourceAdapter,
+from infrastructure.scrapers.raw_statements_scraper import (
+    RawStatementScraper,
 )
 
 
@@ -66,12 +66,12 @@ class CLIAdapter:
 
         # Run company scraper and persist logic
         # self.logger.log("Call Method controller.run()._company_service()", level="info")
-        self._company_service()
+        # self._company_service()
         # self.logger.log("End  Method controller.run()._company_service()", level="info")
 
         # Run NSD fetcher and synchronization
         # self.logger.log("Call Method controller.run()._nsd_service()", level="info")
-        self._nsd_service()
+        # self._nsd_service()
         # self.logger.log("End  Method controller.run()._nsd_service()", level="info")
 
         # Fetch and optionally parse statements
@@ -185,7 +185,7 @@ class CLIAdapter:
 
         # Set up the raw statements scraper (adapter)
         # self.logger.log("Instantiate source", level="info")
-        raw_statements_scraper = RequestsRawStatementSourceAdapter(
+        raw_statements_scraper = RawStatementScraper(
             config=self.config,
             logger=self.logger,
             data_cleaner=self.data_cleaner,

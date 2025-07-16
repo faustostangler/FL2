@@ -102,7 +102,7 @@ class CompanyDataDetailProcessor:
         """Clean, fetch details, and merge into a raw DTO."""
         try:
             text_keys = [
-                "issuingCompanyData",
+                "issuingCompany",
                 "companyName",
                 "tradingName",
                 "segment",
@@ -124,7 +124,7 @@ class CompanyDataDetailProcessor:
 
             detail = self.fetcher.fetch_detail(str(listing.cvm_code))
             text_keys = [
-                "issuingCompanyData",
+                "issuingCompany",
                 "companyName",
                 "tradingName",
                 "IndustryClassificationEng",

@@ -12,7 +12,7 @@ from bs4 import BeautifulSoup, Tag
 
 from domain.dto import StatementRowsDTO, WorkerTaskDTO
 from domain.dto.nsd_dto import NsdDTO
-from domain.ports import LoggerPort, MetricsCollectorPort, RawStatementSourcePort
+from domain.ports import LoggerPort, MetricsCollectorPort, RawStatementScraperPort
 from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
 from infrastructure.helpers.data_cleaner import DataCleaner
@@ -21,7 +21,7 @@ from infrastructure.helpers.time_utils import TimeUtils
 from infrastructure.utils.id_generator import IdGenerator
 
 
-class RequestsRawStatementSourceAdapter(RawStatementSourcePort):
+class RawStatementScraperPort(RawStatementScraperPort):
     """Fetch statement HTML using ``requests``."""
 
     def __init__(

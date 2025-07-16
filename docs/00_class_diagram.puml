@@ -21,8 +21,8 @@ package "fly" {
             CLIController --> fly.infrastructure.repositories.SqlAlchemyCompanyDataRepository : uses
             CLIController --> SqlAlchemyNsdRepository : uses
             CLIController --> SqlAlchemyRawStatementRepository : uses
-            CLIController --> SqlAlchemyParsedStatementRepository : uses
-            CLIController --> RequestsRawStatementSourceAdapter : uses
+            CLIController --> SqlAlchemyParsedStatementRepositoryPort : uses
+            CLIController --> RawStatementScraperPort : uses
             CLIController --> MetricsCollector : uses
             CLIController --> StatementFetchService
         }
@@ -87,11 +87,11 @@ package "fly" {
                 }
                 StatementFetchService --> FetchStatementsUseCase
                 StatementFetchService --> LoggerPort
-                StatementFetchService --> RawStatementSourcePort
+                StatementFetchService --> RawStatementScraperPort
                 StatementFetchService --> ParsedStatementRepositoryPort
                 StatementFetchService --> SqlAlchemyCompanyDataRepositoryPort
                 StatementFetchService --> NSDRepositoryPort
-                StatementFetchService --> RawStatementRepositoryPort
+                StatementFetchService --> SqlAlchemyRawStatementRepository
             }
         }
         package "fly.application.usecases" {
@@ -118,9 +118,9 @@ package "fly" {
                 +fetch_all(...) : List[Tuple[NsdDTO, List[StatementRowsDTO]]]
                 }
                 FetchStatementsUseCase --> LoggerPort
-                FetchStatementsUseCase --> RawStatementSourcePort
+                FetchStatementsUseCase --> RawStatementScraperPort
                 FetchStatementsUseCase --> ParsedStatementRepositoryPort
-                FetchStatementsUseCase --> RawStatementRepositoryPort
+                FetchStatementsUseCase --> SqlAlchemyRawStatementRepository
                 FetchStatementsUseCase --> Config
                 FetchStatementsUseCase --> WorkerPool
                 FetchStatementsUseCase --> ByteFormatter
@@ -190,13 +190,13 @@ package "fly" {
                 +get_existing_by_column(column_name: str) : Set[Any]
                 +save_all(items: List[StatementRowsDTO]) : void
                 }
-            interface RawStatementRepositoryPort {
+            interface SqlAlchemyRawStatementRepository {
                 +save_all(items: List[StatementRowsDTO]) : void
                 }
-            interface RawStatementSourcePort {
+            interface RawStatementScraperPort {
                 +fetch(task: WorkerTaskDTO) : dict
                 }
-                RawStatementSourcePort --> WorkerTaskDTO
+                RawStatementScraperPort --> WorkerTaskDTO
 
         package "fly.domain.dto" {
             class CompanyDataListingDTO {
@@ -415,7 +415,7 @@ package "fly" {
                 NsdScraper --> NsdDTO
                 NsdScraper --> ExecutionResultDTO
 
-            class RequestsRawStatementSourceAdapter {
+            class RawStatementScraperPort {
                 session : Session
                 endpoint : str
                 id_generator : IdGenerator
@@ -425,9 +425,9 @@ package "fly" {
                 -_build_urls() : list
                 +fetch() : dict
                 }
-                RequestsRawStatementSourceAdapter --> IdGenerator
-                RequestsRawStatementSourceAdapter --> MetricsCollector
-                RequestsRawStatementSourceAdapter --|> RawStatementSourcePort
+                RawStatementScraperPort --> IdGenerator
+                RawStatementScraperPort --> MetricsCollector
+                RawStatementScraperPort --|> RawStatementScraperPort
                 }
             }
         package "fly.infrastructure.config" {
@@ -675,7 +675,7 @@ package "fly" {
                 +has_item(identifier: int) : bool
                 +get_by_id(id: int) : StatementDTO
                 }
-                SqlAlchemyRawStatementRepository --|> RawStatementRepositoryPort
+                SqlAlchemyRawStatementRepository --|> SqlAlchemyRawStatementRepository
                 SqlAlchemyRawStatementRepository --|> SqlAlchemyRepositoryBase
                 SqlAlchemyRawStatementRepository --> StatementDTO
 

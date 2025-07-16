@@ -22,7 +22,7 @@ class LoggingConfig:
     log_dir: Path
     log_file_name: str = field(default=LOG_FILENAME)
     level: str = field(default=LEVEL)
-    show_import_path: bool = field(default=SHOW_IMPORT_PATH)
+    show_path: bool = field(default=SHOW_IMPORT_PATH)
 
     @property
     def full_path(self) -> Path:
@@ -44,5 +44,5 @@ def load_logging_config() -> LoggingConfig:
         log_dir=paths.log_dir,
         log_file_name=LOG_FILENAME,
         level=LEVEL,
-        show_import_path=SHOW_IMPORT_PATH,
+        show_path=SHOW_IMPORT_PATH,
     )

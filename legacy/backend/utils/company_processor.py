@@ -209,7 +209,7 @@ class CompanyDataProcessor(BaseProcessor):
 
             # parse r1 first so we can build token2
             results = r1.json().get("results", [])
-            row     = next((i for i in results if i.get("issuingCompanyData") == ticker), None)
+            row     = next((i for i in results if i.get("issuingCompany") == ticker), None)
             if not row:
                 return pd.DataFrame()  # retorna vazio para essa empresa
 
@@ -231,9 +231,9 @@ class CompanyDataProcessor(BaseProcessor):
                 company_details = self._split_industry_classification(company_details)
 
                 # Define the real key
-                merge_key = ["issuingCompanyData"]
+                merge_key = ["issuingCompany"]
 
-                # Merge based only on issuingCompanyData
+                # Merge based only on issuingCompany
                 df = pd.merge(
                     company,
                     company_details,
@@ -331,7 +331,7 @@ class CompanyDataProcessor(BaseProcessor):
             all_companies.extend(companies)
 
             # Log progress for page 1
-            extra_info = [f"page 1, from {companies[0]['issuingCompanyData']} to {companies[-1]['issuingCompanyData']}"]
+            extra_info = [f"page 1, from {companies[0]['issuingCompany']} to {companies[-1]['issuingCompany']}"]
             self.print_info(0, total_pages, start_time, extra_info)
 
             # Loop through remaining pages: page 2 onwards
@@ -349,7 +349,7 @@ class CompanyDataProcessor(BaseProcessor):
                         all_companies.extend(companies)
 
                         # Log progress
-                        extra_info = [f"page {i}, from {companies[0]['issuingCompanyData']} to {companies[-1]['issuingCompanyData']}"]
+                        extra_info = [f"page {i}, from {companies[0]['issuingCompany']} to {companies[-1]['issuingCompany']}"]
                         self.print_info(i - 1, total_pages, start_time, extra_info)
 
                         success = True  # Only mark as success if no exception occurs
@@ -362,8 +362,8 @@ class CompanyDataProcessor(BaseProcessor):
             # Convert the list of companies into a DataFrame
             df = pd.DataFrame(all_companies)
 
-            # Rename 'issuingCompanyData' to 'ticker' and keep only the 'ticker' column
-            df = df.rename(columns={"issuingCompanyData": "ticker"})
+            # Rename 'issuingCompany' to 'ticker' and keep only the 'ticker' column
+            df = df.rename(columns={"issuingCompany": "ticker"})
             df = df[["ticker"]]
 
         except Exception as e:

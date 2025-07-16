@@ -11,9 +11,9 @@ from domain.dto.worker_class_dto import WorkerTaskDTO
 from domain.ports import (
     LoggerPort,
     MetricsCollectorPort,
-    ParsedStatementRepositoryPort,
-    RawStatementRepositoryPort,
-    RawStatementSourcePort,
+    RawStatementScraperPort,
+    SqlAlchemyParsedStatementRepositoryPort,
+    SqlAlchemyRawStatementRepositoryPort,
 )
 from infrastructure.config import Config
 from infrastructure.helpers import ByteFormatter, SaveStrategy, WorkerPool
@@ -25,9 +25,9 @@ class FetchStatementsUseCase:
     def __init__(
         self,
         logger: LoggerPort,
-        source: RawStatementSourcePort,
-        parsed_statements_repo: ParsedStatementRepositoryPort,
-        raw_statement_repository: RawStatementRepositoryPort,
+        source: RawStatementScraperPort,
+        raw_statement_repository: SqlAlchemyRawStatementRepositoryPort,
+        parsed_statements_repo: SqlAlchemyParsedStatementRepositoryPort,
         metrics_collector: MetricsCollectorPort,
         worker_pool_executor: WorkerPool,
         config: Config,

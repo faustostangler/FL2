@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, List, Set, TypeVar
+from typing import Generic, List, Set, Tuple, TypeVar
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
@@ -59,7 +59,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         # self.logger.log(f"Create Instance Base Class {self.__class__.__name__}", level="info")
 
     @abstractmethod
-    def get_model_class(self) -> type:
+    def get_model_class(self) -> Tuple:
         """Return the SQLAlchemy model class associated with the DTO.
 
         This method must be implemented by subclasses to specify which
@@ -84,7 +84,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         session = self.Session()
 
         # Retrieve the SQLAlchemy model class associated with the DTO type
-        model = self.get_model_class()
+        model, pk_column = self.get_model_class()
 
         try:
             # Flatten nested lists into a single-level list of DTOs
@@ -138,7 +138,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         session = self.Session()
 
         # Get the SQLAlchemy model class linked to the current DTO type
-        model = self.get_model_class()
+        model, pk_column = self.get_model_class()
 
         try:
             # Query all rows from the corresponding table
@@ -166,7 +166,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         session = self.Session()
 
         # Get the SQLAlchemy model class linked to the current DTO type
-        model = self.get_model_class()
+        model, pk_column = self.get_model_class()
 
         try:
             # Perform a filtered query and check if any result is found
@@ -199,11 +199,11 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         session = self.Session()
 
         # Get the SQLAlchemy model class linked to the current DTO type
-        model = self.get_model_class()
+        model, pk_column = self.get_model_class()
 
         try:
             # Query the database for the entry with the specified ID
-            obj = session.query(model).filter_by(cvm_code=identifier).first()
+            obj = session.query(model).filter(pk_column == identifier).first()
 
             # Raise an error if the object is not found
             if not obj:
@@ -228,14 +228,35 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         session = self.Session()
 
         # Get the SQLAlchemy model class linked to the current DTO type
-        model = self.get_model_class()
+        model, pk_column = self.get_model_class()
 
         try:
             # Execute a distinct query for the primary key column
-            results = session.query(model.cvm_code).distinct().all()
+            results = session.query(pk_column).distinct().all()
 
             # Extract and collect non-null keys into a set
             return {row[0] for row in results if row[0]}
+
         finally:
             # Ensure session is always closed
+            session.close()
+
+    def get_existing_by_column(self, column_name: str) -> Set[K]:
+        """Return the distinct values for the given column in
+        tbl_raw_statements.
+
+        e.g. repo.get_existing_by_column("nsd") -> {94790, 12345, …}
+        """
+        session = self.Session()
+
+        # Retrieve the SQLAlchemy model class associated with the DTO type
+        model = self.get_model_class()
+
+        try:
+            # dynamically access the ORM attribute
+            column_attr = getattr(model, column_name)
+            rows = session.query(column_attr).distinct().all()
+            results = {row[0] for row in rows if row[0] is not None}
+            return results
+        finally:
             session.close()

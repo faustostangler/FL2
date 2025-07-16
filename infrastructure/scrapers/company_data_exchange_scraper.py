@@ -137,9 +137,9 @@ class CompanyDataScraper(CompanyDataScraperPort):
         # self.logger.log("Run  Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)", level="info")
 
         # Ensure skip_codes is a set (to avoid None and allow fast lookup)
-        skip_codes = skip_codes or set()
+        self.skip_codes = skip_codes or set()
         # Determine the save threshold (number of companies before saving buffer)
-        threshold = threshold or self.config.global_settings.threshold or 50
+        self.threshold = threshold or self.config.global_settings.threshold or 50
         # Determine the number of simultaneous process
 
         def noop(_buffer: List[Dict]) -> None:
@@ -148,9 +148,7 @@ class CompanyDataScraper(CompanyDataScraperPort):
         # 1 Fetch the initial list of companies, possibly skipping some CVM codes
         # self.logger.log("Call Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)._fetch_companies_list(save_callback, max_workers, threshold)", level="info")
         companies_list = self._fetch_companies_list(
-            skip_codes=skip_codes,
             save_callback=noop,
-            threshold=threshold,
         )
         # self.logger.log("End  Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)._fetch_companies_list(save_callback, max_workers, threshold)", level="info")
 
@@ -158,9 +156,7 @@ class CompanyDataScraper(CompanyDataScraperPort):
         # self.logger.log("Call Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)._fetch_companies_details(save_callback, max_workers, threshold)", level="info")
         companies = self._fetch_companies_details(
             companies_list=companies_list.items,
-            skip_codes=skip_codes,
             save_callback=save_callback,
-            threshold=threshold,
         )
         # self.logger.log("End  Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)._fetch_companies_details(save_callback, max_workers, threshold)", level="info")
 
@@ -176,8 +172,6 @@ class CompanyDataScraper(CompanyDataScraperPort):
 
     def _fetch_companies_list(
         self,
-        skip_codes: Optional[Set[str]] = None,
-        threshold: Optional[int] = None,
         save_callback: Optional[Callable[[List[Dict]], None]] = None,
     ) -> ExecutionResultDTO[Dict]:
         """Busca o conjunto inicial de empresas disponíveis na bolsa.
@@ -186,11 +180,8 @@ class CompanyDataScraper(CompanyDataScraperPort):
         """
         # self.logger.log("Run  Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)._fetch_companies_list(save_callback, max_workers, threshold)", level="info")
 
-        skip_codes = skip_codes or set()
-        threshold = threshold or self.config.global_settings.threshold or 50
-
         strategy: SaveStrategy[Dict] = SaveStrategy(
-            save_callback, threshold, config=self.config
+            save_callback, self.threshold, config=self.config
         )
         page_exec = ExecutionResultDTO(
             items=[], metrics=self.metrics_collector.get_metrics(0)
@@ -283,9 +274,7 @@ class CompanyDataScraper(CompanyDataScraperPort):
     def _fetch_companies_details(
         self,
         companies_list: List[Dict],
-        skip_codes: Optional[Set[str]] = None,
         save_callback: Optional[Callable[[List[CompanyDataRawDTO]], None]] = None,
-        threshold: Optional[int] = None,
     ) -> ExecutionResultDTO[CompanyDataRawDTO]:
         """
         Fetches and parses detailed information for a list of companies, with optional skipping and periodic saving.
@@ -308,11 +297,8 @@ class CompanyDataScraper(CompanyDataScraperPort):
         """
         # self.logger.log("Run  Method sync_companies_usecase.run().fetch_all(save_callback, max_workers)._fetch_companies_details(save_callback, max_workers, threshold)", level="info")
 
-        skip_codes = skip_codes or set()
-        threshold = threshold or self.config.global_settings.threshold or 50
-
         strategy: SaveStrategy[CompanyDataRawDTO] = SaveStrategy(
-            save_callback, threshold, config=self.config
+            save_callback, self.threshold, config=self.config
         )
         detail_exec: ExecutionResultDTO[Optional[CompanyDataRawDTO]] = ExecutionResultDTO(
             items=[], metrics=self.metrics_collector.get_metrics(0)
@@ -329,13 +315,13 @@ class CompanyDataScraper(CompanyDataScraperPort):
             worker_id = task.worker_id
 
             code_cvm = entry.get("codeCVM")
-            if code_cvm in skip_codes:
+            if code_cvm in self.skip_codes:
                 # download_bytes_pre = self._metrics_collector.network_bytes
                 # download_bytes_pos = self._metrics_collector.network_bytes - download_bytes_pre
 
                 # Log and skip already persisted companies
                 extra_info = {
-                    "issuingCompanyData": entry["issuingCompanyData"],
+                    "issuingCompany": entry["issuingCompany"],
                     "trading_name": entry["tradingName"],
                     # "Download": self.byte_formatter.format_bytes(download_bytes_pos),
                     # "Total download": self.byte_formatter.format_bytes(self.metrics_collector.network_bytes),
@@ -362,10 +348,10 @@ class CompanyDataScraper(CompanyDataScraperPort):
 
             download_bytes_pos = self._metrics_collector.network_bytes - download_bytes_pre
 
-            issuingCompanyData = entry.get("issuingCompanyData")
+            issuingCompany = entry.get("issuingCompany")
             tradingName = entry.get("tradingName")
             extra_info = {
-                "issuingCompanyData": issuingCompanyData,
+                "issuingCompany": issuingCompany,
                 "trading_name": tradingName,
                 "Download": self.byte_formatter.format_bytes(download_bytes_pos),
                 "Total download": self.byte_formatter.format_bytes(

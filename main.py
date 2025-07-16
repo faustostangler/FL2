@@ -47,8 +47,9 @@ def main() -> None:
             "Finish Project FLY",
             level="info",
         )
+
     except Exception as e:
-        logger.log(f"Erro: {e}", )
+        logger.log(f"Erro {e}", level="info", show_path=True)
 
 # Run main function if this script is executed directly
 if __name__ == "__main__":

@@ -50,9 +50,9 @@ StatementFetchService -> FetchStatementsUseCase : fetch_statement_rows(targets)
 FetchStatementsUseCase -> FetchStatementsUseCase : fetch_all()
 FetchStatementsUseCase -> WorkerPool : run(tasks, processor)
 loop per NSD
-    WorkerPool -> RawStatementSourcePort : fetch()
+    WorkerPool -> RawStatementScraperPort : fetch()
     alt no rows returned
-        WorkerPool -> RawStatementSourcePort : fetch() retry
+        WorkerPool -> RawStatementScraperPort : fetch() retry
     end
     WorkerPool -> SaveStrategy : handle(rows)
     alt threshold reached
@@ -67,7 +67,7 @@ SaveStrategy -> ParsedStatementRepositoryPort : save_all(remaining)
 2. `_build_targets()` filters NSDs that have valid types and are missing
    statement rows.
 3. **FetchStatementsUseCase.fetch_all** sets up a worker pool and `SaveStrategy`.
-4. Each worker calls the `RawStatementSourcePort.fetch` method. Empty results
+4. Each worker calls the `RawStatementScraperPort.fetch` method. Empty results
    trigger retries until rows are returned.
 5. Fetched `StatementRowsDTO` objects are buffered and written in batches via the
    repository.
@@ -84,10 +84,10 @@ loop per statement row
     WorkerPool -> ParseAndClassifyStatementsUseCase : parse_and_store_row(row)
     ParseAndClassifyStatementsUseCase -> SaveStrategy : handle(dto)
     alt threshold reached
-        SaveStrategy -> RawStatementRepositoryPort : save_all(batch)
+        SaveStrategy -> SqlAlchemyRawStatementRepository : save_all(batch)
     end
 end
-SaveStrategy -> RawStatementRepositoryPort : save_all(remaining)
+SaveStrategy -> SqlAlchemyRawStatementRepository : save_all(remaining)
 ParseAndClassifyStatementsUseCase -> StatementParseService : finalize()
 @enduml
 ```
@@ -97,7 +97,7 @@ ParseAndClassifyStatementsUseCase -> StatementParseService : finalize()
    `ParseAndClassifyStatementsUseCase.run`.
 3. The use case converts a `StatementRowsDTO` to a `StatementDTO`, classifies the
    section, and buffers it through `SaveStrategy`.
-4. Batches are saved using `RawStatementRepositoryPort.save_all`, and any remaining
+4. Batches are saved using `SqlAlchemyRawStatementRepository.save_all`, and any remaining
    items flush during `finalize()`.
 
 ---

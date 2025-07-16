@@ -10,10 +10,10 @@ from domain.ports import (
     LoggerPort,
     MetricsCollectorPort,
     NSDRepositoryPort,
-    ParsedStatementRepositoryPort,
-    RawStatementRepositoryPort,
-    RawStatementSourcePort,
+    RawStatementScraperPort,
     SqlAlchemyCompanyDataRepositoryPort,
+    SqlAlchemyParsedStatementRepositoryPort,
+    SqlAlchemyRawStatementRepositoryPort,
 )
 from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
@@ -25,12 +25,12 @@ class StatementFetchService:
     def __init__(
         self,
         logger: LoggerPort,
-        source: RawStatementSourcePort,
-        parsed_statements_repo: ParsedStatementRepositoryPort,
+        config: Config,
         company_repo: SqlAlchemyCompanyDataRepositoryPort,
         nsd_repo: NSDRepositoryPort,
-        raw_statement_repo: RawStatementRepositoryPort,
-        config: Config,
+        raw_statement_repo: SqlAlchemyRawStatementRepositoryPort,
+        parsed_statements_repo: SqlAlchemyParsedStatementRepositoryPort,
+        source: RawStatementScraperPort,
         metrics_collector: MetricsCollectorPort,
         worker_pool_executor: WorkerPool,
         max_workers: int = 1,

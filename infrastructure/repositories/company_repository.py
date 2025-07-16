@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Tuple
+
 from domain.dto.company_data_dto import CompanyDataDTO
 from domain.ports import LoggerPort, SqlAlchemyCompanyDataRepositoryPort
 from infrastructure.config import Config
@@ -41,11 +43,10 @@ class SqlAlchemyCompanyDataRepository(
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def get_model_class(self) -> type:
+    def get_model_class(self) -> Tuple:
         """Return the SQLAlchemy ORM model class managed by this repository.
 
         Returns:
             type: The model class associated with this repository.
         """
-        return CompanyDataModel
-
+        return CompanyDataModel, CompanyDataModel.cvm_code

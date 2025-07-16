@@ -4,11 +4,11 @@ from typing import Mapping
 LANGUAGE = "pt-br"
 COMPANY_ENDPOINT = {
     "initial":   "https://sistemaswebb3-listados.b3.com.br/"
-                    "listedCompaniesProxy/CompanyDataCall/GetInitialCompanies/",
+                    "listedCompaniesProxy/CompanyCall/GetInitialCompanies/",
     "detail":    "https://sistemaswebb3-listados.b3.com.br/"
-                    "listedCompaniesProxy/CompanyDataCall/GetDetail/",
+                    "listedCompaniesProxy/CompanyCall/GetDetail/",
     "financial": "https://sistemaswebb3-listados.b3.com.br/"
-                    "listedCompaniesProxy/CompanyDataCall/GetListedFinancial/"
+                    "listedCompaniesProxy/CompanyCall/GetListedFinancial/"
 }
 NSD_ENDPOINT = (
     "https://www.rad.cvm.gov.br/ENET/frmGerenciaPaginaFRE.aspx?"

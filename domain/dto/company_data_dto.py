@@ -64,7 +64,7 @@ class CompanyDataDTO:
         # also handled for backward compatibility with existing scrapers.
         return CompanyDataDTO(
             cvm_code=raw.get("cvm_code") or raw.get("codeCVM"),
-            issuing_company=raw.get("issuing_company") or raw.get("issuingCompanyData"),
+            issuing_company=raw.get("issuing_company") or raw.get("issuingCompany"),
             trading_name=raw.get("trading_name") or raw.get("tradingName"),
             company_name=raw.get("company_name") or raw.get("companyName"),
             cnpj=raw.get("cnpj"),
