@@ -71,8 +71,9 @@ class StatementFetchService:
 
         if not company_records or not nsd_records:
             return []
-
-        nsd_rows_processed = self.parsed_statements_repo.get_existing_by_column(
+        raw_rows_records = self.raw_statement_repo.get_all()
+        parsed_rows_records = self.parsed_statements_repo.get_all()
+        nsd_rows_processed = self.raw_statement_repo.get_existing_by_column(
             column_name="nsd"
         )
         valid_types = set(self.config.domain.statements_types)

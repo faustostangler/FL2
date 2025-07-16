@@ -142,7 +142,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
 
         try:
             # Query all rows from the corresponding table
-            results = session.query(model).all()
+            results = session.query(model).order_by(pk_column).all()
 
             # Convert each ORM instance into a DTO
             return [model.to_dto() for model in results]
@@ -232,7 +232,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
 
         try:
             # Execute a distinct query for the primary key column
-            results = session.query(pk_column).distinct().all()
+            results = session.query(pk_column).distinct().order_by(pk_column).all()
 
             # Extract and collect non-null keys into a set
             return {row[0] for row in results if row[0]}
@@ -250,7 +250,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         session = self.Session()
 
         # Retrieve the SQLAlchemy model class associated with the DTO type
-        model = self.get_model_class()
+        model, pk_column = self.get_model_class()
 
         try:
             # dynamically access the ORM attribute
