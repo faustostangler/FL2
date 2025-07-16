@@ -82,14 +82,11 @@ class SQLiteNSDRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
         finally:
             session.close()
 
-    def get_all_primary_keys(self) -> set[int]:
-        """Retrieve all distinct primary key values from the NSDModel table.
-
-        Returns: All unique primary key values (nsd) from the NSDModel table.
-        """
+    def get_all_primary_keys(self) -> set[str]:
+        """Retrieve all distinct NSD primary keys stored."""
         session = self.Session()
         try:
             results = session.query(NSDModel.nsd).distinct().all()
-            return {row[0] for row in results if row[0]}
+            return {str(row[0]) for row in results if row[0] is not None}
         finally:
             session.close()
