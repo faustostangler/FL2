@@ -3,10 +3,10 @@ from unittest.mock import MagicMock
 from application.usecases.fetch_statements import FetchStatementsUseCase
 from domain.dto.nsd_dto import NsdDTO
 from domain.ports import (
-    ParsedStatementRepositoryPort,
-    SqlAlchemyRawStatementRepository,
     RawStatementScraperPort,
+    SqlAlchemyParsedStatementRepositoryPort,
 )
+from infrastructure.repositories import SqlAlchemyRawStatementRepository
 from tests.conftest import DummyConfig, DummyLogger
 
 
@@ -28,7 +28,7 @@ def _make_nsd(nsd: int) -> NsdDTO:
 
 def test_fetch_statement_rows_skips_existing(monkeypatch):
     source = MagicMock(spec=RawStatementScraperPort)
-    rows_repo = MagicMock(spec=ParsedStatementRepositoryPort)
+    rows_repo = MagicMock(spec=SqlAlchemyParsedStatementRepositoryPort)
     stmt_repo = MagicMock(spec=SqlAlchemyRawStatementRepository)
     stmt_repo.get_all_primary_keys = MagicMock(return_value={1})
 

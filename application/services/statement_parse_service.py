@@ -5,7 +5,8 @@ from typing import List, Tuple
 from application.usecases.parse_and_classify_statements import (
     ParseAndClassifyStatementsUseCase,
 )
-from domain.dto import NsdDTO, StatementDTO, StatementRowsDTO, WorkerTaskDTO
+from domain.dto import NsdDTO, ParsedStatementDTO, WorkerTaskDTO
+from domain.dto.raw_statement_dto import RawStatementDTO
 from domain.ports import LoggerPort, SqlAlchemyRawStatementRepositoryPort
 from infrastructure.config import Config
 from infrastructure.helpers import MetricsCollector, WorkerPool
@@ -35,8 +36,8 @@ class StatementParseService:
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def _parse_all(
-        self, fetched: List[Tuple[NsdDTO, List[StatementRowsDTO]]]
-    ) -> List[List[StatementDTO]]:
+        self, fetched: List[Tuple[NsdDTO, List[RawStatementDTO]]]
+    ) -> List[List[ParsedStatementDTO]]:
         collector = MetricsCollector()
         parse_pool = WorkerPool(
             config=self.config,
@@ -46,7 +47,7 @@ class StatementParseService:
 
         tasks = list(enumerate(fetched))
 
-        def processor(task: WorkerTaskDTO) -> List[StatementDTO]:
+        def processor(task: WorkerTaskDTO) -> List[ParsedStatementDTO]:
             _nsd, rows = task.data
             return [self.parse_usecase.parse_and_store_row(r) for r in rows]
 
@@ -54,7 +55,7 @@ class StatementParseService:
         return result.items
 
     def parse_statements(
-        self, fetched: List[Tuple[NsdDTO, List[StatementRowsDTO]]]
+        self, fetched: List[Tuple[NsdDTO, List[RawStatementDTO]]]
     ) -> None:
         """Parse and persist statements from ``fetched`` rows."""
         # self.logger.log("Run  Method statement_parse_service.run()", level="info")

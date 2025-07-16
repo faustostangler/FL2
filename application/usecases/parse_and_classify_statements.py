@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from domain.dto import StatementDTO
-from domain.dto.statement_rows_dto import StatementRowsDTO
+from domain.dto import ParsedStatementDTO
+from domain.dto.raw_statement_dto import RawStatementDTO
 from domain.ports import LoggerPort, SqlAlchemyRawStatementRepositoryPort
 from domain.utils.statement_processing import classify_section
 from infrastructure.config import Config
@@ -9,7 +9,7 @@ from infrastructure.helpers import SaveStrategy
 
 
 class ParseAndClassifyStatementsUseCase:
-    """Parse raw HTML and build :class:`StatementDTO` objects."""
+    """Parse raw HTML and build :class:`ParsedStatementDTO` objects."""
 
     def __init__(
         self,
@@ -19,15 +19,15 @@ class ParseAndClassifyStatementsUseCase:
     ) -> None:
         self.logger = logger
         self.repository = repository
-        self.strategy: SaveStrategy[StatementDTO] = SaveStrategy(
+        self.strategy: SaveStrategy[ParsedStatementDTO] = SaveStrategy(
             repository.save_all, config=config
         )
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def parse_and_store_row(self, row: StatementRowsDTO) -> StatementDTO:
-        """Build a :class:`StatementDTO` from a statement row."""
-        dto = StatementDTO(
+    def parse_and_store_row(self, row: RawStatementDTO) -> ParsedStatementDTO:
+        """Build a :class:`ParsedStatementDTO` from a statement row."""
+        dto = ParsedStatementDTO(
             batch_id=str(row.nsd),
             account=row.account,
             section=classify_section(row.account),

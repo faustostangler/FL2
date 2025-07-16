@@ -5,7 +5,8 @@ from __future__ import annotations
 from typing import Callable, List, Optional, Tuple
 
 from application.usecases.fetch_statements import FetchStatementsUseCase
-from domain.dto import NsdDTO, StatementRowsDTO
+from domain.dto import NsdDTO
+from domain.dto.raw_statement_dto import RawStatementDTO
 from domain.ports import (
     LoggerPort,
     MetricsCollectorPort,
@@ -95,10 +96,7 @@ class StatementFetchService:
         _full_results = [
             n
             for n in nsd_records
-            if (
-                n.nsd_type in valid_types
-                and n.company_name in common_company_names
-            )
+            if (n.nsd_type in valid_types and n.company_name in common_company_names)
         ]
         # self.logger.log(f"results: {len(results)} full_results: {len(full_results)}")
         # self.logger.log(
@@ -110,9 +108,9 @@ class StatementFetchService:
 
     def fetch_statements(
         self,
-        save_callback: Optional[Callable[[List[StatementRowsDTO]], None]] = None,
+        save_callback: Optional[Callable[[List[RawStatementDTO]], None]] = None,
         threshold: Optional[int] = None,
-    ) -> List[Tuple[NsdDTO, List[StatementRowsDTO]]]:
+    ) -> List[Tuple[NsdDTO, List[RawStatementDTO]]]:
         """Execute the fetch workflow and return raw rows.
 
         Parameters

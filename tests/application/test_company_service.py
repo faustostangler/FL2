@@ -15,8 +15,7 @@ def test_sync_companies_calls_usecase(monkeypatch):
     mock_usecase_inst = MagicMock()
     mock_usecase_cls.return_value = mock_usecase_inst
     monkeypatch.setattr(
-        # "application.services.company_services.SyncCompanyDataUseCase",
-        "application.services.company_service.SyncCompanyDataUseCase",
+        "application.services.company_data_service.SyncCompanyDataUseCase",
         mock_usecase_cls,
     )
 

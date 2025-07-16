@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Tuple
 
-from domain.dto import StatementDTO
+from domain.dto import ParsedStatementDTO
 from domain.ports import LoggerPort, SqlAlchemyParsedStatementRepositoryPort
 from infrastructure.config import Config
 from infrastructure.models.statement_model import StatementModel
@@ -11,11 +11,14 @@ from infrastructure.repositories.sqlalchemy_repository_base import (
 )
 
 
-class SqlAlchemyParsedStatementRepository(SqlAlchemyRepositoryBase[StatementDTO, int], SqlAlchemyParsedStatementRepositoryPort):
-    """SQLite-backed repository for ``StatementRowsDTO`` objects."""
+class SqlAlchemyParsedStatementRepository(
+    SqlAlchemyRepositoryBase[ParsedStatementDTO, int],
+    SqlAlchemyParsedStatementRepositoryPort,
+):
+    """SQLite-backed repository for ``ParsedStatementDTO`` objects."""
 
     def __init__(self, config: Config, logger: LoggerPort) -> None:
-        super().__init__(config, logger) 
+        super().__init__(config, logger)
 
         self.config = config
         self.logger = logger
