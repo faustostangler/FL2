@@ -13,11 +13,11 @@ from infrastructure.repositories.sqlalchemy_repository_base import (
 )
 
 
-class SqlAlchemyNsdRepository(SqlAlchemyRepositoryBase[NsdDTO, int], NSDRepositoryPort):
+class SqlAlchemyNsdRepository(SqlAlchemyRepositoryBase[NsdDTO, str], NSDRepositoryPort):
     """Concrete repository for NsdDTO using SQLite via SQLAlchemy."""
 
     def __init__(self, config: Config, logger: LoggerPort) -> None:
-        super().__init__(config, logger) 
+        super().__init__(config, logger)
 
         self.config = config
         self.logger = logger
@@ -29,4 +29,3 @@ class SqlAlchemyNsdRepository(SqlAlchemyRepositoryBase[NsdDTO, int], NSDReposito
             type: The model class associated with this repository.
         """
         return NSDModel, NSDModel.nsd
-

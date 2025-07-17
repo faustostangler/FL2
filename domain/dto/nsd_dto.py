@@ -12,7 +12,7 @@ from typing import Optional
 class NsdDTO:
     """Structured NSD data extracted from the exchange."""
 
-    nsd: int
+    nsd: str
     company_name: Optional[str]
     quarter: Optional[datetime]
     version: Optional[str]
@@ -28,10 +28,10 @@ class NsdDTO:
     def from_dict(raw: dict) -> NsdDTO:
         """Build an ``NsdDTO`` from scraped raw data."""
 
-        try:
-            nsd_value = int(raw.get("nsd", 0))
-        except (TypeError, ValueError) as exc:
-            raise ValueError("Invalid NSD value") from exc
+        nsd_raw = raw.get("nsd", "")
+        if nsd_raw is None or not str(nsd_raw).isdigit():
+            raise ValueError("Invalid NSD value")
+        nsd_value = str(nsd_raw)
 
         return NsdDTO(
             nsd=nsd_value,

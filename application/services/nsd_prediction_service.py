@@ -32,7 +32,7 @@ def _find_next_probable_nsd(
     if not records:
         return []
 
-    last_nsd = max(r.nsd for r in records)
+    last_nsd = max(int(r.nsd) for r in records)
     max_date = max(r.sent_date for r in records)
     window_start = max_date - timedelta(days=window_days)
 
