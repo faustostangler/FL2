@@ -31,4 +31,4 @@ def test_statement_rows_dto_from_dict():
     }
     dto = RawStatementDTO.from_dict(raw)
     assert dto.account == "00.01.01"
-    assert dto.nsd == 102395
+    assert dto.nsd == "102395"

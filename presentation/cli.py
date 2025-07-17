@@ -220,18 +220,18 @@ class CLIAdapter:
         )
         _company_all = company_repo.get_all()
         _company_all_primary_keys = company_repo.get_all_primary_keys()
-        identifier = cvm_code = '25224'
+        identifier = "25224"
         _company_has = company_repo.has_item(identifier)
         _company_by_id = company_repo.get_by_id(identifier)
-        column_name = 'cvm_code'
+        column_name = "cvm_code"
         _company_by_column = company_repo.get_existing_by_column(column_name)
 
         _nsd_all = nsd_repo.get_all()
         _nsd_all_primary_keys = nsd_repo.get_all_primary_keys()
-        identifier = cvm_code = 25224
+        identifier = 25224
         _nsd_has = nsd_repo.has_item(identifier)
         _nsd_by_id = nsd_repo.get_by_id(identifier)
-        column_name = 'cvm_code'
+        column_name = "cvm_code"
         _nsd_by_column = nsd_repo.get_existing_by_column(column_name)
 
         # Execute fetch process and log total rows fetched
