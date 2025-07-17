@@ -187,7 +187,7 @@ class CLIAdapter:
         # self.logger.log("End Instance raw_statement_repo", level="info")
 
         # self.logger.log("Instantiate parsed_statements_repo", level="info")
-        parsed_statements_repo = SqlAlchemyParsedStatementRepository(
+        parsed_statement_repo = SqlAlchemyParsedStatementRepository(
             config=self.config, logger=self.logger
         )
         # self.logger.log("End Instance parsed_statements_repo", level="info")
@@ -208,7 +208,7 @@ class CLIAdapter:
         statements_fetch_service = StatementFetchService(
             logger=self.logger,
             source=raw_statements_scraper,
-            parsed_statements_repo=parsed_statements_repo,
+            parsed_statements_repo=parsed_statement_repo,
             company_repo=company_repo,
             nsd_repo=nsd_repo,
             raw_statement_repo=raw_statement_repo,
@@ -233,9 +233,26 @@ class CLIAdapter:
         column_name = "nsd"
         _nsd_by_column = nsd_repo.get_existing_by_column(column_name)
 
+        _raw_statement_all = raw_statement_repo.get_all()
+        _raw_statement_all_primary_keys = raw_statement_repo.get_all_primary_keys()
+        identifier = '25224'
+        _raw_statement_has = raw_statement_repo.has_item(identifier)
+        _raw_statement_by_id = raw_statement_repo.get_by_id(identifier)
+        column_name = "nsd"
+        _raw_statement_by_column = raw_statement_repo.get_existing_by_column(column_name)
+
+        _parsed_statement_all = parsed_statement_repo.get_all()
+        _parsed_statement_all_primary_keys = parsed_statement_repo.get_all_primary_keys()
+        identifier = '25224'
+        _parsed_statement_has = parsed_statement_repo.has_item(identifier)
+        _parsed_statement_by_id = parsed_statement_repo.get_by_id(identifier)
+        column_name = "nsd"
+        _parsed_statement_by_column = parsed_statement_repo.get_existing_by_column(column_name)
+
         # Execute fetch process and log total rows fetched
         # self.logger.log("Call Method controller.run()._statement_service().statements_fetch_service.run()", level="info")
         raw_rows = statements_fetch_service.fetch_statements()
+
         self.logger.log(f"total {len(raw_rows)}")
         # self.logger.log("End  Method controller.run()._statement_service().statements_fetch_service.run()", level="info")
 
