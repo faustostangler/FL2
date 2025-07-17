@@ -3,36 +3,53 @@
 from infrastructure.config import Config
 from infrastructure.factories import create_data_cleaner
 from infrastructure.logging import Logger
-from presentation import CLIController
+from presentation import CLIAdapter
 
-# Executa a aplicação principal se este arquivo for executado diretamente
-if __name__ == "__main__":
+
+def main() -> None:
+    """Initialize and run the FLY application via the command-line interface.
+
+    This function executes the following startup sequence:
+    - Instantiates the configuration object (``Config``).
+    - Creates the main logger.
+    - Creates the data cleaner component.
+    - Instantiates the CLI controller with injected dependencies.
+    - Starts the application logic by calling ``controller.start_fly()``.
+    """
     # Inicializa a configuração
     config = Config()
     logger = Logger(config)
 
-    # Load CLI
-    logger.log(
-        "Run Project FLY",
-        level="info",
-    )
+    try:
 
-    # Load data_cleaner
-    data_cleaner = create_data_cleaner(config, logger)
+        # Load CLI
+        logger.log(
+            "Run Project FLY",
+            level="info",
+        )
 
-    # Entry point for the FLY CLI application.
-    # logger.log("Instantiate controller", level="info")
-    controller = CLIController(config=config, logger=logger, data_cleaner=data_cleaner)
+        # Load data_cleaner
+        data_cleaner = create_data_cleaner(config, logger)
 
-    # Run Controller
-    # logger.log("Call Method controller.start()", level="info")
-    controller.start_fly()
-    # logger.log("End  Method controller.start()", level="info")
+        # Entry point for the FLY CLI application.
+        # logger.log("Instantiate controller", level="info")
+        controller = CLIAdapter(config=config, logger=logger, data_cleaner=data_cleaner)
 
-    # logger.log("End Instance controller", level="info")
+        # Run Controller
+        # logger.log("Call Method controller.start()", level="info")
+        controller.start_fly()
+        # logger.log("End  Method controller.start()", level="info")
 
-    # Finaliza a execução com uma mensagem de confirmação
-    logger.log(
-        "Finish Project FLY",
-        level="info",
-    )
+        # logger.log("End Instance controller", level="info")
+
+        # Finaliza a execução com uma mensagem de confirmação
+        logger.log(
+            "Finish Project FLY",
+            level="info",
+        )
+    except Exception as e:  # pragma: no cover
+        logger.log(f"Erro {e}", level="info", show_path=True)
+
+
+if __name__ == "__main__":
+    main()

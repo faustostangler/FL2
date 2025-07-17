@@ -16,15 +16,37 @@ def main() -> None:
     - Instantiates the CLI controller with injected dependencies.
     - Starts the application logic by calling ``controller.start_fly()``.
     """
+    # Inicializa a configuração
     config = Config()
     logger = Logger(config)
 
     try:
-        logger.log("Start Project FLY", level="info")
+
+        # Load CLI
+        logger.log(
+            "Run Project FLY",
+            level="info",
+        )
+
+        # Load data_cleaner
         data_cleaner = create_data_cleaner(config, logger)
+
+        # Entry point for the FLY CLI application.
+        # logger.log("Instantiate controller", level="info")
         controller = CLIAdapter(config=config, logger=logger, data_cleaner=data_cleaner)
+
+        # Run Controller
+        # logger.log("Call Method controller.start()", level="info")
         controller.start_fly()
-        logger.log("Finish Project FLY", level="info")
+        # logger.log("End  Method controller.start()", level="info")
+
+        # logger.log("End Instance controller", level="info")
+
+        # Finaliza a execução com uma mensagem de confirmação
+        logger.log(
+            "Finish Project FLY",
+            level="info",
+        )
     except Exception as e:  # pragma: no cover
         logger.log(f"Erro {e}", level="info", show_path=True)
 
