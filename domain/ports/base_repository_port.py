@@ -40,6 +40,24 @@ class SqlAlchemyRepositoryBasePort(ABC, Generic[T, K]):
         raise NotImplementedError
 
     @abstractmethod
+    def get_all_primary_keys(self) -> List[K]:
+        """Retrieve the set of all primary keys currently stored.
+
+        Returns:
+            Set[K]: A set of unique identifiers for all stored items.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def get_existing_by_columns(self, column_names: Union[str, List[str]]) -> List[Tuple]:
+        """Retrieve the set of all primary keys currently stored by column.
+
+        Returns:
+            Set[K]: A set of unique identifiers for all stored items.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def has_item(self, identifier: K) -> bool:
         """Check whether an item with the given identifier exists.
 
@@ -63,24 +81,6 @@ class SqlAlchemyRepositoryBasePort(ABC, Generic[T, K]):
 
         Raises:
             KeyError or ValueError: If the item is not found.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_all_primary_keys(self) -> List[K]:
-        """Retrieve the set of all primary keys currently stored.
-
-        Returns:
-            Set[K]: A set of unique identifiers for all stored items.
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    def get_existing_by_columns(self, column_names: Union[str, List[str]]) -> List[Tuple]:
-        """Retrieve the set of all primary keys currently stored by column.
-
-        Returns:
-            Set[K]: A set of unique identifiers for all stored items.
         """
         raise NotImplementedError
 

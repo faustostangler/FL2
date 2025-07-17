@@ -217,37 +217,6 @@ class CLIAdapter:
             worker_pool_executor=self.worker_pool_executor,
             max_workers=self.config.global_settings.max_workers,
         )
-        _company_all = company_repo.get_all()
-        _company_all_primary_keys = company_repo.get_all_primary_keys()
-        identifier = "25224"
-        _company_has = company_repo.has_item(identifier)
-        _company_by_id = company_repo.get_by_id(identifier)
-        column_name = "cvm_code"
-        _company_by_column = company_repo.get_existing_by_columns(column_name)
-
-        _nsd_all = nsd_repo.get_all()
-        _nsd_all_primary_keys = nsd_repo.get_all_primary_keys()
-        identifier = '25224'
-        _nsd_has = nsd_repo.has_item(identifier)
-        _nsd_by_id = nsd_repo.get_by_id(identifier)
-        column_name = "nsd"
-        _nsd_by_column = nsd_repo.get_existing_by_columns(column_name)
-
-        _raw_statement_all = raw_statement_repo.get_all()
-        _raw_statement_all_primary_keys = raw_statement_repo.get_all_primary_keys()
-        identifier = '25224'
-        _raw_statement_has = raw_statement_repo.has_item(identifier)
-        _raw_statement_by_id = raw_statement_repo.get_by_id(identifier)
-        column_name = ["nsd","company_name","quarter","version","grupo","quadro","account"]
-        _raw_statement_by_column = raw_statement_repo.get_existing_by_columns(column_name)
-
-        _parsed_statement_all = parsed_statement_repo.get_all()
-        _parsed_statement_all_primary_keys = parsed_statement_repo.get_all_primary_keys()
-        identifier = '25224'
-        _parsed_statement_has = parsed_statement_repo.has_item(identifier)
-        _parsed_statement_by_id = parsed_statement_repo.get_by_id(identifier)
-        column_name = "nsd"
-        _parsed_statement_by_column = parsed_statement_repo.get_existing_by_columns(column_name)
 
         # Execute fetch process and log total rows fetched
         # self.logger.log("Call Method controller.run()._statement_service().statements_fetch_service.run()", level="info")

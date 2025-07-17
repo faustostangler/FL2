@@ -182,6 +182,58 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
             # Ensure session is always closed
             session.close()
 
+    def get_existing_by_columns(self, column_names: Union[str, List[str]]) -> List[Tuple]:
+        """
+        Return distinct and ordered values for one or more given columns.
+
+        Examples:
+            repo.get_existing_by_columns("nsd") -> [("94790",), ("12345",)]
+            repo.get_existing_by_columns(["nsd", "company_name"]) -> [("94790", "ACME"), ("12345", "ROMI")]
+
+        Args:
+            column_names: A single column name as string, or a list of column names.
+
+        Returns:
+            A list of tuples with distinct and ordered values.
+        """
+        session = self.Session()
+
+        # Retrieve the SQLAlchemy model class associated with the DTO type
+        model, pk_columns = self.get_model_class()
+
+        try:
+            if isinstance(column_names, str):
+                column_names = [column_names]
+
+            kw_columns = [getattr(model, name) for name in column_names]
+            rows = session.query(*kw_columns).distinct().all()
+
+            # remove nulls
+            results = [row for row in rows if not any(field is None for field in row)]
+
+            # Create a lightweight wrapper to simulate attribute access on a tuple
+            class RowWrapper:
+                def __init__(self, values):
+                    # Store the original tuple of values
+                    self._values = values
+
+                def __getattr__(self, key):
+                    # Find the index of the requested column name
+                    idx = column_names.index(key)
+                    # Return the value at that index in the tuple
+                    return self._values[idx]
+
+            # Sort the result list using a custom sort key
+            results.sort(
+                key=lambda row:
+                    # Wrap the tuple to enable attribute-style access
+                    self._sort_key(RowWrapper(row), kw_columns)
+            )
+
+            return results
+        finally:
+            session.close()
+
     def has_item(self, identifier: K) -> bool:
         """Check if a record with the given identifier exists in the database.
 
@@ -251,58 +303,6 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
             return obj.to_dto()
         finally:
             # Ensure the session is closed in all cases
-            session.close()
-
-    def get_existing_by_columns(self, column_names: Union[str, List[str]]) -> List[Tuple]:
-        """
-        Return distinct and ordered values for one or more given columns.
-
-        Examples:
-            repo.get_existing_by_columns("nsd") -> [("94790",), ("12345",)]
-            repo.get_existing_by_columns(["nsd", "company_name"]) -> [("94790", "ACME"), ("12345", "ROMI")]
-
-        Args:
-            column_names: A single column name as string, or a list of column names.
-
-        Returns:
-            A list of tuples with distinct and ordered values.
-        """
-        session = self.Session()
-
-        # Retrieve the SQLAlchemy model class associated with the DTO type
-        model, pk_columns = self.get_model_class()
-
-        try:
-            if isinstance(column_names, str):
-                column_names = [column_names]
-
-            kw_columns = [getattr(model, name) for name in column_names]
-            rows = session.query(*kw_columns).distinct().all()
-
-            # remove nulls
-            results = [row for row in rows if not any(field is None for field in row)]
-
-            # Create a lightweight wrapper to simulate attribute access on a tuple
-            class RowWrapper:
-                def __init__(self, values):
-                    # Store the original tuple of values
-                    self._values = values
-
-                def __getattr__(self, key):
-                    # Find the index of the requested column name
-                    idx = column_names.index(key)
-                    # Return the value at that index in the tuple
-                    return self._values[idx]
-
-            # Sort the result list using a custom sort key
-            results.sort(
-                key=lambda row:
-                    # Wrap the tuple to enable attribute-style access
-                    self._sort_key(RowWrapper(row), kw_columns)
-            )
-
-            return results
-        finally:
             session.close()
 
     def _safe_cast(self, value: Any) -> Union[int, str]:
