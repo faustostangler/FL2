@@ -15,7 +15,7 @@ def test_find_next_probable_nsd_returns_sequence():
     for i in range(10):
         items.append(
             NsdDTO(
-                nsd=i + 1,
+                nsd=str(i + 1),
                 company_name=None,
                 quarter=None,
                 version=None,

@@ -12,7 +12,7 @@ from infrastructure.repositories.sqlalchemy_repository_base import (
 
 
 class SqlAlchemyParsedStatementRepository(
-    SqlAlchemyRepositoryBase[ParsedStatementDTO, int],
+    SqlAlchemyRepositoryBase[ParsedStatementDTO, str],
     SqlAlchemyParsedStatementRepositoryPort,
 ):
     """SQLite-backed repository for ``ParsedStatementDTO`` objects."""

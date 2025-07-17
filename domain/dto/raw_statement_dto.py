@@ -8,7 +8,7 @@ from typing import Optional
 class RawStatementDTO:
     """Immutable DTO representing a scraped statement row."""
 
-    nsd: int
+    nsd: str
     company_name: Optional[str]
     quarter: Optional[str]
     version: Optional[str]
@@ -22,10 +22,10 @@ class RawStatementDTO:
     def from_dict(raw: dict) -> "RawStatementDTO":
         """Create a ``RawStatementDTO`` from a raw dictionary."""
 
-        try:
-            nsd_value = int(raw.get("nsd", 0))
-        except (TypeError, ValueError) as exc:
-            raise ValueError("Invalid NSD value") from exc
+        nsd_raw = raw.get("nsd", "")
+        if nsd_raw is None or not str(nsd_raw).isdigit():
+            raise ValueError("Invalid NSD value")
+        nsd_value = str(nsd_raw)
 
         return RawStatementDTO(
             nsd=nsd_value,
