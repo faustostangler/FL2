@@ -165,7 +165,6 @@ class NsdScraper(NSDSourcePort):
 
             return NsdDTO.from_dict(parsed)
 
-
         def handle_batch(item: Optional[NsdDTO]) -> None:
             if item is not None:
                 strategy.handle([item])
@@ -364,7 +363,7 @@ class NsdScraper(NSDSourcePort):
             after the last stored record.
         """
         # Get all nsd with valid sent_date
-        all_nsds = self.repository.get_all_primary_keys()
+        all_nsds = {int(nsd) for nsd in self.repository.get_all_primary_keys()}
         if not all_nsds:
             return start
 

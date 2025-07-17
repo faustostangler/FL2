@@ -23,12 +23,11 @@ class SqlAlchemyRawStatementRepository(
     def save_all(self, items: List[StatementDTO]) -> None:
         session = self.Session()
         try:
-            flat_items = ListFlattener.flatten(items)  # recebe nested lists, devolve flat list
+            flat_items = ListFlattener.flatten(
+                items
+            )  # recebe nested lists, devolve flat list
 
-            valid_items = [
-                item for item in flat_items
-                if item is not None
-            ]
+            valid_items = [item for item in flat_items if item is not None]
 
             for dto in valid_items:
                 model = StatementModel.from_dto(dto)
@@ -37,8 +36,7 @@ class SqlAlchemyRawStatementRepository(
 
             if len(valid_items) > 0:
                 self.logger.log(
-                    f"Saved {len(valid_items)} raw statement rows", 
-                    level="info"
+                    f"Saved {len(valid_items)} raw statement rows", level="info"
                 )
         except Exception as exc:  # noqa: BLE001
             session.rollback()
@@ -59,7 +57,7 @@ class SqlAlchemyRawStatementRepository(
         session = self.Session()
         try:
             return (
-                session.query(StatementModel).filter_by(id=int(identifier)).first()
+                session.query(StatementModel).filter_by(id=identifier).first()
                 is not None
             )
         finally:
@@ -68,7 +66,7 @@ class SqlAlchemyRawStatementRepository(
     def get_by_id(self, id: str) -> StatementDTO:
         session = self.Session()
         try:
-            obj = session.query(StatementModel).filter_by(id=int(id)).first()
+            obj = session.query(StatementModel).filter_by(id=id).first()
             if not obj:
                 raise ValueError(f"Statement not found: {id}")
             return obj.to_dto()
