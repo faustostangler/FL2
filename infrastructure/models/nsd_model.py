@@ -4,6 +4,9 @@ from datetime import datetime
 from typing import Optional
 
 from sqlalchemy import DateTime, String
+# =======
+# from sqlalchemy import DateTime, Integer
+# >>>>>>> 2025-07-03-Statements-Round-1
 from sqlalchemy.orm import Mapped, mapped_column
 
 from domain.dto.nsd_dto import NsdDTO
@@ -17,6 +20,9 @@ class NSDModel(BaseModel):
     __tablename__ = "tbl_nsd"
 
     nsd: Mapped[str] = mapped_column(String, primary_key=True)
+# =======
+#     nsd: Mapped[int] = mapped_column(Integer, primary_key=True)
+# >>>>>>> 2025-07-03-Statements-Round-1
     company_name: Mapped[Optional[str]] = mapped_column()
     quarter: Mapped[Optional[datetime]] = mapped_column(DateTime)
     version: Mapped[Optional[str]] = mapped_column()

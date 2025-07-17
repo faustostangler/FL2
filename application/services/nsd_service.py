@@ -15,16 +15,17 @@ class NsdService:
     ) -> None:
         """Instantiate the service with its required dependencies."""
         self.logger = logger
-        # Log the start of the service for observability.
-        self.logger.log("Start NsdService", level="info")
 
         # Set up the underlying use case that performs the synchronization.
-        self.sync_usecase = SyncNSDUseCase(
+        self.sync_nsd_usecase = SyncNSDUseCase(
             logger=self.logger, repository=repository, scraper=scraper
         )
 
-    def run(self) -> None:
-        """Run the NSD synchronization workflow."""
+        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
+
+    def sync_nsd(self) -> None:
+        """Start the NSD synchronization workflow."""
         # Delegate the work to the injected use case.
-        self.sync_usecase.run()
-        self.logger.log("Finish NsdService", level="info")
+        # self.logger.log("Call Method controller.start()._nsd_service().sync_nsd().sync_nsd_usecase.synchronize_nsd()", level="info")
+        self.sync_nsd_usecase.synchronize_nsd()
+        # self.logger.log("End  Method controller.start()._nsd_service().sync_nsd().sync_nsd_usecase.synchronize_nsd()", level="info")

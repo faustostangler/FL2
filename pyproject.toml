@@ -23,6 +23,10 @@ addopts = "--maxfail=1 --disable-warnings --cov=fly --cov-report=term-missing"
 [tool.ruff]
 select = ["E", "F", "W", "I"]
 ignore = ["E501"]
+exclude = ["legacy/**"]
+
+[tool.ruff.format]
+exclude = ["legacy/**"]
 
 [tool.black]
 line-length = 88

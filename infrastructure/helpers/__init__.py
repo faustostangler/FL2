@@ -1,3 +1,4 @@
+from .byte_formatter import ByteFormatter
 from .data_cleaner import DataCleaner
 from .fetch_utils import FetchUtils
 from .metrics_collector import MetricsCollector
@@ -12,4 +13,5 @@ __all__ = [
     "WorkerPool",
     "MetricsCollector",
     "SaveStrategy",
+    "ByteFormatter",
 ]

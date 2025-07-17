@@ -12,7 +12,7 @@ from tests.conftest import DummyLogger
 
 def test_execute_converts_and_saves():
     repo = MagicMock(spec=CompanyRepositoryPort)
-    repo.get_all_primary_keys.return_value = {"SKIP"}
+    repo.get_all_primary_keys = MagicMock(return_value={"SKIP"})
 
     raw = types.SimpleNamespace(
         cvm_code="001",
@@ -74,7 +74,7 @@ def test_execute_converts_and_saves():
         max_workers=2,
     )
 
-    result = usecase.run()
+    result = usecase.synchronize_companies()
 
     repo.get_all_primary_keys.assert_called_once()
     scraper.fetch_all.assert_called_once()

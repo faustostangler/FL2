@@ -3,13 +3,24 @@
 from application import CompanyMapper
 from application.services.company_service import CompanyService
 from application.services.nsd_service import NsdService
+from application.services.statement_fetch_service import StatementFetchService
+
+# from application.services.statement_parse_service import StatementParseService
 from domain.ports import LoggerPort
 from infrastructure.config import Config
 from infrastructure.helpers import WorkerPool
 from infrastructure.helpers.metrics_collector import MetricsCollector
-from infrastructure.repositories import SQLiteCompanyRepository, SQLiteNSDRepository
+from infrastructure.repositories import (
+    SqlAlchemyCompanyRepository,
+    SqlAlchemyNsdRepository,
+    SqlAlchemyParsedStatementRepository,
+    SqlAlchemyRawStatementRepository,
+)
 from infrastructure.scrapers.company_exchange_scraper import CompanyExchangeScraper
 from infrastructure.scrapers.nsd_scraper import NsdScraper
+from infrastructure.scrapers.statements_source_adapter import (
+    RequestsRawStatementSourceAdapter,
+)
 
 
 class CLIController:
@@ -30,41 +41,84 @@ class CLIController:
         # The data cleaner is injected into scrapers.
         self.data_cleaner = data_cleaner
 
-    def run(self):
+        # Collector gathers metrics for the worker pool.
+        # self.logger.log("Instantiate collector", level="info")
+        self.collector = MetricsCollector()
+        # self.logger.log("End Instance collector", level="info")
+
+        # Worker pool executes scraping tasks concurrently.
+        # self.logger.log("Instantiate worker_pool_executor", level="info")
+        self.worker_pool_executor = WorkerPool(
+            self.config,
+            metrics_collector=self.collector,
+            max_workers=self.config.global_settings.max_workers or 1,
+        )
+        # self.logger.log("End Instance worker_pool_executor", level="info")
+
+        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
+
+    def start_fly(self):
         """Execute the main CLI tasks sequentially."""
-        # Announce the CLI startup for visibility.
-        self.logger.log("Start FLY CLI", level="info")
+        # self.logger.log("Run  Method controller.run()", level="info")
 
-        # Run the company synchronization workflow.
-        # self._run_company_sync()
-        self._run_nsd_sync()
+        # Start the company synchronization workflow.
+        # self.logger.log("Call Method controller.run()._company_service()", level="info")
+        self._company_service()
+        # self.logger.log("End  Method controller.run()._company_service()", level="info")
 
-        # Indicate the CLI finished executing.
-        self.logger.log("Finish FLY CLI", level="info")
+        # self.logger.log("Call Method controller.run()._nsd_service()", level="info")
+        self._nsd_service()
+        # self.logger.log("End  Method controller.run()._nsd_service()", level="info")
 
-    def _run_company_sync(self):
+        # self.logger.log(
+        #     "Call Method controller.run()._statement_service()", level="info"
+        # )
+        self._statement_service()
+        # self.logger.log(
+        #     "End  Method controller.run()._statement_service()", level="info"
+        # )
+
+        # self.logger.log("End  Method controller.run()", level="info")
+
+    def _company_service(self):
         """Build and run the company synchronization workflow."""
-        # Announce the workflow start.
-        self.logger.log("Start Companies Sync Use Case", level="info")
+
+        # self.logger.log("Run  Method controller.run()._company_service()", level="info")
+
+        # Mapper transforms scraped data into DTOs.
+        # self.logger.log("Instantiate mapper", level="info")
+        mapper = CompanyMapper(self.data_cleaner)
+        # self.logger.log("End Instance mapper", level="info")
 
         # Create repository for persistent storage.
-        company_repo = SQLiteCompanyRepository(config=self.config, logger=self.logger)
-        # Mapper transforms scraped data into DTOs.
-        mapper = CompanyMapper(self.data_cleaner)
-        # Collector gathers metrics for the worker pool.
-        collector = MetricsCollector()
-        # Worker pool executes scraping tasks concurrently.
-        executor = WorkerPool(self.config, metrics_collector=collector)
-        # Assemble the scraper with all its collaborators.
+        # self.logger.log("Instantiate company_repo", level="info")
+        company_repo = SqlAlchemyCompanyRepository(
+            config=self.config, logger=self.logger
+        )
+        # self.logger.log("End Instance company_repo", level="info")
+
+        # Create Scraper
+        # self.logger.log(
+        #     "Instantiate company_scraper (mapper, worker_pool_executor, collector)",
+        #     level="info",
+        # )
         company_scraper = CompanyExchangeScraper(
             config=self.config,
             logger=self.logger,
             data_cleaner=self.data_cleaner,
             mapper=mapper,
-            executor=executor,
-            metrics_collector=collector,
+            worker_pool_executor=self.worker_pool_executor,
+            metrics_collector=self.collector,
         )
-        # Service coordinates the synchronization use case.
+        # self.logger.log(
+        #     "End Instance company_scraper (mapper, worker_pool_executor, collector)",
+        #     level="info",
+        # )
+
+        # Service coordinates the synchronization UseCase.
+        # self.logger.log(
+        #     "Instantiate company_service (company_repo, scraper)", level="info"
+        # )
         company_service = CompanyService(
             config=self.config,
             logger=self.logger,
@@ -73,37 +127,163 @@ class CLIController:
         )
 
         # Trigger the actual company synchronization process.
-        company_service.run()
+        # self.logger.log(
+        #     "Call Method controller.start().company_service.sync_companies()",
+        #     level="info",
+        # )
+        company_service.sync_companies()
+        # self.logger.log(
+        #     "Finish Method controller.start().company_service.sync_companies()",
+        #     level="info",
+        # )
 
-        # Log the end of the workflow
-        self.logger.log("Finish Companies Sync Use Case", level="info")
+        # self.logger.log(
+        #     "End Instance company_service (company_repo, scraper)", level="info"
+        # )
 
-    def _run_nsd_sync(self):
+        # self.logger.log("End  Method controller.run()", level="info")
+
+    def _nsd_service(self):
         """Build and run the NSD synchronization workflow."""
-        self.logger.log("Start NSD Sync Use Case", level="info")
+
+        # self.logger.log("Run  Method controller.run()._nsd_service()", level="info")
 
         # Create repository for persistent storage.
-        nsd_repo = SQLiteNSDRepository(config=self.config, logger=self.logger)
-        # Collector gathers metrics for the worker pool.
-        collector = MetricsCollector()
-        # Worker pool executes scraping tasks concurrently.
-        executor = WorkerPool(self.config, metrics_collector=collector)
+        # self.logger.log("Instantiate nsd_repo", level="info")
+        nsd_repo = SqlAlchemyNsdRepository(config=self.config, logger=self.logger)
+        # self.logger.log("End Instance nsd_repo", level="info")
+
         # Assemble the scraper with all its collaborators.
+        # self.logger.log(
+        #     "Instantiate nsd_scraper (worker_pool_executor, collector, nsd_repo)",
+        #     level="info",
+        # )
         nsd_scraper = NsdScraper(
             config=self.config,
             logger=self.logger,
             data_cleaner=self.data_cleaner,
-            executor=executor,
-            metrics_collector=collector,
             repository=nsd_repo,
+            worker_pool_executor=self.worker_pool_executor,
+            metrics_collector=self.collector,
         )
+        # self.logger.log(
+        #     "End Instance nsd_scraper (worker_pool_executor, collector, nsd_repo)",
+        #     level="info",
+        # )
 
+        # self.logger.log("Instantiate nsd_service (nsd_repo, nsd_scraper)", level="info")
         nsd_service = NsdService(
             logger=self.logger,
             repository=nsd_repo,
             scraper=nsd_scraper,
         )
 
-        nsd_service.run()
+        # self.logger.log(
+        #     "Call Method controller.start()._nsd_service().sync_nsd()", level="info"
+        # )
+        nsd_service.sync_nsd()
+        # self.logger.log(
+        #     "End  Method controller.start()._nsd_service().sync_nsd()", level="info"
+        # )
 
-        self.logger.log("Finish NSD Sync Use Case", level="info")
+        # self.logger.log("End Instance nsd_service (nsd_repo, nsd_scraper", level="info")
+
+        # self.logger.log("End  Method controller.run()._nsd_service()", level="info")
+
+    def _statement_service(self) -> None:
+        """Build and run the statement processing workflow."""
+
+        # self.logger.log(
+        #     "Run  Method controller.run()._statement_service()", level="info"
+        # )
+
+        # self.logger.log("Instantiate company_repo", level="info")
+        company_repo = SqlAlchemyCompanyRepository(
+            config=self.config, logger=self.logger
+        )
+        # self.logger.log("End Instance company_repo", level="info")
+
+        # self.logger.log("Instantiate nsd_repo", level="info")
+        nsd_repo = SqlAlchemyNsdRepository(config=self.config, logger=self.logger)
+        # self.logger.log("End Instance nsd_repo", level="info")
+
+        # self.logger.log("Instantiate raw_statement_repo", level="info")
+        raw_statement_repo = SqlAlchemyRawStatementRepository(
+            config=self.config, logger=self.logger
+        )
+        # self.logger.log("End Instance raw_statement_repo", level="info")
+
+        # self.logger.log("Instantiate parsed_statements_repo", level="info")
+        parsed_statements_repo = SqlAlchemyParsedStatementRepository(
+            config=self.config,
+            logger=self.logger,
+        )
+        # self.logger.log("End Instance parsed_statements_repo", level="info")
+
+        # self.logger.log("Instantiate source", level="info")
+        raw_statements_scraper = RequestsRawStatementSourceAdapter(
+            config=self.config,
+            logger=self.logger,
+            data_cleaner=self.data_cleaner,
+            metrics_collector=self.collector,
+            worker_pool_executor=self.worker_pool_executor,
+        )
+        # self.logger.log("End Instance source", level="info")
+
+        # UseCase 1: Fetch
+        # self.logger.log(
+        #     "Instantiate statements_fetch_service (source, raw_rows_repo, company_repo, nsd_repo, raw_statement_repo)",
+        #     level="info",
+        # )
+        statements_fetch_service = StatementFetchService(
+            logger=self.logger,
+            source=raw_statements_scraper,
+            parsed_statements_repo=parsed_statements_repo,
+            company_repo=company_repo,
+            nsd_repo=nsd_repo,
+            raw_statement_repo=raw_statement_repo,
+            config=self.config,
+            metrics_collector=self.collector,
+            worker_pool_executor=self.worker_pool_executor,
+            max_workers=self.config.global_settings.max_workers,
+        )
+        # self.logger.log(
+        #     "Call Method controller.run()._statement_service().statements_fetch_service.run()",
+        #     level="info",
+        # )
+        raw_rows = statements_fetch_service.fetch_statements()
+        self.logger.log(f"total {len(raw_rows)}")
+        # self.logger.log(
+        #     "End  Method controller.run()._statement_service().statements_fetch_service.run()",
+        #     level="info",
+        # )
+
+        # self.logger.log(
+        #     "End Instance statements_fetch_service (source, raw_rows_repo, company_repo, nsd_repo, raw_statement_repo)",
+        #     level="info",
+        # )
+
+        # # UseCase 2: Parse
+        # # self.logger.log("Instantiate parse_service (raw_statement_repo)", level="info")
+        # parse_service = StatementParseService(
+        #     logger=self.logger,
+        #     repository=raw_statement_repo,
+        #     config=self.config,
+        #     max_workers=self.config.global_settings.max_workers,
+        # )
+
+        # # self.logger.log(
+        # #     "Call Method controller.start()._statement_service().parse_service.parse_statements()",
+        # #     level="info",
+        # # )
+        # parse_service.parse_statements(raw_rows)
+        # # self.logger.log(
+        # #     "End  Method controller.start()._statement_service().parse_service.parse_statements(",
+        # #     level="info",
+        # # )
+
+        # # self.logger.log("End Instance parse_service (raw_statement_repo)", level="info")
+
+        # # self.logger.log(
+        # #     "End  Method controller.run()._statement_service()", level="info"
+        # # )

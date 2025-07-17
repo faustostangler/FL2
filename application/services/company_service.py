@@ -1,4 +1,5 @@
 from application.usecases.sync_companies import SyncCompaniesUseCase
+from domain.dto import SyncCompaniesResultDTO
 from domain.ports import CompanyRepositoryPort, CompanySourcePort, LoggerPort
 from infrastructure.config import Config
 
@@ -16,20 +17,27 @@ class CompanyService:
         """Initialize dependencies for company synchronization."""
         self.logger = logger
         self.config = config
-        # Log startup so we know when the service begins.
-        self.logger.log("Start CompanyService", level="info")
 
         # Create the use case responsible for performing the sync operation.
-        self.sync_usecase = SyncCompaniesUseCase(
+        self.sync_companies_usecase = SyncCompaniesUseCase(
             logger=self.logger,
             repository=repository,
             scraper=scraper,
             max_workers=self.config.global_settings.max_workers,
         )
 
-    def run(self):
+        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
+
+    def sync_companies(self) -> SyncCompaniesResultDTO:
         """Execute company synchronization using the injected use case."""
         # Delegate execution to the underlying use case and return the result.
-        result = self.sync_usecase.run()
-        self.logger.log("Finish CompanyService", level="info")
+        # self.logger.log(
+        #     "Call Method sync_companies_usecase.synchronize_companies()",
+        #     level="info",
+        # )
+        result = self.sync_companies_usecase.synchronize_companies()
+        # self.logger.log(
+        #     "End  Method sync_companies_usecase.synchronize_companies()",
+        #     level="info",
+        # )
         return result

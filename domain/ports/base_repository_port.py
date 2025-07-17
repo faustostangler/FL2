@@ -33,5 +33,5 @@ class BaseRepositoryPort(ABC, Generic[T]):
 
     @abstractmethod
     def get_all_primary_keys(self) -> Set[str]:
-        """Return all stored CVM codes."""
+        """Retrieve the set of all primary keys already persisted."""
         raise NotImplementedError

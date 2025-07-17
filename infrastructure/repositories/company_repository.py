@@ -7,11 +7,12 @@ from typing import List, Set
 from domain.dto.company_dto import CompanyDTO
 from domain.ports import CompanyRepositoryPort, LoggerPort
 from infrastructure.config import Config
+from infrastructure.helpers.list_flattener import ListFlattener
 from infrastructure.models.company_model import CompanyModel
 from infrastructure.repositories import BaseRepository
 
 
-class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort):
+class SqlAlchemyCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort):
     """Concrete implementation of the repository using SQLite.
 
     Note:
@@ -21,21 +22,31 @@ class SQLiteCompanyRepository(BaseRepository[CompanyDTO], CompanyRepositoryPort)
         issues.
     """
 
-    def __init__(self, config: Config, logger: LoggerPort):
+    def __init__(self, config: Config, logger: LoggerPort) -> None:
         super().__init__(config, logger)
+
+        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def save_all(self, items: List[CompanyDTO]) -> None:
         """Persist a list of ``CompanyDTO`` objects."""
         session = self.Session()
         try:
-            models = [CompanyModel.from_dto(dto) for dto in items]
-            for model in models:
-                session.merge(model)
+            flat_items = ListFlattener.flatten(items)  # recebe nested lists, devolve flat list
+
+            valid_items = [
+                item for item in flat_items
+                if item is not None
+            ]
+
+            for dto in valid_items:
+                session.merge(CompanyModel.from_dto(dto))
             session.commit()
-            self.logger.log(
-                f"Saved {len(items)} companies",
-                level="info",
-            )
+
+            if len(valid_items) > 0:
+                self.logger.log(
+                    f"Saved {len(valid_items)} companies",
+                    level="info",
+                )
         except Exception as e:
             session.rollback()
             self.logger.log(

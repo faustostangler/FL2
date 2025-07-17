@@ -9,7 +9,7 @@ class WorkerThreadIdentifier:
     Example identifiers: ``"W1"``, ``"W2"``, up to the ``max_workers`` limit from ``Config``.
     """
 
-    def __init__(self, config: Config):
+    def __init__(self, config: Config) -> None:
         """Initialize the generator using the configured ``max_workers`` value.
 
         Args:

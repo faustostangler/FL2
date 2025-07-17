@@ -5,7 +5,7 @@ from typing import Mapping
 
 from .paths import load_paths
 
-DB_FILENAME="fly.db"
+DB_FILENAME = "fly.db"
 TABLES = {
     # logic key : SQLite physical name
     "company": "tbl_company",
@@ -30,23 +30,20 @@ class DatabaseConfig:
     tables: Mapping[str, str] = field(default_factory=lambda: TABLES)
     connection_string: str = field(init=False)
 
-    def __post_init__(self):
-
+    def __post_init__(self) -> None:
         # Dynamically compute the connection URI
         object.__setattr__(
-            self,
-            "connection_string",
-            f"sqlite:///{self.data_dir / self.db_filename}"
+            self, "connection_string", f"sqlite:///{self.data_dir / self.db_filename}"
         )
 
 
 def load_database_config() -> DatabaseConfig:
-    """Load the database configuration using project paths."""
+    """Run the database configuration using project paths."""
 
     paths = load_paths()
 
     return DatabaseConfig(
-        data_dir = paths.data_dir,
-        db_filename = DB_FILENAME,
-        tables = TABLES,
+        data_dir=paths.data_dir,
+        db_filename=DB_FILENAME,
+        tables=TABLES,
     )

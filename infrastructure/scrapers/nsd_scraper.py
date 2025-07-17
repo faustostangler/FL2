@@ -30,17 +30,17 @@ class NsdScraper(NSDSourcePort):
         config: Config,
         logger: LoggerPort,
         data_cleaner: DataCleaner,
-        executor: WorkerPoolPort,
+        worker_pool_executor: WorkerPoolPort,
         metrics_collector: MetricsCollectorPort,
         repository: NSDRepositoryPort,
     ):
-        """Set up configuration, logger and helper utilities for the
+        """Set up configuration, logger, and helper utilities for the
         scraper."""
         # Store configuration and logger for use throughout the scraper
         self.config = config
         self.logger = logger
         self.data_cleaner = data_cleaner
-        self.executor = executor
+        self.worker_pool_executor = worker_pool_executor
         self._metrics_collector = metrics_collector
         self.repository = repository
 
@@ -49,7 +49,7 @@ class NsdScraper(NSDSourcePort):
 
         self.nsd_endpoint = self.config.exchange.nsd_endpoint
 
-        self.logger.log("Start NsdScraper", level="info")
+        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     @property
     def metrics_collector(self) -> MetricsCollectorPort:
@@ -61,12 +61,17 @@ class NsdScraper(NSDSourcePort):
         threshold: Optional[int] = None,
         skip_codes: Optional[Set[str]] = None,
         save_callback: Optional[Callable[[List[NsdDTO]], None]] = None,
-        max_workers: Optional[int] = None,
         start: int = 1,
         max_nsd: Optional[int] = None,
         **kwargs,
     ) -> ExecutionResultDTO[NsdDTO]:
         """Fetch and parse NSD pages using a worker queue."""
+
+        # self.logger.log(
+        #     "Run  Method controller.run()._nsd_service().run().sync_nsd_usecase.run().fetch_all()",
+        #     level="info",
+        # )
+
         skip_codes = skip_codes or set()
         skip_codes_int = {int(code) for code in skip_codes} if skip_codes else set()
         start = max(start, max(skip_codes_int, default=0) + 1)
@@ -76,7 +81,6 @@ class NsdScraper(NSDSourcePort):
         max_nsd = max(max_nsd_existing, max_nsd_probable)
 
         threshold = threshold or self.config.global_settings.threshold or 50
-        max_workers = max_workers or self.config.global_settings.max_workers or 1
 
         self.logger.log("Fetch NSD list", level="info")
 
@@ -87,7 +91,11 @@ class NsdScraper(NSDSourcePort):
         tasks = list(enumerate(range(start, max_nsd + 1)))
         start_time = time.perf_counter()
 
-        def processor(task: WorkerTaskDTO) -> Optional[Dict]:
+        def processor(task: WorkerTaskDTO) -> Optional[NsdDTO]:
+            # self.logger.log(
+            #     "Run  Method controller.run()._nsd_service().run().sync_nsd_usecase.run().processor()",
+            #     level="info",
+            # )
             nsd = task.data
             progress = {
                 "index": task.index,
@@ -104,9 +112,20 @@ class NsdScraper(NSDSourcePort):
             url = self.nsd_endpoint.format(nsd=nsd)
 
             try:
-                response = self.fetch_utils.fetch_with_retry(self.session, url)
+                response, self.session = self.fetch_utils.fetch_with_retry(
+                    self.session, url
+                )
                 self.metrics_collector.record_network_bytes(len(response.content))
+
+                # self.logger.log(
+                #     "Call Method controller.run()._nsd_service().run().sync_nsd_usecase.run().processor()_parse_html()",
+                #     level="info",
+                # )
                 parsed = self._parse_html(nsd, response.text)
+                # self.logger.log(
+                #     "End  Method controller.run()._nsd_service().run().sync_nsd_usecase.run().processor()._parse_html()",
+                #     level="info",
+                # )
             except Exception as e:
                 self.logger.log(
                     f"Failed to fetch NSD {nsd}: {e}",
@@ -133,32 +152,53 @@ class NsdScraper(NSDSourcePort):
                 extra_info = []
 
             self.logger.log(
-                "NSD",
+                f"{nsd}",
                 level="info",
                 progress={**progress, "extra_info": extra_info},
                 worker_id=task.worker_id,
             )
 
-            return parsed
+            # self.logger.log(
+            #     "End  Method controller.run()._nsd_service().run().sync_nsd_usecase.run().processor()",
+            #     level="info",
+            # )
 
-        def handle_batch(item: Optional[Dict]) -> None:
-            strategy.handle(item)
+            return NsdDTO.from_dict(parsed)
 
-        exec_result = self.executor.run(
+
+        def handle_batch(item: Optional[NsdDTO]) -> None:
+            if item is not None:
+                strategy.handle([item])
+
+        # self.logger.log(
+        #     "Call Method controller.run()._nsd_service().run().sync_nsd_usecase.run().worker_pool_executor.run()",
+        #     level="info",
+        # )
+        exec_result = self.worker_pool_executor.run(
             tasks=tasks,
             processor=processor,
             logger=self.logger,
             on_result=handle_batch,
         )
+        # self.logger.log(
+        #     "End  Method controller.run()._nsd_service().run().sync_nsd_usecase.run().worker_pool_executor.run()",
+        #     level="info",
+        # )
 
         strategy.finalize()
 
-        self.logger.log(
-            f"Downloaded {self.metrics_collector.network_bytes} bytes",
-            level="info",
-        )
+        # self.logger.log(
+        #     f"Downloaded {self.metrics_collector.network_bytes} bytes",
+        #     level="info",
+        # )
 
         results = [item for item in exec_result.items if item is not None]
+
+        # self.logger.log(
+        #     "End  Method controller.run()._nsd_service().run().sync_nsd_usecase.run().fetch_all()",
+        #     level="info",
+        # )
+
         return ExecutionResultDTO(items=results, metrics=exec_result.metrics)
 
     def _parse_html(self, nsd: int, html: str) -> Dict:
@@ -239,8 +279,6 @@ class NsdScraper(NSDSourcePort):
         Returns:
             int: The last NSD with valid content.
         """
-        self.logger.log("Finding last existing NSD", level="info")
-
         nsd = start - 1
         last_valid = None
 
@@ -292,7 +330,9 @@ class NsdScraper(NSDSourcePort):
         try:
             # Request the NSD page and parse its HTML
             url = self.nsd_endpoint.format(nsd=nsd)
-            response = self.fetch_utils.fetch_with_retry(self.session, url)
+            response, self.session = self.fetch_utils.fetch_with_retry(
+                self.session, url
+            )
             parsed = self._parse_html(nsd, response.text)
 
             # Only return results if the page contains a "sent_date" field
@@ -305,6 +345,9 @@ class NsdScraper(NSDSourcePort):
         self,
         start: int = 1,
         safety_factor: float = 1.5,
+# =======
+#         safety_factor: float = 1.10,
+# >>>>>>> 2025-07-03-Statements-Round-1
     ) -> int:
         """Estimate next NSD numbers based on historical submission rate.
 
@@ -323,8 +366,6 @@ class NsdScraper(NSDSourcePort):
             A list of sequential NSD values likely to have been published
             after the last stored record.
         """
-        self.logger.log("Finding next probable NSD", level="info")
-
         # Get all nsd with valid sent_date
         all_nsds_str = self.repository.get_all_primary_keys()
         if not all_nsds_str:
@@ -341,6 +382,11 @@ class NsdScraper(NSDSourcePort):
         # First and last date from first and last date
         first_date = first_record.sent_date
         last_date = last_record.sent_date
+# =======
+#         # First and last date from first and last date
+#         first_date = self.repository.get_by_id(min(all_nsds)).sent_date
+#         last_date = self.repository.get_by_id(max(all_nsds)).sent_date
+# >>>>>>> 2025-07-03-Statements-Round-1
 
         # Days span between dates
         total_span_days = (last_date - first_date).days or 1  # type: ignore[assignment]
@@ -352,6 +398,10 @@ class NsdScraper(NSDSourcePort):
         days_elapsed = max((datetime.now() - last_date).days, 0)  # type: ignore[assignment]
 
         # Estimated nsd
-        last_estimated_nsd = int(daily_avg * days_elapsed * safety_factor)
+        last_estimated_nsd = (
+            start
+            + int(daily_avg * days_elapsed * safety_factor)
+            + self.config.global_settings.max_linear_holes
+        )
 
         return last_estimated_nsd

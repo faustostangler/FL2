@@ -31,6 +31,18 @@ class NsdDTO:
         # Map raw keys directly to the immutable dataclass fields
         return NsdDTO(
             nsd=str(nsd_value) if nsd_value is not None else "",
+# =======
+#     def from_dict(raw: dict) -> NsdDTO:
+#         """Build an ``NsdDTO`` from scraped raw data."""
+
+#         try:
+#             nsd_value = int(raw.get("nsd", 0))
+#         except (TypeError, ValueError) as exc:
+#             raise ValueError("Invalid NSD value") from exc
+
+#         return NsdDTO(
+#             nsd=nsd_value,
+# >>>>>>> 2025-07-03-Statements-Round-1
             company_name=raw.get("company_name"),
             quarter=raw.get("quarter"),
             version=raw.get("version"),
@@ -41,4 +53,21 @@ class NsdDTO:
             protocol=raw.get("protocol"),
             sent_date=raw.get("sent_date"),
             reason=raw.get("reason"),
+        )
+
+    @staticmethod
+    def from_raw(raw: NsdDTO) -> NsdDTO:
+        """Build an NsdDTO from a NsdRawDTO instance."""
+        return NsdDTO(
+            nsd=raw.nsd,
+            company_name=raw.company_name,
+            quarter=raw.quarter,
+            version=raw.version,
+            nsd_type=raw.nsd_type,
+            dri=raw.dri,
+            auditor=raw.auditor,
+            responsible_auditor=raw.responsible_auditor,
+            protocol=raw.protocol,
+            sent_date=raw.sent_date,
+            reason=raw.reason,
         )

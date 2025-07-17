@@ -7,28 +7,39 @@ from typing import List
 from domain.dto.nsd_dto import NsdDTO
 from domain.ports import LoggerPort, NSDRepositoryPort
 from infrastructure.config import Config
+from infrastructure.helpers.list_flattener import ListFlattener
 from infrastructure.models.nsd_model import NSDModel
 from infrastructure.repositories import BaseRepository
 
 
-class SQLiteNSDRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
+class SqlAlchemyNsdRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
     """Concrete repository for NsdDTO using SQLite via SQLAlchemy."""
 
-    def __init__(self, config: Config, logger: LoggerPort):
+    def __init__(self, config: Config, logger: LoggerPort) -> None:
         super().__init__(config, logger)
+
+        # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
     def save_all(self, items: List[NsdDTO]) -> None:
         """Persist a list of ``CompanyDTO`` objects."""
         session = self.Session()
         try:
-            models = [NSDModel.from_dto(dto) for dto in items]
-            for model in models:
-                session.merge(model)
+            flat_items = ListFlattener.flatten(items)  # recebe nested lists, devolve flat list
+
+            valid_items = [
+                item for item in flat_items
+                if item.nsd > 0 and item.sent_date is not None
+            ]
+
+            for dto in valid_items:
+                session.merge(NSDModel.from_dto(dto))
             session.commit()
-            self.logger.log(
-                f"Saved {len(items)} nsd records",
-                level="info",
-            )
+
+            if len(valid_items) > 0:
+                self.logger.log(
+                    f"Saved {len(valid_items)} nsd records",
+                    level="info",
+                )
         except Exception as e:
             session.rollback()
             self.logger.log(
@@ -52,7 +63,7 @@ class SQLiteNSDRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
         database.
 
         Args:
-            identifier (str): The unique identifier of the item to check.
+            identifier (int): The unique identifier of the item to check.
 
         Returns:
             bool: True if the item exists, False otherwise.
@@ -67,7 +78,7 @@ class SQLiteNSDRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
         """Fetches an NSD record from the database by its unique identifier.
 
         Args:
-            id (str): The unique identifier (ticker) of the NSD to retrieve.
+            id (int): The unique identifier of the NSD to retrieve.
         Returns:
             NsdDTO: Data transfer object representing the retrieved NSD.
         Raises:

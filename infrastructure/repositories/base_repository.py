@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import List, TypeVar
+from typing import List, Set, TypeVar
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
@@ -18,12 +18,11 @@ class BaseRepository(BaseRepositoryPort[T], ABC):
     Pode ser especializada para qualquer tipo de DTO.
     """
 
-    def __init__(self, config: Config, logger: LoggerPort):
+    def __init__(self, config: Config, logger: LoggerPort) -> None:
         """Initialize the SQLite database connection and ensure tables
         exist."""
         self.config = config
         self.logger = logger
-        self.logger.log(f"Start {self.__class__.__name__}", level="info")
 
         self.engine = create_engine(
             config.database.connection_string,
@@ -37,6 +36,8 @@ class BaseRepository(BaseRepositoryPort[T], ABC):
             bind=self.engine, autoflush=True, expire_on_commit=True
         )
         BaseModel.metadata.create_all(self.engine)
+
+        # self.logger.log(f"Create Instance Base Class {self.__class__.__name__}", level="info")
 
     @abstractmethod
     def save_all(self, items: List[T]) -> None:
@@ -57,3 +58,8 @@ class BaseRepository(BaseRepositoryPort[T], ABC):
     def get_by_id(self, id: str) -> T:
         """Recupera uma empresa a partir do ticker."""
         pass
+
+    @abstractmethod
+    def get_all_primary_keys(self) -> Set[str]:
+        """Retrieve the set of all primary keys already persisted."""
+        raise NotImplementedError

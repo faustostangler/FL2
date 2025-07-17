@@ -3,8 +3,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import List
 
-TEST_INTERNET = "https://www.google.com"  # URL usada para verificar conectividade
-TIMEOUT = 1  # Tempo máximo de espera em cada requisição (em segundos)
+TEST_INTERNET = "http://clients3.google.com/generate_204"  # URL usada para verificar conectividade
+TIMEOUT = 5  # Tempo máximo de espera em cada requisição (em segundos)
 MAX_ATTEMPTS = 5  # Número máximo de tentativas em caso de falha
 
 USER_AGENTS_JSON = "user_agents.json"  # Arquivo JSON com User-Agents

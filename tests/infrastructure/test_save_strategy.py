@@ -48,4 +48,23 @@ def test_threshold_loaded_from_config():
     strategy.handle(2)
 
     assert collected == [[1, 2]]
+# =======
+#     assert strategy.buffer == []
+
+
+# def test_handle_accepts_iterable():
+#     """Items provided as an iterable should be buffered individually."""
+
+#     collected = []
+
+#     def cb(buffer):
+#         collected.append(list(buffer))
+
+#     strategy = SaveStrategy(cb, threshold=4)
+#     strategy.handle([1, 2])
+#     strategy.handle([3, 4])
+#     strategy.finalize()
+
+#     assert collected == [[[1, 2], [3, 4]]]
+# >>>>>>> 2025-07-03-Statements-Round-1
     assert strategy.buffer == []
