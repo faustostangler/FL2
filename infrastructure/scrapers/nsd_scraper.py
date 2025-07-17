@@ -165,7 +165,6 @@ class NsdScraper(NSDSourcePort):
 
             return NsdDTO.from_dict(parsed)
 
-
         def handle_batch(item: Optional[NsdDTO]) -> None:
             if item is not None:
                 strategy.handle([item])
@@ -368,9 +367,11 @@ class NsdScraper(NSDSourcePort):
         if not all_nsds:
             return start
 
+        nsd_ints = [int(n) for n in all_nsds]
+
         # First and last date from first and last date
-        first_date = self.repository.get_by_id(min(all_nsds)).sent_date
-        last_date = self.repository.get_by_id(max(all_nsds)).sent_date
+        first_date = self.repository.get_by_id(str(min(nsd_ints))).sent_date
+        last_date = self.repository.get_by_id(str(max(nsd_ints))).sent_date
 
         # Days span between dates
         total_span_days = (last_date - first_date).days or 1  # type: ignore[assignment]

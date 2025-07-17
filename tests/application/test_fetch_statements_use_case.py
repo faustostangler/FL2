@@ -10,7 +10,7 @@ from infrastructure.repositories import SqlAlchemyRawStatementRepository
 from tests.conftest import DummyConfig, DummyLogger
 
 
-def _make_nsd(nsd: int) -> NsdDTO:
+def _make_nsd(nsd: str) -> NsdDTO:
     return NsdDTO(
         nsd=nsd,
         company_name=None,
@@ -30,7 +30,7 @@ def test_fetch_statement_rows_skips_existing(monkeypatch):
     source = MagicMock(spec=RawStatementScraperPort)
     rows_repo = MagicMock(spec=SqlAlchemyParsedStatementRepositoryPort)
     stmt_repo = MagicMock(spec=SqlAlchemyRawStatementRepository)
-    stmt_repo.get_all_primary_keys = MagicMock(return_value={1})
+    stmt_repo.get_all_primary_keys = MagicMock(return_value={"1"})
 
     collector = MagicMock()
     worker_pool = MagicMock()
@@ -49,7 +49,7 @@ def test_fetch_statement_rows_skips_existing(monkeypatch):
     mock_fetch_all = MagicMock(return_value=[("result", [])])
     monkeypatch.setattr(usecase, "fetch_all", mock_fetch_all)
 
-    targets = [_make_nsd(1), _make_nsd(2)]
+    targets = [_make_nsd("1"), _make_nsd("2")]
     result = usecase.fetch_statement_rows(targets, save_callback="cb", threshold=5)
 
     stmt_repo.get_all_primary_keys.assert_not_called()

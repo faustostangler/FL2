@@ -8,7 +8,7 @@ from typing import Optional
 class ParsedStatementDTO:
     """Immutable representation of a cleaned statement row."""
 
-    nsd: int
+    nsd: str
     company_name: Optional[str]
     quarter: Optional[str]
     version: Optional[str]
@@ -22,13 +22,10 @@ class ParsedStatementDTO:
     def from_dict(raw: dict) -> "ParsedStatementDTO":
         """Create ``ParsedStatementDTO`` from a raw dictionary."""
 
-        try:
-            nsd_value = int(raw.get("nsd", 0))
-        except (TypeError, ValueError) as exc:
-            raise ValueError("Invalid NSD value") from exc
+        nsd_value = raw.get("nsd")
 
         return ParsedStatementDTO(
-            nsd=nsd_value,
+            nsd=str(nsd_value) if nsd_value is not None else "",
             company_name=raw.get("company_name"),
             quarter=raw.get("quarter"),
             version=raw.get("version"),

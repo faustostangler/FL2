@@ -1,5 +1,3 @@
-import pytest
-
 from domain.dto.company_data_dto import CompanyDataDTO
 from domain.dto.nsd_dto import NsdDTO
 from domain.dto.raw_statement_dto import RawStatementDTO
@@ -12,9 +10,9 @@ def test_company_dto_from_dict():
     assert dto.company_name == "Xyz Corp"
 
 
-def test_nsd_dto_invalid_nsd():
-    with pytest.raises(ValueError):
-        NsdDTO.from_dict({"nsd": "not_a_number"})
+def test_nsd_dto_accepts_any_value():
+    dto = NsdDTO.from_dict({"nsd": "not_a_number"})
+    assert dto.nsd == "not_a_number"
 
 
 def test_statement_rows_dto_from_dict():
@@ -31,4 +29,4 @@ def test_statement_rows_dto_from_dict():
     }
     dto = RawStatementDTO.from_dict(raw)
     assert dto.account == "00.01.01"
-    assert dto.nsd == 102395
+    assert dto.nsd == "102395"
