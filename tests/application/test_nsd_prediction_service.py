@@ -42,7 +42,7 @@ def test_find_next_probable_nsd_returns_sequence():
     daily_avg = len(items) / days_span
     days_since_last = (now - max_date).days
     expected_count = int(daily_avg * days_since_last * 1.0)
-    expected = [len(items) + i for i in range(1, expected_count + 1)]
+    expected = [str(len(items) + i) for i in range(1, expected_count + 1)]
 
     assert result == expected
 

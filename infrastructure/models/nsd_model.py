@@ -23,6 +23,8 @@ class NSDModel(BaseModel):
 # =======
 #     nsd: Mapped[int] = mapped_column(Integer, primary_key=True)
 # >>>>>>> 2025-07-03-Statements-Round-1
+# =======
+# >>>>>>> 2025-07-03-Statements-Round-1
     company_name: Mapped[Optional[str]] = mapped_column()
     quarter: Mapped[Optional[datetime]] = mapped_column(DateTime)
     version: Mapped[Optional[str]] = mapped_column()

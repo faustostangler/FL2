@@ -10,7 +10,7 @@ def _find_next_probable_nsd(
     repository: NSDRepositoryPort,
     window_days: int = 30,
     safety_factor: float = 1.5,
-) -> List[int]:
+) -> List[str]:
     """Estimate next NSD numbers based on historical submission rate.
 
     The prediction is calculated from the most recent ``window_days`` worth
@@ -47,4 +47,4 @@ def _find_next_probable_nsd(
     days_since_last = max((datetime.utcnow() - max_date).days, 0)
     estimate = int(daily_avg * days_since_last * safety_factor)
 
-    return [last_nsd + i for i in range(1, estimate + 1)]
+    return [str(last_nsd + i) for i in range(1, estimate + 1)]

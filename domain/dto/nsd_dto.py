@@ -29,6 +29,16 @@ class NsdDTO:
         """Build an ``NsdDTO`` from scraped raw data."""
         nsd_value = raw.get("nsd")
         # Map raw keys directly to the immutable dataclass fields
+# =======
+
+#         nsd_raw = raw.get("nsd", "")
+#         if nsd_raw is None:
+#             nsd_raw = ""
+#         nsd_value = str(nsd_raw)
+#         if not nsd_value:
+#             raise ValueError("Invalid NSD value")
+
+# >>>>>>> 2025-07-03-Statements-Round-1
         return NsdDTO(
             nsd=str(nsd_value) if nsd_value is not None else "",
 # =======

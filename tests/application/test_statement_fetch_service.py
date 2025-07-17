@@ -42,7 +42,6 @@ def test_fetch_statements_calls_usecase(monkeypatch):
         config=dummy_config,
         metrics_collector=collector,
         worker_pool_executor=worker_pool,
-        max_workers=3,
     )
 
     mock_usecase_cls.assert_called_once_with(
@@ -53,7 +52,6 @@ def test_fetch_statements_calls_usecase(monkeypatch):
         metrics_collector=collector,
         worker_pool_executor=worker_pool,
         config=dummy_config,
-        max_workers=3,
     )
 
     targets = [MagicMock(spec=NsdDTO)]

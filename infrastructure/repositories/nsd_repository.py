@@ -24,11 +24,12 @@ class SqlAlchemyNsdRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
         """Persist a list of ``CompanyDTO`` objects."""
         session = self.Session()
         try:
-            flat_items = ListFlattener.flatten(items)  # recebe nested lists, devolve flat list
+            flat_items = ListFlattener.flatten(
+                items
+            )  # recebe nested lists, devolve flat list
 
             valid_items = [
-                item for item in flat_items
-                if item.nsd > 0 and item.sent_date is not None
+                item for item in flat_items if item.nsd and item.sent_date is not None
             ]
 
             for dto in valid_items:
@@ -63,7 +64,7 @@ class SqlAlchemyNsdRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
         database.
 
         Args:
-            identifier (int): The unique identifier of the item to check.
+            identifier (str): The unique identifier of the item to check.
 
         Returns:
             bool: True if the item exists, False otherwise.
@@ -78,7 +79,7 @@ class SqlAlchemyNsdRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
         """Fetches an NSD record from the database by its unique identifier.
 
         Args:
-            id (int): The unique identifier of the NSD to retrieve.
+            id (str): The unique identifier of the NSD to retrieve.
         Returns:
             NsdDTO: Data transfer object representing the retrieved NSD.
         Raises:
@@ -95,6 +96,12 @@ class SqlAlchemyNsdRepository(BaseRepository[NsdDTO], NSDRepositoryPort):
 
     def get_all_primary_keys(self) -> set[str]:
         """Retrieve all distinct NSD primary keys stored."""
+# =======
+#         """Retrieve all distinct primary key values from the NSDModel table.
+
+#         Returns: All unique primary key values (nsd) from the NSDModel table.
+#         """
+# >>>>>>> 2025-07-03-Statements-Round-1
         session = self.Session()
         try:
             results = session.query(NSDModel.nsd).distinct().all()
