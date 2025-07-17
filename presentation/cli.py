@@ -136,7 +136,6 @@ class CLIAdapter:
         # self.logger.log("Instantiate nsd_repo", level="info")
         nsd_repo = SqlAlchemyNsdRepository(config=self.config, logger=self.logger)
         # self.logger.log("End Instance nsd_repo", level="info")
-        _nsd_all = nsd_repo.get_all()
 
         # Build NSD scraper with concurrent capabilities
         # self.logger.log("Instantiate nsd_scraper (worker_pool_executor, collector, nsd_repo)", level="info")

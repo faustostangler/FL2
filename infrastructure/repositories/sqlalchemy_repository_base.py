@@ -172,7 +172,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
             # Perform a filtered query and check if any result is found
             return (
                 session.query(model)
-                .filter_by(cvm_code=identifier)
+                .filter_by(cvm_code=str(identifier))
                 .first()
                 is not None
             )
@@ -203,7 +203,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
 
         try:
             # Query the database for the entry with the specified ID
-            obj = session.query(model).filter(pk_column == identifier).first()
+            obj = session.query(model).filter(pk_column == str(identifier)).first()
 
             # Raise an error if the object is not found
             if not obj:

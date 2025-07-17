@@ -97,6 +97,7 @@ class NsdScraper(NSDSourcePort):
             #     level="info",
             # )
             nsd = task.data
+
             progress = {
                 "index": task.index,
                 "size": len(tasks),
@@ -168,6 +169,8 @@ class NsdScraper(NSDSourcePort):
         def handle_batch(item: Optional[NsdDTO]) -> None:
             if item is not None:
                 strategy.handle([item])
+            else:
+                pass
 
         # self.logger.log(
         #     "Call Method controller.run()._nsd_service().run().sync_nsd_usecase.run().worker_pool_executor.run()",
@@ -363,20 +366,19 @@ class NsdScraper(NSDSourcePort):
             after the last stored record.
         """
         # Get all nsd with valid sent_date
-        all_nsds = self.repository.get_all_primary_keys()
-        if not all_nsds:
+        if not self.skip_codes:
             return start
 
-        first_pk = min(all_nsds, key=lambda n: int(n))
-        last_pk = max(all_nsds, key=lambda n: int(n))
-        first_date = self.repository.get_by_id(first_pk).sent_date
-        last_date = self.repository.get_by_id(last_pk).sent_date
+        first_pk = min(self.skip_codes, key=lambda n: int(n))
+        last_pk = max(self.skip_codes, key=lambda n: int(n))
+        first_date = self.repository.get_by_id(str(first_pk)).sent_date
+        last_date = self.repository.get_by_id(str(last_pk)).sent_date
 
         # Days span between dates
         total_span_days = (last_date - first_date).days or 1  # type: ignore[assignment]
 
         # Daily nsd per day Average
-        daily_avg = len(all_nsds) / total_span_days
+        daily_avg = len(self.skip_codes) / total_span_days
 
         # days elapsed since last_date
         days_elapsed = max((datetime.now() - last_date).days, 0)  # type: ignore[assignment]
