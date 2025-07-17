@@ -23,10 +23,18 @@ class SqlAlchemyRawStatementRepository(
         self.config = config
         self.logger = logger
 
-    def get_model_class(self) -> Tuple:
+    def get_model_class(self) -> Tuple[type, tuple]:
         """Return the SQLAlchemy ORM model class managed by this repository.
 
         Returns:
             type: The model class associated with this repository.
         """
-        return StatementModel, StatementModel.nsd
+        return StatementModel, (
+                StatementModel.nsd,
+                StatementModel.company_name,
+                StatementModel.quarter,
+                StatementModel.version,
+                StatementModel.grupo,
+                StatementModel.quadro,
+                StatementModel.account,
+            )

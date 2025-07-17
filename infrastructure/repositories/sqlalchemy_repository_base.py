@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Generic, List, Set, Tuple, TypeVar
+from typing import Any, Generic, List, Sequence, Set, Tuple, TypeVar, Union
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
@@ -59,7 +59,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         # self.logger.log(f"Create Instance Base Class {self.__class__.__name__}", level="info")
 
     @abstractmethod
-    def get_model_class(self) -> Tuple:
+    def get_model_class(self) -> Tuple[type, tuple]:
         """Return the SQLAlchemy model class associated with the DTO.
 
         This method must be implemented by subclasses to specify which
@@ -84,7 +84,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         session = self.Session()
 
         # Retrieve the SQLAlchemy model class associated with the DTO type
-        model, pk_column = self.get_model_class()
+        model, pk_columns = self.get_model_class()
 
         try:
             # Flatten nested lists into a single-level list of DTOs
@@ -138,16 +138,48 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         session = self.Session()
 
         # Get the SQLAlchemy model class linked to the current DTO type
-        model, pk_column = self.get_model_class()
+        model, pk_columns = self.get_model_class()
 
         try:
             # Query all rows from the corresponding table
-            results = session.query(model).order_by(pk_column).all()
+            results = session.query(model).order_by(*pk_columns).all()
+
+            # Sort py PK
+            results.sort(key=lambda obj: self._sort_key(obj, pk_columns))
 
             # Convert each ORM instance into a DTO
             return [model.to_dto() for model in results]
         finally:
             # Ensure the session is closed even if an error occurs
+            session.close()
+
+    def get_all_primary_keys(self) -> List[K]:
+        """Retrieve all unique primary keys from the database.
+
+        This method queries the repository for all distinct identifiers
+        (e.g., CVM codes) of the persisted records.
+
+        Returns:
+            Set[str]: A set containing all unique primary keys currently stored.
+        """
+        # Create a new SQLAlchemy session
+        session = self.Session()
+
+        # Get the SQLAlchemy model class linked to the current DTO type
+        model, pk_columns = self.get_model_class()
+
+        try:
+            # Execute a distinct query for the primary key column
+            results = session.query(*pk_columns).distinct().order_by(*pk_columns).all()
+
+            # Sort py PK
+            results.sort(key=lambda obj: self._sort_key(obj, pk_columns))
+
+            # Extract and collect non-null keys into a set
+            return [row[0] for row in results if row[0]]
+
+        finally:
+            # Ensure session is always closed
             session.close()
 
     def has_item(self, identifier: K) -> bool:
@@ -166,16 +198,18 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         session = self.Session()
 
         # Get the SQLAlchemy model class linked to the current DTO type
-        model, pk_column = self.get_model_class()
+        model, pk_columns = self.get_model_class()
 
         try:
+            if len(pk_columns) == 1:
+                filter_expr = pk_columns[0] == identifier
+            else:
+                assert isinstance(identifier, tuple), "Expected tuple for composite key"
+                filter_expr = [col == val for col, val in zip(pk_columns, identifier)]
             # Perform a filtered query and check if any result is found
-            return (
-                session.query(model)
-                .filter(pk_column == str(identifier))
-                .first()
-                is not None
-            )
+            query = session.query(model).filter(*filter_expr) if isinstance(filter_expr, list) else session.query(model).filter(filter_expr)
+
+            return query.first() is not None
         finally:
             # Always close the session after the query
             session.close()
@@ -199,49 +233,27 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         session = self.Session()
 
         # Get the SQLAlchemy model class linked to the current DTO type
-        model, pk_column = self.get_model_class()
+        model, pk_columns = self.get_model_class()
 
         try:
-            # Query the database for the entry with the specified ID
-            obj = session.query(model).filter(pk_column == str(identifier)).first()
+            if len(pk_columns) == 1:
+                filter_expr = pk_columns[0] == identifier
+            else:
+                assert isinstance(identifier, tuple), "Expected tuple for composite key"
+                filter_expr = [col == val for col, val in zip(pk_columns, identifier)]
 
-            # Raise an error if the object is not found
+            query = session.query(model).filter(*filter_expr) if isinstance(filter_expr, list) else session.query(model).filter(filter_expr)
+            obj = query.first()
+
             if not obj:
-                raise ValueError(f"CompanyData not found: {identifier}")
+                raise ValueError(f"Data not found: {identifier}")
 
-            # Convert the ORM model to a DTO and return it
             return obj.to_dto()
         finally:
             # Ensure the session is closed in all cases
             session.close()
 
-    def get_all_primary_keys(self) -> Set[K]:
-        """Retrieve all unique primary keys from the database.
-
-        This method queries the repository for all distinct identifiers
-        (e.g., CVM codes) of the persisted records.
-
-        Returns:
-            Set[str]: A set containing all unique primary keys currently stored.
-        """
-        # Create a new SQLAlchemy session
-        session = self.Session()
-
-        # Get the SQLAlchemy model class linked to the current DTO type
-        model, pk_column = self.get_model_class()
-
-        try:
-            # Execute a distinct query for the primary key column
-            results = session.query(pk_column).distinct().order_by(pk_column).all()
-
-            # Extract and collect non-null keys into a set
-            return {row[0] for row in results if row[0]}
-
-        finally:
-            # Ensure session is always closed
-            session.close()
-
-    def get_existing_by_column(self, column_name: str) -> Set[K]:
+    def get_existing_by_column(self, column_name: str) -> List[K]:
         """Return the distinct values for the given column in
         tbl_raw_statements.
 
@@ -250,13 +262,27 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         session = self.Session()
 
         # Retrieve the SQLAlchemy model class associated with the DTO type
-        model, pk_column = self.get_model_class()
+        model, pk_columns = self.get_model_class()
 
         try:
             # dynamically access the ORM attribute
             column_attr = getattr(model, column_name)
             rows = session.query(column_attr).distinct().all()
-            results = {row[0] for row in rows if row[0] is not None}
+            results = [row[0] for row in rows if row[0] is not None]
+
+            # Sort py PK
+            results.sort(key=lambda obj: self._sort_key(obj, pk_columns))
+
+
             return results
         finally:
             session.close()
+
+    def _safe_cast(self, value: Any) -> Union[int, str]:
+        try:
+            return int(value)
+        except (ValueError, TypeError):
+            return str(value)
+
+    def _sort_key(self, obj: Any, pk_columns: Sequence) -> tuple[Union[int, str], ...]:
+        return tuple(self._safe_cast(getattr(obj, col.key)) for col in pk_columns)

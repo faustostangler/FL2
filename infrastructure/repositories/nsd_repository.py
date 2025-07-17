@@ -22,10 +22,10 @@ class SqlAlchemyNsdRepository(SqlAlchemyRepositoryBase[NsdDTO, str], NSDReposito
         self.config = config
         self.logger = logger
 
-    def get_model_class(self) -> Tuple:
+    def get_model_class(self) -> Tuple[type, tuple]:
         """Return the SQLAlchemy ORM model class managed by this repository.
 
         Returns:
             type: The model class associated with this repository.
         """
-        return NSDModel, NSDModel.nsd
+        return NSDModel, (NSDModel.nsd,)  # para PK simples

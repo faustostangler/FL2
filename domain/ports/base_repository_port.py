@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Generic, List, Set, TypeVar
+from typing import Any, Generic, List, Sequence, Set, TypeVar, Union
 
 T = TypeVar("T")   # DTO type
 K = TypeVar("K")   # Key type (e.g., str, int)
@@ -67,7 +67,7 @@ class SqlAlchemyRepositoryBasePort(ABC, Generic[T, K]):
         raise NotImplementedError
 
     @abstractmethod
-    def get_all_primary_keys(self) -> Set[K]:
+    def get_all_primary_keys(self) -> List[K]:
         """Retrieve the set of all primary keys currently stored.
 
         Returns:
@@ -76,11 +76,19 @@ class SqlAlchemyRepositoryBasePort(ABC, Generic[T, K]):
         raise NotImplementedError
 
     @abstractmethod
-    def get_existing_by_column(self, column_name: str) -> Set[K]:
+    def get_existing_by_column(self, column_name: str) -> List[K]:
         """Retrieve the set of all primary keys currently stored by column.
 
         Returns:
             Set[K]: A set of unique identifiers for all stored items.
         """
+        raise NotImplementedError
+
+    @abstractmethod
+    def _safe_cast(self, value: Any) -> Union[int, str]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def _sort_key(self, obj: Any, pk_columns: Sequence) -> tuple[Union[int, str], ...]:
         raise NotImplementedError
 

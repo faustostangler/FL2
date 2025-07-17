@@ -43,10 +43,10 @@ class SqlAlchemyCompanyDataRepository(
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
-    def get_model_class(self) -> Tuple:
+    def get_model_class(self) -> Tuple[type, tuple]:
         """Return the SQLAlchemy ORM model class managed by this repository.
 
         Returns:
             type: The model class associated with this repository.
         """
-        return CompanyDataModel, CompanyDataModel.cvm_code
+        return CompanyDataModel, (CompanyDataModel.cvm_code,)  # para PK simples
