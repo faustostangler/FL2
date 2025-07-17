@@ -172,7 +172,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
             # Perform a filtered query and check if any result is found
             return (
                 session.query(model)
-                .filter_by(cvm_code=str(identifier))
+                .filter(pk_column == str(identifier))
                 .first()
                 is not None
             )

@@ -72,7 +72,7 @@ class CLIAdapter:
 
         # Run NSD fetcher and synchronization
         # self.logger.log("Call Method controller.run()._nsd_service()", level="info")
-        self._nsd_service()
+        # self._nsd_service()
         # self.logger.log("End  Method controller.run()._nsd_service()", level="info")
 
         # Fetch and optionally parse statements
@@ -227,10 +227,10 @@ class CLIAdapter:
 
         _nsd_all = nsd_repo.get_all()
         _nsd_all_primary_keys = nsd_repo.get_all_primary_keys()
-        identifier = 25224
+        identifier = '25224'
         _nsd_has = nsd_repo.has_item(identifier)
         _nsd_by_id = nsd_repo.get_by_id(identifier)
-        column_name = "cvm_code"
+        column_name = "nsd"
         _nsd_by_column = nsd_repo.get_existing_by_column(column_name)
 
         # Execute fetch process and log total rows fetched
