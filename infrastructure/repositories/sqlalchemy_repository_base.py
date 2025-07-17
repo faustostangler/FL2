@@ -253,11 +253,19 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
             # Ensure the session is closed in all cases
             session.close()
 
-    def get_existing_by_column(self, column_name: str) -> List[K]:
-        """Return the distinct values for the given column in
-        tbl_raw_statements.
+    def get_existing_by_columns(self, column_names: Union[str, List[str]]) -> List[Tuple]:
+        """
+        Return distinct and ordered values for one or more given columns.
 
-        e.g. repo.get_existing_by_column("nsd") -> {94790, 12345, …}
+        Examples:
+            repo.get_existing_by_columns("nsd") -> [("94790",), ("12345",)]
+            repo.get_existing_by_columns(["nsd", "company_name"]) -> [("94790", "ACME"), ("12345", "ROMI")]
+
+        Args:
+            column_names: A single column name as string, or a list of column names.
+
+        Returns:
+            A list of tuples with distinct and ordered values.
         """
         session = self.Session()
 
@@ -265,14 +273,33 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         model, pk_columns = self.get_model_class()
 
         try:
-            # dynamically access the ORM attribute
-            column_attr = getattr(model, column_name)
-            rows = session.query(column_attr).distinct().all()
-            results = [row[0] for row in rows if row[0] is not None]
+            if isinstance(column_names, str):
+                column_names = [column_names]
 
-            # Sort py PK
-            results.sort(key=lambda obj: self._sort_key(obj, pk_columns))
+            kw_columns = [getattr(model, name) for name in column_names]
+            rows = session.query(*kw_columns).distinct().all()
 
+            # remove nulls
+            results = [row for row in rows if not any(field is None for field in row)]
+
+            # Create a lightweight wrapper to simulate attribute access on a tuple
+            class RowWrapper:
+                def __init__(self, values):
+                    # Store the original tuple of values
+                    self._values = values
+
+                def __getattr__(self, key):
+                    # Find the index of the requested column name
+                    idx = column_names.index(key)
+                    # Return the value at that index in the tuple
+                    return self._values[idx]
+
+            # Sort the result list using a custom sort key
+            results.sort(
+                key=lambda row:
+                    # Wrap the tuple to enable attribute-style access
+                    self._sort_key(RowWrapper(row), kw_columns)
+            )
 
             return results
         finally:

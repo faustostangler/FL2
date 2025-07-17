@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Generic, List, Sequence, Set, TypeVar, Union
+from typing import Any, Generic, List, Sequence, Tuple, TypeVar, Union
 
 T = TypeVar("T")   # DTO type
 K = TypeVar("K")   # Key type (e.g., str, int)
@@ -76,7 +76,7 @@ class SqlAlchemyRepositoryBasePort(ABC, Generic[T, K]):
         raise NotImplementedError
 
     @abstractmethod
-    def get_existing_by_column(self, column_name: str) -> List[K]:
+    def get_existing_by_columns(self, column_names: Union[str, List[str]]) -> List[Tuple]:
         """Retrieve the set of all primary keys currently stored by column.
 
         Returns:

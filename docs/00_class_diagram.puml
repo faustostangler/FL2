@@ -187,7 +187,7 @@ package "fly" {
                 WorkerPoolPort --> LoggerPort
                 WorkerPoolPort --> WorkerTaskDTO
             interface ParsedStatementRepositoryPort {
-                +get_existing_by_column(column_name: str) : Set[Any]
+                +get_existing_by_columns(column_name: str) : Set[Any]
                 +save_all(items: List[StatementRowsDTO]) : void
                 }
             interface SqlAlchemyRawStatementRepository {
