@@ -119,7 +119,7 @@ class CompanyDataScraper(CompanyDataScraperPort):
     def fetch_all(
         self,
         threshold: Optional[int] = None,
-        skip_codes: Optional[Set[str]] = None,
+        skip_codes: Optional[List[str]] = None,
         save_callback: Optional[Callable[[List[CompanyDataRawDTO]], None]] = None,
         **kwargs,
     ) -> ExecutionResultDTO[CompanyDataRawDTO]:
