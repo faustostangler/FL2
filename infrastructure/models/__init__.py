@@ -13,6 +13,6 @@ __all__ = [
     "Base",
     "CompanyDataModel",
     "NSDModel",
-    "ParsedStatementModel",
     "RawStatementModel",
+    "ParsedStatementModel",
 ]

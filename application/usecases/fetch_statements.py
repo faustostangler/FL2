@@ -45,6 +45,42 @@ class FetchStatementsUseCase:
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
 
+    def fetch_statement_rows(
+        self,
+        targets: list[NsdDTO],
+        save_callback: Optional[Callable[[List[RawStatementDTO]], None]] = None,
+        threshold: Optional[int] = None,
+    ) -> List[Tuple[NsdDTO, List[RawStatementDTO]]]:
+        """Execute the use case for ``batch_rows``."""
+        # self.logger.log(
+        #     "Run  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",
+        #     level="info",
+        # )
+
+        if not targets:
+            return []
+
+        # self.logger.log(
+        #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all(save_callback, threshold)",
+        #     level="info",
+        # )
+        results = self.fetch_all(
+            targets=targets,
+            save_callback=save_callback,
+            threshold=threshold,
+        )
+        # self.logger.log(
+        #     "End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all(save_callback, threshold)",
+        #     level="info",
+        # )
+
+        # self.logger.log(
+        #     "End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",
+        #     level="info",
+        # )
+
+        return results
+
     def fetch_all(
         self,
         targets: List[NsdDTO],
@@ -169,40 +205,3 @@ class FetchStatementsUseCase:
         # )
 
         return result.items
-
-    def fetch_statement_rows(
-        self,
-        batch_rows: Iterable[NsdDTO],
-        save_callback: Optional[Callable[[List[RawStatementDTO]], None]] = None,
-        threshold: Optional[int] = None,
-    ) -> List[Tuple[NsdDTO, List[RawStatementDTO]]]:
-        """Execute the use case for ``batch_rows``."""
-        # self.logger.log(
-        #     "Run  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",
-        #     level="info",
-        # )
-
-        targets = list(batch_rows)
-        if not targets:
-            return []
-
-        # self.logger.log(
-        #     "Call Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all(save_callback, threshold)",
-        #     level="info",
-        # )
-        results = self.fetch_all(
-            targets=targets,
-            save_callback=save_callback,
-            threshold=threshold,
-        )
-        # self.logger.log(
-        #     "End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run().fetch_all(save_callback, threshold)",
-        #     level="info",
-        # )
-
-        # self.logger.log(
-        #     "End  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",
-        #     level="info",
-        # )
-
-        return results

@@ -69,37 +69,24 @@ class StatementFetchService:
 
         if not company_records or not nsd_records:
             return []
-        nsd_rows_processed = self.raw_statement_repo.get_existing_by_columns(column_names="nsd")
+
+        nsd_rows_processed = {
+            row[0] for row in self.raw_statement_repo.get_existing_by_columns(column_names="nsd")
+        }
+
         valid_types = set(self.config.domain.statements_types)
 
         company_names = {c.company_name for c in company_records if c.company_name}
         nsd_company_names = {n.company_name for n in nsd_records if n.company_name}
-        common_company_names = sorted(
-            set(company_names.intersection(nsd_company_names))
+        common_company_names = set(company_names.intersection(nsd_company_names))
+
+        results = self.nsd_repo.get_all_pending(
+            company_names=common_company_names,
+            valid_types=valid_types,
+            exclude_nsd=nsd_rows_processed,
         )
 
-        results = [
-            n
-            for n in nsd_records
-            if (
-                n.nsd_type in valid_types
-                and n.company_name in common_company_names
-                and n.nsd not in nsd_rows_processed
-            )
-        ]
-
-        _full_results = [
-            n
-            for n in nsd_records
-            if (n.nsd_type in valid_types and n.company_name in common_company_names)
-        ]
-        # self.logger.log(f"results: {len(results)} full_results: {len(full_results)}")
-        # self.logger.log(
-        #     "End  Method controller.run()._statement_service().statements_fetch_service.run()._build_targets()",
-        #     level="info",
-        # )
-
-        return sorted(results, key=lambda n: (n.company_name, n.quarter, n.nsd))
+        return results
 
     def fetch_statements(
         self,
@@ -140,7 +127,7 @@ class StatementFetchService:
         #     level="info",
         # )
         rows = self.fetch_usecase.fetch_statement_rows(
-            batch_rows=targets,
+            targets=targets,
             save_callback=save_callback,
             threshold=threshold,
         )
