@@ -63,7 +63,7 @@ class FetchStatementsUseCase:
         # Initialize the saving strategy that buffers results.
         # self.logger.log("Instantiate strategy", level="info")
         strategy: SaveStrategy[RawStatementDTO] = SaveStrategy(
-            save_callback or self.parsed_statements_repo.save_all,
+            save_callback or self.raw_statement_repository.save_all,
             threshold,
             config=self.config,
         )

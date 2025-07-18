@@ -29,13 +29,13 @@ class NsdDTO:
         """Build an ``NsdDTO`` from scraped raw data."""
 
         if not raw:
-            return None  # <- retorna None se nsd estiver ausente ou inválido
+            return None
 
         nsd_raw = raw.get("nsd", "")
-        if nsd_raw is not None or str(nsd_raw).isdigit():
-            nsd_value = (nsd_raw)
-        else:
-            nsd_value = ""
+        if nsd_raw is None or not str(nsd_raw).isdigit():
+            raise ValueError("Invalid NSD value")
+
+        nsd_value = str(nsd_raw)
 
         return NsdDTO(
             nsd=nsd_value,

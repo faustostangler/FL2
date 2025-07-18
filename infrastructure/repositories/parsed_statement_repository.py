@@ -5,7 +5,7 @@ from typing import Tuple
 from domain.dto import ParsedStatementDTO
 from domain.ports import LoggerPort, SqlAlchemyParsedStatementRepositoryPort
 from infrastructure.config import Config
-from infrastructure.models.statement_model import StatementModel
+from infrastructure.models.parsed_statement_model import ParsedStatementModel
 from infrastructure.repositories.sqlalchemy_repository_base import (
     SqlAlchemyRepositoryBase,
 )
@@ -29,12 +29,12 @@ class SqlAlchemyParsedStatementRepository(
         Returns:
             type: The model class associated with this repository.
         """
-        return StatementModel, (
-                StatementModel.nsd,
-                StatementModel.company_name,
-                StatementModel.quarter,
-                StatementModel.version,
-                StatementModel.grupo,
-                StatementModel.quadro,
-                StatementModel.account,
-            )
+        return ParsedStatementModel, (
+            ParsedStatementModel.nsd,
+            ParsedStatementModel.company_name,
+            ParsedStatementModel.quarter,
+            ParsedStatementModel.version,
+            ParsedStatementModel.grupo,
+            ParsedStatementModel.quadro,
+            ParsedStatementModel.account,
+        )

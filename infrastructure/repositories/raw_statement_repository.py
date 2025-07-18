@@ -5,7 +5,7 @@ from typing import Tuple
 from domain.dto.raw_statement_dto import RawStatementDTO
 from domain.ports import LoggerPort, SqlAlchemyRawStatementRepositoryPort
 from infrastructure.config import Config
-from infrastructure.models.statement_model import StatementModel
+from infrastructure.models.raw_statement_model import RawStatementModel
 from infrastructure.repositories.sqlalchemy_repository_base import (
     SqlAlchemyRepositoryBase,
 )
@@ -29,12 +29,12 @@ class SqlAlchemyRawStatementRepository(
         Returns:
             type: The model class associated with this repository.
         """
-        return StatementModel, (
-                StatementModel.nsd,
-                StatementModel.company_name,
-                StatementModel.quarter,
-                StatementModel.version,
-                StatementModel.grupo,
-                StatementModel.quadro,
-                StatementModel.account,
-            )
+        return RawStatementModel, (
+            RawStatementModel.nsd,
+            RawStatementModel.company_name,
+            RawStatementModel.quarter,
+            RawStatementModel.version,
+            RawStatementModel.grupo,
+            RawStatementModel.quadro,
+            RawStatementModel.account,
+        )

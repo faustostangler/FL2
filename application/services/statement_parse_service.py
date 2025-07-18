@@ -7,7 +7,10 @@ from application.usecases.parse_and_classify_statements import (
 )
 from domain.dto import NsdDTO, ParsedStatementDTO, WorkerTaskDTO
 from domain.dto.raw_statement_dto import RawStatementDTO
-from domain.ports import LoggerPort, SqlAlchemyRawStatementRepositoryPort
+from domain.ports import (
+    LoggerPort,
+    SqlAlchemyParsedStatementRepositoryPort,
+)
 from infrastructure.config import Config
 from infrastructure.helpers import MetricsCollector, WorkerPool
 
@@ -18,7 +21,7 @@ class StatementParseService:
     def __init__(
         self,
         logger: LoggerPort,
-        repository: SqlAlchemyRawStatementRepositoryPort,
+        repository: SqlAlchemyParsedStatementRepositoryPort,
         config: Config,
         max_workers: int = 1,
     ) -> None:
