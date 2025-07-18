@@ -10,7 +10,8 @@ TABLES = {
     # logic key : SQLite physical name
     "company": "tbl_company",
     "nsd": "tbl_nsd",
-    "statements": "tbl_statements",
+    "raw_statements": "tbl_raw_statements",
+    "parsed_statements": "tbl_parsed_statements",
 }
 
 
