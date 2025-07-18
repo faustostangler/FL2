@@ -27,35 +27,33 @@ class StatementFetchService:
         self,
         logger: LoggerPort,
         config: Config,
+        source: RawStatementScraperPort,
         company_repo: SqlAlchemyCompanyDataRepositoryPort,
         nsd_repo: NSDRepositoryPort,
         raw_statement_repo: SqlAlchemyRawStatementRepositoryPort,
         parsed_statements_repo: SqlAlchemyParsedStatementRepositoryPort,
-        source: RawStatementScraperPort,
         metrics_collector: MetricsCollectorPort,
         worker_pool_executor: WorkerPool,
-        max_workers: int = 1,
     ) -> None:
         """Store dependencies for the service."""
         self.logger = logger
-        self.parsed_statements_repo = parsed_statements_repo
+        self.config = config
+        self.source = source,
         self.company_repo = company_repo
         self.nsd_repo = nsd_repo
         self.raw_statement_repo = raw_statement_repo
-        self.config = config
-        self.max_workers = max_workers
+        self.parsed_statements_repo = parsed_statements_repo
         self.collector = metrics_collector
         self.worker_pool_executor = worker_pool_executor
 
         self.fetch_usecase = FetchStatementsUseCase(
             logger=self.logger,
+            config=self.config,
             source=source,
-            parsed_statements_repo=parsed_statements_repo,
             raw_statement_repository=raw_statement_repo,
+            parsed_statements_repo=parsed_statements_repo,
             metrics_collector=self.collector,
             worker_pool_executor=self.worker_pool_executor,
-            config=self.config,
-            max_workers=self.max_workers,
         )
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
@@ -71,9 +69,7 @@ class StatementFetchService:
 
         if not company_records or not nsd_records:
             return []
-        nsd_rows_processed = self.raw_statement_repo.get_existing_by_columns(
-            column_name="nsd"
-        )
+        nsd_rows_processed = self.raw_statement_repo.get_existing_by_columns(column_names="nsd")
         valid_types = set(self.config.domain.statements_types)
 
         company_names = {c.company_name for c in company_records if c.company_name}

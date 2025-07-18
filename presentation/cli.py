@@ -207,15 +207,14 @@ class CLIAdapter:
         # self.logger.log("Instantiate statements_fetch_service (...)", level="info")
         statements_fetch_service = StatementFetchService(
             logger=self.logger,
+            config=self.config,
             source=raw_statements_scraper,
-            parsed_statements_repo=parsed_statement_repo,
             company_repo=company_repo,
             nsd_repo=nsd_repo,
             raw_statement_repo=raw_statement_repo,
-            config=self.config,
+            parsed_statements_repo=parsed_statement_repo,
             metrics_collector=self.collector,
             worker_pool_executor=self.worker_pool_executor,
-            max_workers=self.config.global_settings.max_workers,
         )
 
         # Execute fetch process and log total rows fetched
