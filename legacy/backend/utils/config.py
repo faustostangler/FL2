@@ -157,6 +157,7 @@ class Config:
             db_config["raw"]["filename"]: {
                 tbl_company_info: f"""
                     CREATE TABLE IF NOT EXISTS {tbl_company_info} (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
                         cvm_code TEXT,
                         ticker TEXT,
                         company_name TEXT,
@@ -189,13 +190,13 @@ class Config:
                         has_quotation TEXT,
                         has_emissions TEXT,
                         has_bdr TEXT,
-
-                        PRIMARY KEY (company_name)
+                        UNIQUE(company_name)
                     );
                     CREATE INDEX IF NOT EXISTS idx_company_info ON {tbl_company_info} (company_name);
                 """,
                 tbl_nsd: f"""
                     CREATE TABLE IF NOT EXISTS {tbl_nsd} (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
                         nsd INTEGER,
                         company_name TEXT,
                         quarter TEXT,
@@ -206,8 +207,8 @@ class Config:
                         responsible_auditor TEXT,
                         protocol TEXT,
                         sent_date TEXT,
-                        reason TEXT, 
-                        PRIMARY KEY (nsd)
+                        reason TEXT,
+                        UNIQUE(nsd)
                     );
                     CREATE INDEX IF NOT EXISTS idx_nsd ON {tbl_nsd} (nsd);
                 """,
@@ -363,7 +364,8 @@ class Config:
         }
 
     def _find_heaviest_table(self, db_filepath, sample_size=10_000):
-        """Encontra a tabela com linhas mais pesadas para basear o chunk_size."""
+        """Encontra a tabela com linhas mais pesadas para basear o
+        chunk_size."""
         heaviest_table = None
         max_memory_per_row = 1  # fallback seguro
 
@@ -649,19 +651,15 @@ class Config:
             "segmentEng": "segment_eng",
             "activity": "activity",
             "describle_category_bvmf": "describle_category_bvmf",
-
             "last_date": "last_date",
             "dateListing": "date_listing",
             "date_quotation": "date_quotation",
-
             "cnpj": "cnpj",
             "website": "website",
-
             "registrar": "registrar",
             "main_registrar": "main_registrar",
             "status": "status",
             "type": "type",
-
             "marketIndicator": "market_indicator",
             "typeBDR": "type_bdr",
             "has_quotation": "has_quotation",

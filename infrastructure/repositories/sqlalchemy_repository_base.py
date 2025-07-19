@@ -1,5 +1,5 @@
 from abc import ABC, abstractmethod
-from typing import Any, Generic, List, Sequence, Set, Tuple, TypeVar, Union
+from typing import Any, Generic, List, Sequence, Tuple, TypeVar, Union
 
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
@@ -38,7 +38,9 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
         # Create SQLAlchemy engine for SQLite with thread-safe settings
         self.engine = create_engine(
             config.database.connection_string,
-            connect_args={"check_same_thread": False},  # allow usage from multiple threads
+            connect_args={
+                "check_same_thread": False
+            },  # allow usage from multiple threads
             future=True,
         )
 
@@ -91,10 +93,7 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
             flat_items = ListFlattener.flatten(items)
 
             # Remove any None values from the list
-            valid_items = [
-                item for item in flat_items
-                if item is not None
-            ]
+            valid_items = [item for item in flat_items if item is not None]
 
             # Merge each DTO into the current session (insert or update)
             for dto in valid_items:
@@ -182,9 +181,10 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
             # Ensure session is always closed
             session.close()
 
-    def get_existing_by_columns(self, column_names: Union[str, List[str]]) -> List[Tuple]:
-        """
-        Return distinct and ordered values for one or more given columns.
+    def get_existing_by_columns(
+        self, column_names: Union[str, List[str]]
+    ) -> List[Tuple]:
+        """Return distinct and ordered values for one or more given columns.
 
         Examples:
             repo.get_existing_by_columns("nsd") -> [("94790",), ("12345",)]
@@ -226,8 +226,8 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
             # Sort the result list using a custom sort key
             results.sort(
                 key=lambda row:
-                    # Wrap the tuple to enable attribute-style access
-                    self._sort_key(RowWrapper(row), kw_columns)
+                # Wrap the tuple to enable attribute-style access
+                self._sort_key(RowWrapper(row), kw_columns)
             )
 
             return results
@@ -259,7 +259,11 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
                 assert isinstance(identifier, tuple), "Expected tuple for composite key"
                 filter_expr = [col == val for col, val in zip(pk_columns, identifier)]
             # Perform a filtered query and check if any result is found
-            query = session.query(model).filter(*filter_expr) if isinstance(filter_expr, list) else session.query(model).filter(filter_expr)
+            query = (
+                session.query(model).filter(*filter_expr)
+                if isinstance(filter_expr, list)
+                else session.query(model).filter(filter_expr)
+            )
 
             return query.first() is not None
         finally:
@@ -294,7 +298,11 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
                 assert isinstance(identifier, tuple), "Expected tuple for composite key"
                 filter_expr = [col == val for col, val in zip(pk_columns, identifier)]
 
-            query = session.query(model).filter(*filter_expr) if isinstance(filter_expr, list) else session.query(model).filter(filter_expr)
+            query = (
+                session.query(model).filter(*filter_expr)
+                if isinstance(filter_expr, list)
+                else session.query(model).filter(filter_expr)
+            )
             obj = query.first()
 
             if not obj:
@@ -303,6 +311,21 @@ class SqlAlchemyRepositoryBase(SqlAlchemyRepositoryBasePort[T, K], ABC, Generic[
             return obj.to_dto()
         finally:
             # Ensure the session is closed in all cases
+            session.close()
+
+    def get_page_after(self, last_id: int, limit: int) -> List[T]:
+        """Return a page of DTOs ordered by surrogate id."""
+        session = self.Session()
+        model, _ = self.get_model_class()
+        try:
+            query = (
+                session.query(model)
+                .filter(model.id > last_id)
+                .order_by(model.id)
+                .limit(limit)
+            )
+            return [obj.to_dto() for obj in query.all()]
+        finally:
             session.close()
 
     def _safe_cast(self, value: Any) -> Union[int, str]:

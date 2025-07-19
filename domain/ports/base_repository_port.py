@@ -5,8 +5,8 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Generic, List, Sequence, Tuple, TypeVar, Union
 
-T = TypeVar("T")   # DTO type
-K = TypeVar("K")   # Key type (e.g., str, int)
+T = TypeVar("T")  # DTO type
+K = TypeVar("K")  # Key type (e.g., str, int)
 
 
 class SqlAlchemyRepositoryBasePort(ABC, Generic[T, K]):
@@ -49,7 +49,9 @@ class SqlAlchemyRepositoryBasePort(ABC, Generic[T, K]):
         raise NotImplementedError
 
     @abstractmethod
-    def get_existing_by_columns(self, column_names: Union[str, List[str]]) -> List[Tuple]:
+    def get_existing_by_columns(
+        self, column_names: Union[str, List[str]]
+    ) -> List[Tuple]:
         """Retrieve the set of all primary keys currently stored by column.
 
         Returns:
@@ -85,10 +87,14 @@ class SqlAlchemyRepositoryBasePort(ABC, Generic[T, K]):
         raise NotImplementedError
 
     @abstractmethod
+    def get_page_after(self, last_id: int, limit: int) -> List[T]:
+        """Return a page of items with id greater than ``last_id``."""
+        raise NotImplementedError
+
+    @abstractmethod
     def _safe_cast(self, value: Any) -> Union[int, str]:
         raise NotImplementedError
 
     @abstractmethod
     def _sort_key(self, obj: Any, pk_columns: Sequence) -> tuple[Union[int, str], ...]:
         raise NotImplementedError
-

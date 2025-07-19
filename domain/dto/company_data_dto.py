@@ -55,6 +55,7 @@ class CompanyDataDTO:
     date_quotation: Optional[datetime]
     last_date: Optional[datetime]
     listing_date: Optional[datetime]
+    id: Optional[int] = None
 
     @staticmethod
     def from_dict(raw: dict) -> "CompanyDataDTO":
@@ -97,6 +98,7 @@ class CompanyDataDTO:
             date_quotation=raw.get("date_quotation"),
             last_date=raw.get("last_date"),
             listing_date=raw.get("listing_date"),
+            id=None,
         )
 
     @staticmethod
@@ -146,4 +148,5 @@ class CompanyDataDTO:
             date_quotation=raw.date_quotation,
             last_date=raw.last_date,
             listing_date=raw.listing_date,
+            id=None,
         )
