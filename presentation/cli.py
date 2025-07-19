@@ -210,7 +210,7 @@ class CLIAdapter:
 
         # Compose fetch service with all dependencies
         # self.logger.log("Instantiate statements_fetch_service (...)", level="info")
-        statements_fetch_service = StatementFetchService(
+        _statements_fetch_service = StatementFetchService(
             logger=self.logger,
             config=self.config,
             source=raw_statements_scraper,
@@ -232,8 +232,8 @@ class CLIAdapter:
         # for _nsd, rows in raw_rows:
         #     all_rows.extend(rows)
 
-        math_adapter = MathStatementTransformerAdapter()
-        intel_adapter = IntelStatementTransformerAdapter()
+        math_adapter = MathStatementTransformerAdapter(config=self.config)
+        intel_adapter = IntelStatementTransformerAdapter(config=self.config)
         usecase = TransformStatementsUseCase(
             math_transformer=math_adapter,
             intel_transformer=intel_adapter,

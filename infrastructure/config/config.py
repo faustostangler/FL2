@@ -8,6 +8,10 @@ from .logging import LoggingConfig, load_logging_config
 from .paths import PathConfig, load_paths
 from .scraping import ScrapingConfig, load_scraping_config
 from .statements import StatementsConfig, load_statements_config
+from .transformers import (
+    TransformersConfig,
+    load_transformers_config,
+)
 
 
 class Config:
@@ -28,3 +32,4 @@ class Config:
         self.global_settings: GlobalSettingsConfig = load_global_settings_config()
         self.domain: DomainConfig = load_domain_config()
         self.statements: StatementsConfig = load_statements_config()
+        self.transformers: TransformersConfig = load_transformers_config()
