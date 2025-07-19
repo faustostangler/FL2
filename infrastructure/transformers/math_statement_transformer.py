@@ -8,13 +8,15 @@ from typing import Dict, List, Tuple
 from application.ports import StatementTransformerPort
 from domain.dto.parsed_statement_dto import ParsedStatementDTO
 from domain.dto.raw_statement_dto import RawStatementDTO
+from infrastructure.config import Config
 
 
 class MathStatementTransformerAdapter(StatementTransformerPort):
     """Adjust quarterly statement values."""
 
-    YEAR_END_PREFIXES = ("3", "4")
-    CUMULATIVE_PREFIXES = ("6", "7")
+    def __init__(self, config: Config) -> None:
+        self.year_end_prefixes = config.transformers.math_year_end_prefixes
+        self.cumulative_prefixes = config.transformers.math_cumulative_prefixes
 
     def _group_key(self, row: RawStatementDTO) -> Tuple[str, str, str]:
         dt = self._parse(row.quarter)
@@ -42,9 +44,9 @@ class MathStatementTransformerAdapter(StatementTransformerPort):
         for key, items in groups.items():
             items.sort(key=lambda x: (x[0] or datetime.min))
             account = key[1]
-            if account.startswith(self.YEAR_END_PREFIXES):
+            if account.startswith(self.year_end_prefixes):
                 result.extend(self._adjust_year_end(items))
-            elif account.startswith(self.CUMULATIVE_PREFIXES):
+            elif account.startswith(self.cumulative_prefixes):
                 result.extend(self._adjust_cumulative(items))
             else:
                 result.extend(self._as_parsed(items))

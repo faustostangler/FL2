@@ -4,37 +4,28 @@ from __future__ import annotations
 
 import re
 from typing import Dict, Iterable, List, Tuple
+
 # =======
 # # =======
 # # """Financial intelligence adapter that calculates simple ratios."""
-
 # # from __future__ import annotations
-
 # # from typing import Dict, List, Tuple
 # # >>>>>>> 2025-07-16-Statements-Round-2
 # >>>>>>> 2025-07-16-Statements-Round-2
-
 from application.ports import StatementTransformerPort
 from domain.dto.parsed_statement_dto import ParsedStatementDTO
 from domain.dto.raw_statement_dto import RawStatementDTO
 from domain.utils import parse_quarter
-from legacy.backend.utils import intel
+from infrastructure.config import Config
 
 
 class IntelStatementTransformerAdapter(StatementTransformerPort):
     """Apply business rules to parsed statements."""
 
-    SECTION_CRITERIA: Tuple[Tuple[str, Iterable[dict]], ...] = (
-        ("CAPITAL", intel.section_0_criteria),
-        ("BALANCE_ASSET", intel.section_1_criteria),
-        ("BALANCE_LIAB", intel.section_2_criteria),
-        ("INCOME", intel.section_3_criteria),
-        ("CASH_FLOW", intel.section_6_criteria),
-        ("VALUE_ADDED", intel.section_7_criteria),
-    )
-
-    YEAR_END_PREFIXES = ("03", "04")
-    CUMULATIVE_PREFIXES = ("06", "07")
+    def __init__(self, config: Config) -> None:
+        self.section_criteria = config.transformers.intel_section_criteria
+        self.year_end_prefixes = config.transformers.intel_year_end_prefixes
+        self.cumulative_prefixes = config.transformers.intel_cumulative_prefixes
 
     def transform(self, rows: List[RawStatementDTO]) -> List[ParsedStatementDTO]:
         """Run the Intel transformation pipeline."""
@@ -74,7 +65,7 @@ class IntelStatementTransformerAdapter(StatementTransformerPort):
         result: List[ParsedStatementDTO] = []
         for row in rows:
             data = row.__dict__.copy()
-            for _name, criteria in self.SECTION_CRITERIA:
+            for _name, criteria in self.section_criteria:
                 for item in criteria:
                     data = self.apply_criteria(data, item)
             result.append(ParsedStatementDTO(**data))
@@ -176,9 +167,9 @@ class IntelStatementTransformerAdapter(StatementTransformerPort):
                 key=lambda r: parse_quarter(r.quarter) or parse_quarter("1900-01-01")
             )
             account = key[1]
-            if account.startswith(self.YEAR_END_PREFIXES):
+            if account.startswith(self.year_end_prefixes):
                 results.extend(self._adjust_year_end(items))
-            elif account.startswith(self.CUMULATIVE_PREFIXES):
+            elif account.startswith(self.cumulative_prefixes):
                 results.extend(self._adjust_cumulative(items))
             else:
                 results.extend(items)
@@ -211,6 +202,8 @@ class IntelStatementTransformerAdapter(StatementTransformerPort):
             data = {**row.__dict__, "value": val}
             result.append(ParsedStatementDTO(**data))
         return result
+
+
 # =======
 # # =======
 

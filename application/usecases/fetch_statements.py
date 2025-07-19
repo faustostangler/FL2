@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import time
-from typing import Callable, Iterable, List, Optional, Tuple
+from typing import Callable, List, Optional, Tuple
 
 from domain.dto.nsd_dto import NsdDTO
 from domain.dto.raw_statement_dto import RawStatementDTO
@@ -47,11 +47,13 @@ class FetchStatementsUseCase:
 
     def fetch_statement_rows(
         self,
-        targets: list[NsdDTO],
+        targets: list[NsdDTO] | None = None,
+        batch_rows: list[NsdDTO] | None = None,
         save_callback: Optional[Callable[[List[RawStatementDTO]], None]] = None,
         threshold: Optional[int] = None,
     ) -> List[Tuple[NsdDTO, List[RawStatementDTO]]]:
         """Execute the use case for ``batch_rows``."""
+        targets = targets or batch_rows
         # self.logger.log(
         #     "Run  Method controller.run()._statement_service().statements_fetch_service.run().fetch_usecase.run(save_callback, threshold)",
         #     level="info",
