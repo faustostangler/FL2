@@ -34,17 +34,19 @@ class StatementFetchService:
         parsed_statements_repo: SqlAlchemyParsedStatementRepositoryPort,
         metrics_collector: MetricsCollectorPort,
         worker_pool_executor: WorkerPool,
+        max_workers: int = 1,
     ) -> None:
         """Store dependencies for the service."""
         self.logger = logger
         self.config = config
-        self.source = source,
+        self.source = (source,)
         self.company_repo = company_repo
         self.nsd_repo = nsd_repo
         self.raw_statement_repo = raw_statement_repo
         self.parsed_statements_repo = parsed_statements_repo
         self.collector = metrics_collector
         self.worker_pool_executor = worker_pool_executor
+        self.max_workers = max_workers
 
         self.fetch_usecase = FetchStatementsUseCase(
             logger=self.logger,
@@ -54,6 +56,7 @@ class StatementFetchService:
             parsed_statements_repo=parsed_statements_repo,
             metrics_collector=self.collector,
             worker_pool_executor=self.worker_pool_executor,
+            max_workers=self.max_workers,
         )
 
         # self.logger.log(f"Load Class {self.__class__.__name__}", level="info")
@@ -71,7 +74,10 @@ class StatementFetchService:
             return []
 
         nsd_rows_processed = {
-            row[0] for row in self.raw_statement_repo.get_existing_by_columns(column_names="nsd")
+            row[0]
+            for row in self.raw_statement_repo.get_existing_by_columns(
+                column_names="nsd"
+            )
         }
 
         valid_types = set(self.config.domain.statements_types)
@@ -127,7 +133,7 @@ class StatementFetchService:
         #     level="info",
         # )
         rows = self.fetch_usecase.fetch_statement_rows(
-            targets=targets,
+            batch_rows=targets,
             save_callback=save_callback,
             threshold=threshold,
         )
