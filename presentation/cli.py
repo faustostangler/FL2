@@ -238,5 +238,7 @@ class CLIAdapter:
             math_transformer=math_adapter,
             intel_transformer=intel_adapter,
         )
-        parsed = usecase.execute(all_rows)
+        raw_dtos = raw_statement_repo.get_all()
+
+        parsed = usecase.execute(raw_dtos)
         parsed_statement_repo.save_all(parsed)
