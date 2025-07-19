@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import PrimaryKeyConstraint, String
+from sqlalchemy import Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from .base_model import BaseModel
@@ -11,7 +11,7 @@ class AbstractStatementModel(BaseModel):
 
     __abstract__ = True
     __table_args__ = (
-        PrimaryKeyConstraint(
+        UniqueConstraint(
             "nsd",
             "company_name",
             "quarter",
@@ -19,17 +19,18 @@ class AbstractStatementModel(BaseModel):
             "grupo",
             "quadro",
             "account",
-            name="pk_statements_temp",
+            name="uq_statements_temp",
         ),
     )
 
-    nsd: Mapped[str] = mapped_column(String, primary_key=True)
-    company_name: Mapped[str | None] = mapped_column(primary_key=True)
-    quarter: Mapped[str | None] = mapped_column(primary_key=True)
-    version: Mapped[str | None] = mapped_column(primary_key=True)
-    grupo: Mapped[str] = mapped_column(primary_key=True)
-    quadro: Mapped[str] = mapped_column(primary_key=True)
-    account: Mapped[str] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    nsd: Mapped[str] = mapped_column(String)
+    company_name: Mapped[str | None] = mapped_column()
+    quarter: Mapped[str | None] = mapped_column()
+    version: Mapped[str | None] = mapped_column()
+    grupo: Mapped[str] = mapped_column()
+    quadro: Mapped[str] = mapped_column()
+    account: Mapped[str] = mapped_column()
     description: Mapped[str] = mapped_column()
     value: Mapped[float] = mapped_column()
 
@@ -50,4 +51,6 @@ class AbstractStatementModel(BaseModel):
         return {field: getattr(dto, field) for field in cls._FIELDS}
 
     def _dto_kwargs(self) -> dict:
-        return {field: getattr(self, field) for field in self._FIELDS}
+        data = {field: getattr(self, field) for field in self._FIELDS}
+        data["id"] = self.id
+        return data

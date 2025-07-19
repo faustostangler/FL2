@@ -8,6 +8,6 @@ from .base_repository_port import SqlAlchemyRepositoryBasePort
 
 
 class SqlAlchemyRawStatementRepositoryPort(
-    SqlAlchemyRepositoryBasePort[RawStatementDTO, str], ABC
+    SqlAlchemyRepositoryBasePort[RawStatementDTO, int], ABC
 ):
     """Port for persisting raw statement rows."""

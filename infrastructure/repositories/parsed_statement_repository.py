@@ -12,7 +12,7 @@ from infrastructure.repositories.sqlalchemy_repository_base import (
 
 
 class SqlAlchemyParsedStatementRepository(
-    SqlAlchemyRepositoryBase[ParsedStatementDTO, str],
+    SqlAlchemyRepositoryBase[ParsedStatementDTO, int],
     SqlAlchemyParsedStatementRepositoryPort,
 ):
     """SQLite-backed repository for ``ParsedStatementDTO`` objects."""
@@ -29,12 +29,4 @@ class SqlAlchemyParsedStatementRepository(
         Returns:
             type: The model class associated with this repository.
         """
-        return ParsedStatementModel, (
-            ParsedStatementModel.nsd,
-            ParsedStatementModel.company_name,
-            ParsedStatementModel.quarter,
-            ParsedStatementModel.version,
-            ParsedStatementModel.grupo,
-            ParsedStatementModel.quadro,
-            ParsedStatementModel.account,
-        )
+        return ParsedStatementModel, (ParsedStatementModel.id,)

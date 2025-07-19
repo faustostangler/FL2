@@ -3,7 +3,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Optional
 
-from sqlalchemy import DateTime, String
+from sqlalchemy import DateTime, Integer, String, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from domain.dto.nsd_dto import NsdDTO
@@ -15,8 +15,10 @@ class NSDModel(BaseModel):
     """ORM model for the tbl_nsd table."""
 
     __tablename__ = "tbl_nsd"
+    __table_args__ = (UniqueConstraint("nsd", name="uq_nsd"),)
 
-    nsd: Mapped[str] = mapped_column(String, primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    nsd: Mapped[str] = mapped_column(String)
     company_name: Mapped[Optional[str]] = mapped_column()
     quarter: Mapped[Optional[datetime]] = mapped_column(DateTime)
     version: Mapped[Optional[str]] = mapped_column()
@@ -48,6 +50,7 @@ class NSDModel(BaseModel):
     def to_dto(self) -> NsdDTO:
         """Converts this ORM model back into a NsdDTO."""
         return NsdDTO(
+            id=self.id,
             nsd=self.nsd,
             company_name=self.company_name,
             quarter=self.quarter,

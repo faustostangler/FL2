@@ -6,6 +6,6 @@ from .base_repository_port import SqlAlchemyRepositoryBasePort
 
 
 class SqlAlchemyParsedStatementRepositoryPort(
-    SqlAlchemyRepositoryBasePort[ParsedStatementDTO, str]
+    SqlAlchemyRepositoryBasePort[ParsedStatementDTO, int]
 ):
     """Port for persisting parsed statement rows."""

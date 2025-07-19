@@ -12,7 +12,7 @@ from infrastructure.repositories.sqlalchemy_repository_base import (
 
 
 class SqlAlchemyRawStatementRepository(
-    SqlAlchemyRepositoryBase[RawStatementDTO, str],
+    SqlAlchemyRepositoryBase[RawStatementDTO, int],
     SqlAlchemyRawStatementRepositoryPort,
 ):
     """SQLite-backed repository for ``RawStatementDTO`` objects."""
@@ -29,12 +29,4 @@ class SqlAlchemyRawStatementRepository(
         Returns:
             type: The model class associated with this repository.
         """
-        return RawStatementModel, (
-            RawStatementModel.nsd,
-            RawStatementModel.company_name,
-            RawStatementModel.quarter,
-            RawStatementModel.version,
-            RawStatementModel.grupo,
-            RawStatementModel.quadro,
-            RawStatementModel.account,
-        )
+        return RawStatementModel, (RawStatementModel.id,)

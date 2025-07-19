@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+import dataclasses
 import json
 from datetime import datetime
 from typing import List, Optional
 
-from sqlalchemy import Boolean, DateTime
+from sqlalchemy import Boolean, DateTime, Integer, UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column
 
 from domain.dto.company_data_dto import CompanyDataDTO
@@ -17,8 +18,10 @@ class CompanyDataModel(BaseModel):
     """ORM adapter for the ``tbl_company`` table."""
 
     __tablename__ = "tbl_company"
+    __table_args__ = (UniqueConstraint("cvm_code", name="uq_company_cvm_code"),)
 
-    cvm_code: Mapped[str] = mapped_column(primary_key=True)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    cvm_code: Mapped[str] = mapped_column()
     issuing_company: Mapped[Optional[str]] = mapped_column()
     trading_name: Mapped[Optional[str]] = mapped_column()
     company_name: Mapped[Optional[str]] = mapped_column()
@@ -62,7 +65,8 @@ class CompanyDataModel(BaseModel):
 
     @staticmethod
     def from_dto(dto: CompanyDataRawDTO | CompanyDataDTO) -> "CompanyDataModel":
-        """Convert a ``CompanyDataRawDTO`` or ``CompanyDataDTO`` into ``CompanyDataModel``."""
+        """Convert a ``CompanyDataRawDTO`` or ``CompanyDataDTO`` into
+        ``CompanyDataModel``."""
 
         def attr(name: str):
             return getattr(dto, name, None)
@@ -179,4 +183,5 @@ class CompanyDataModel(BaseModel):
             listing_date=self.listing_date,
         )
 
-        return CompanyDataDTO.from_raw(raw)
+        dto = CompanyDataDTO.from_raw(raw)
+        return dataclasses.replace(dto, id=self.id)

@@ -23,6 +23,7 @@ class NsdDTO:
     protocol: Optional[str]
     sent_date: Optional[datetime]
     reason: Optional[str]
+    id: Optional[int] = None
 
     @staticmethod
     def from_dict(raw: dict) -> Optional[NsdDTO]:
@@ -49,6 +50,7 @@ class NsdDTO:
             protocol=raw.get("protocol"),
             sent_date=raw.get("sent_date"),
             reason=raw.get("reason"),
+            id=None,
         )
 
     @staticmethod
@@ -66,4 +68,5 @@ class NsdDTO:
             protocol=raw.protocol,
             sent_date=raw.sent_date,
             reason=raw.reason,
+            id=None,
         )

@@ -4,8 +4,6 @@ from __future__ import annotations
 
 from typing import List, Set, Tuple
 
-from sqlalchemy.orm import Session
-
 from domain.dto.nsd_dto import NsdDTO
 from domain.ports import LoggerPort, NSDRepositoryPort
 from infrastructure.config import Config
@@ -15,7 +13,7 @@ from infrastructure.repositories.sqlalchemy_repository_base import (
 )
 
 
-class SqlAlchemyNsdRepository(SqlAlchemyRepositoryBase[NsdDTO, str], NSDRepositoryPort):
+class SqlAlchemyNsdRepository(SqlAlchemyRepositoryBase[NsdDTO, int], NSDRepositoryPort):
     """Concrete repository for NsdDTO using SQLite via SQLAlchemy."""
 
     def __init__(self, config: Config, logger: LoggerPort) -> None:
@@ -30,7 +28,7 @@ class SqlAlchemyNsdRepository(SqlAlchemyRepositoryBase[NsdDTO, str], NSDReposito
         Returns:
             type: The model class associated with this repository.
         """
-        return NSDModel, (NSDModel.nsd,)  # para PK simples
+        return NSDModel, (NSDModel.id,)
 
     def get_all_pending(
         self,
@@ -38,7 +36,8 @@ class SqlAlchemyNsdRepository(SqlAlchemyRepositoryBase[NsdDTO, str], NSDReposito
         valid_types: Set[str],
         exclude_nsd: Set[str],
     ) -> List[NsdDTO]:
-        """Retorna todos os NSDs que ainda não foram processados, filtrando por empresa, tipo e NSD.
+        """Retorna todos os NSDs que ainda não foram processados, filtrando por
+        empresa, tipo e NSD.
 
         Args:
             company_names (Set[str]): Conjunto de nomes de empresas válidas.
@@ -55,7 +54,4 @@ class SqlAlchemyNsdRepository(SqlAlchemyRepositoryBase[NsdDTO, str], NSDReposito
                 ~NSDModel.nsd.in_(exclude_nsd),
             )
             results = query.all()
-        return sorted(
-            [nsd.to_dto() for nsd in results],
-            key=lambda dto: int(dto.nsd)
-        )
+        return sorted([nsd.to_dto() for nsd in results], key=lambda dto: int(dto.nsd))

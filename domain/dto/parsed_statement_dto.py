@@ -17,6 +17,7 @@ class ParsedStatementDTO:
     account: str
     description: str
     value: float
+    id: Optional[int] = None
 
     @staticmethod
     def from_dict(raw: dict) -> "ParsedStatementDTO":
@@ -37,4 +38,5 @@ class ParsedStatementDTO:
             account=str(raw.get("account", "")),
             description=str(raw.get("description", "")),
             value=float(raw.get("value", 0.0)),
+            id=None,
         )
