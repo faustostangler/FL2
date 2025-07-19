@@ -224,13 +224,13 @@ class CLIAdapter:
 
         # Execute fetch process and log total rows fetched
         # self.logger.log("Call Method controller.run()._statement_service().statements_fetch_service.run()", level="info")
-        raw_rows = statements_fetch_service.fetch_statements()
+        # raw_rows = statements_fetch_service.fetch_statements()
 
-        self.logger.log(f"total {len(raw_rows)}")
+        # self.logger.log(f"total {len(raw_rows)}")
 
-        all_rows = []
-        for _nsd, rows in raw_rows:
-            all_rows.extend(rows)
+        # all_rows = []
+        # for _nsd, rows in raw_rows:
+        #     all_rows.extend(rows)
 
         math_adapter = MathStatementTransformerAdapter()
         intel_adapter = IntelStatementTransformerAdapter()

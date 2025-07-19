@@ -133,7 +133,7 @@ class StatementFetchService:
         #     level="info",
         # )
         rows = self.fetch_usecase.fetch_statement_rows(
-            batch_rows=targets,
+            targets=targets,
             save_callback=save_callback,
             threshold=threshold,
         )
