@@ -4,6 +4,7 @@ from application import CompanyDataMapper
 from application.services.company_data_service import CompanyDataService
 from application.services.nsd_service import NsdService
 from application.services.statement_fetch_service import StatementFetchService
+from application.usecases.transform_statements import TransformStatementsUseCase
 
 # from application.services.statement_parse_service import StatementParseService
 from domain.ports import LoggerPort
@@ -20,6 +21,10 @@ from infrastructure.scrapers.company_data_exchange_scraper import CompanyDataScr
 from infrastructure.scrapers.nsd_scraper import NsdScraper
 from infrastructure.scrapers.requests_raw_statement_scraper import (
     RawStatementScraper,
+)
+from infrastructure.transformers import (
+    IntelStatementTransformerAdapter,
+    MathStatementTransformerAdapter,
 )
 
 
@@ -222,8 +227,16 @@ class CLIAdapter:
         raw_rows = statements_fetch_service.fetch_statements()
 
         self.logger.log(f"total {len(raw_rows)}")
-        # self.logger.log("End  Method controller.run()._statement_service().statements_fetch_service.run()", level="info")
 
-        # Parsing step is not yet enabled
-        # parse_service = StatementParseService(...)
-        # parse_service.parse_statements(raw_rows)
+        all_rows = []
+        for _nsd, rows in raw_rows:
+            all_rows.extend(rows)
+
+        math_adapter = MathStatementTransformerAdapter()
+        intel_adapter = IntelStatementTransformerAdapter()
+        usecase = TransformStatementsUseCase(
+            math_transformer=math_adapter,
+            intel_transformer=intel_adapter,
+        )
+        parsed = usecase.execute(all_rows)
+        parsed_statement_repo.save_all(parsed)
